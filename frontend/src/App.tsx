@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { getToken, clearToken } from './auth'
 import LoginPage from './LoginPage'
 import MainContent from './MainContent'
-import HistoryList from './HistoryList'
 import HistoryDetail from './HistoryDetail'
 import SharePage from './SharePage'
 
@@ -71,7 +70,6 @@ function AppContent() {
       {/* 需要登录的页面 */}
       <Route path="/" element={user ? <MainContent email={user} onLogout={handleLogout} fetchUser={fetchUser} /> : <Navigate to="/login" />} />
       <Route path="/login" element={user ? <Navigate to="/" /> : <LoginPage onSuccess={fetchUser} />} />
-      <Route path="/history" element={user ? <HistoryList /> : <Navigate to="/login" />} />
       <Route path="/history/:id" element={user ? <HistoryDetail /> : <Navigate to="/login" />} />
     </Routes>
   )

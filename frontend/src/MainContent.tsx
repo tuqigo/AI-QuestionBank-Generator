@@ -1,9 +1,39 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { marked } from 'marked'
+import { renderMarkdown, renderMarkdownForPrinting, renderMarkdownForPdf } from './utils/markdownProcessor'
 import type { GenerateResponse } from './types'
 import { fetchWithAuth, clearToken } from './auth'
+import HistoryDropdown from './HistoryList'
 import './App.css'
+
+// 加载 MathJax 脚本
+const loadMathJax = (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (window.MathJax) {
+      resolve()
+      return
+    }
+    // 先设置配置
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: false,
+        processEnvironments: false
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    }
+    const script = document.createElement('script')
+    script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'
+    script.async = true
+    script.onload = () => resolve()
+    script.onerror = () => reject(new Error('Failed to load MathJax'))
+    document.head.appendChild(script)
+  })
+}
 
 const API_BASE = '/api'
 
@@ -29,54 +59,11 @@ function splitQuestionsAndAnswers(md: string): { questions: string; answers: str
  * 计算题目数量 - 匹配行首数字加点号的格式
  */
 function countQuestions(questions: string): number {
+  if (!questions || typeof questions !== 'string') return 0
   const matches = questions.match(/^\d+\./gm)
   return matches ? matches.length : 0
 }
 
-/**
- * 处理 markdown 中的特殊符号，将其转换为带样式的 HTML
- */
-function processMarkdown(md: string): string {
-  let processed = md
-
-  // 处理 [○] 比较符号
-  processed = processed.replace(/\[○\]/g, '<span class="comparison-circle">○</span>')
-
-  // 处理 6 个或以上连续下划线作为填空横线
-  processed = processed.replace(/_{6,}/g, (match) => {
-    const width = Math.max(80, match.length * 8)
-    return `<span class="blank-line" style="min-width: ${width}px"></span>`
-  })
-
-  // 处理 [  ] 方框填空（2 个空格以上）
-  processed = processed.replace(/\[ {2,}\]/g, '<span class="blank-box"></span>')
-
-  // 处理带空格的括号（全角）- 将空格转为 &nbsp;
-  processed = processed.replace(/（ {2,}）/g, (match) => {
-    const spaces = match.slice(1, -1)
-    const nbsp = '\u00a0'.repeat(spaces.length)
-    return `（${nbsp}）`
-  })
-
-  // 处理带空格的半角括号 - 将空格转为 &nbsp;
-  processed = processed.replace(/\( {2,}\)/g, (match) => {
-    const spaces = match.slice(1, -1)
-    const nbsp = '\u00a0'.repeat(spaces.length)
-    return `(${nbsp})`
-  })
-
-  // 只处理完全空的括号（全角）
-  processed = processed.replace(/（）/g, '<span class="blank-parentheses"></span>')
-
-  // 只处理完全空的半角括号
-  processed = processed.replace(/\(\)/g, '<span class="blank-parentheses"></span>')
-
-  // 将行首的题号（如"1. "）转换为带序号样式的格式
-  // 匹配行首的数字加点号加空格，如"1. "、"10. "等
-  processed = processed.replace(/^(\d+)\.\s+/gm, '<span class="question-number">$1.</span> ')
-
-  return processed
-}
 
 interface Props {
   email: string
@@ -92,6 +79,7 @@ export default function MainContent({ email, onLogout }: Props) {
   const [imageHint, setImageHint] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [extendLoading, setExtendLoading] = useState(false)
+  const [historyOpen, setHistoryOpen] = useState(false)
 
   const generate = async () => {
     const p = prompt.trim()
@@ -176,7 +164,7 @@ export default function MainContent({ email, onLogout }: Props) {
 
     // 移除题目中的# 标题，避免重复显示
     const questionsWithoutTitle = questions.replace(/^#\s+(.+)$/gm, '').trim()
-    const questionsHtmlProcessed = (marked(processMarkdown(questionsWithoutTitle), { async: false }) as string)
+    const questionsHtmlProcessed = (renderMarkdownForPrinting(questionsWithoutTitle))
 
     const titleHtml = `<h1 style="text-align: center; margin-bottom: 20px; font-size: 18px;">${titleText}</h1>`
     const contentHtml = answers
@@ -205,8 +193,8 @@ export default function MainContent({ email, onLogout }: Props) {
     // 移除题目中的# 标题，避免重复显示
     const questionsWithoutTitle = questions.replace(/^#\s+(.+)$/gm, '').trim()
 
-    const questionsHtml = (marked(processMarkdown(questionsWithoutTitle), { async: false }) as string)
-    const answersHtml = answers ? (marked(processMarkdown(answers), { async: false }) as string) : ''
+    const questionsHtml = (renderMarkdownForPdf(questionsWithoutTitle))
+    const answersHtml = answers ? (renderMarkdownForPdf(answers)) : ''
 
     import('html2pdf.js').then(({ default: html2pdf }) => {
       const container = document.createElement('div')
@@ -243,8 +231,60 @@ export default function MainContent({ email, onLogout }: Props) {
   }
 
   const { questions, answers } = splitQuestionsAndAnswers(markdown)
-  const questionsHtml = markdown ? (marked(processMarkdown(questions), { async: false }) as string) : ''
-  const answersHtml = answers ? (marked(processMarkdown(answers), { async: false }) as string) : ''
+  const questionsHtml = markdown ? (renderMarkdown(String(questions || ''))) : ''
+  const answersHtml = answers ? (renderMarkdown(String(answers))) : ''
+
+  // 引用预览容器，用于 MathJax 渲染
+  const questionsRef = useRef<HTMLDivElement>(null)
+  const answersRef = useRef<HTMLDivElement>(null)
+
+  // 引用历史下拉容器，用于正确处理鼠标离开事件
+  const historyDropdownRef = useRef<HTMLDivElement>(null)
+
+  // 加载 MathJax 并在 markdown 变化时渲染公式
+  useEffect(() => {
+    let mounted = true
+
+    const initAndRenderMathJax = async () => {
+      if (!markdown) return
+
+      try {
+        console.log('Loading MathJax...')
+        await loadMathJax()
+        console.log('MathJax loaded:', !!window.MathJax)
+
+        if (!mounted) return
+
+        // 等待 DOM 更新
+        await new Promise(resolve => setTimeout(resolve, 100))
+
+        // 收集需要渲染的元素（排除 null）
+        const elements = [questionsRef.current, answersRef.current].filter(Boolean) as HTMLElement[]
+        console.log('MathJax rendering elements:', elements)
+
+        if (elements.length > 0 && window.MathJax) {
+          // 尝试使用 typeset（同步）或 typesetPromise（异步）
+          if (window.MathJax.typeset) {
+            window.MathJax.typeset(elements)
+            console.log('MathJax typeset called')
+          } else if (window.MathJax.typesetPromise) {
+            await window.MathJax.typesetPromise(elements).catch((err: unknown) => {
+              console.log('MathJax typesetPromise failed:', err)
+            })
+            console.log('MathJax typesetPromise called')
+          }
+        }
+      } catch (error) {
+        console.error('Failed to process MathJax:', error)
+      }
+    }
+
+    initAndRenderMathJax()
+
+    return () => {
+      mounted = false
+    }
+  }, [markdown])
 
   return (
     <div className="app">
@@ -261,12 +301,37 @@ export default function MainContent({ email, onLogout }: Props) {
             <h1>好学生 AI 题库生成器</h1>
           </div>
           <div className="header-right">
-            <Link to="/history" className="btn-history" title="历史记录">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-                <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </Link>
+            <div
+              className="history-dropdown-wrapper"
+              ref={historyDropdownRef}
+              onMouseOver={(e) => {
+                // 鼠标在 wrapper 或其任何子元素上时，保持打开
+                // 这包括按钮和下拉菜单
+                const target = e.target as Node
+                if (historyDropdownRef.current && historyDropdownRef.current.contains(target)) {
+                  setHistoryOpen(true)
+                }
+              }}
+              onMouseLeave={(e) => {
+                // 只有当鼠标真正离开整个区域（按钮 + 下拉菜单）时才关闭
+                const relatedTarget = e.relatedTarget as Node
+                // 如果 relatedTarget 不在 wrapper 内，则关闭
+                if (!relatedTarget || !historyDropdownRef.current!.contains(relatedTarget)) {
+                  setHistoryOpen(false)
+                }
+              }}
+            >
+              <button
+                className={`btn-history history-dropdown-trigger ${historyOpen ? 'active' : ''}`}
+                title="历史记录"
+              >
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                  <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </button>
+              <HistoryDropdown isOpen={historyOpen} onClose={() => setHistoryOpen(false)} />
+            </div>
             <div className="user-info">
               <div className="user-avatar">
                 {email.charAt(0).toUpperCase()}
@@ -499,9 +564,9 @@ export default function MainContent({ email, onLogout }: Props) {
           <div className="preview-card">
             {markdown ? (
               <div className="preview-body markdown-body">
-                <div dangerouslySetInnerHTML={{ __html: questionsHtml }} />
+                <div ref={questionsRef} dangerouslySetInnerHTML={{ __html: questionsHtml }} />
                 {answersHtml && (
-                  <div className="answer-section" dangerouslySetInnerHTML={{ __html: answersHtml }} />
+                  <div ref={answersRef} className="answer-section" dangerouslySetInnerHTML={{ __html: answersHtml }} />
                 )}
               </div>
             ) : (

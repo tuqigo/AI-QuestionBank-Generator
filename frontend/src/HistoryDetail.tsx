@@ -1,8 +1,36 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { marked } from 'marked'
+import { renderMarkdown } from '@/utils/markdownProcessor'
 import { getHistoryDetail, deleteHistory, createShareUrl } from '@/api/history'
 import type { QuestionRecord } from '@/types'
+
+// 加载 MathJax 脚本
+const loadMathJax = (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (window.MathJax) {
+      resolve()
+      return
+    }
+    // 先设置配置
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: false,
+        processEnvironments: false
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      }
+    }
+    const script = document.createElement('script')
+    script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'
+    script.async = true
+    script.onload = () => resolve()
+    script.onerror = () => reject(new Error('Failed to load MathJax'))
+    document.head.appendChild(script)
+  })
+}
 
 export default function HistoryDetail() {
   const { id } = useParams<{ id: string }>()
@@ -10,6 +38,7 @@ export default function HistoryDetail() {
   const [record, setRecord] = useState<QuestionRecord | null>(null)
   const [loading, setLoading] = useState(true)
   const [shareUrl, setShareUrl] = useState<string | null>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!id) return
@@ -22,6 +51,34 @@ export default function HistoryDetail() {
       })
       .finally(() => setLoading(false))
   }, [id, navigate])
+
+  // 加载 MathJax 并渲染公式
+  useEffect(() => {
+    let mounted = true
+
+    const initAndRenderMathJax = async () => {
+      if (!record) return
+
+      try {
+        await loadMathJax()
+        if (mounted && window.MathJax) {
+          await new Promise(resolve => setTimeout(resolve, 100))
+          if (contentRef.current && window.MathJax.typeset) {
+            window.MathJax.typeset([contentRef.current])
+            console.log('HistoryDetail MathJax rendered')
+          }
+        }
+      } catch (error) {
+        console.error('Failed to process MathJax in HistoryDetail:', error)
+      }
+    }
+
+    initAndRenderMathJax()
+
+    return () => {
+      mounted = false
+    }
+  }, [record])
 
   const handleDelete = async () => {
     if (!confirm('确定要删除这条记录吗？')) return
@@ -56,12 +113,12 @@ export default function HistoryDetail() {
     return (
       <div className="detail-page">
         <p>记录不存在</p>
-        <Link to="/history">返回历史列表</Link>
+        <Link to="/">返回首页</Link>
       </div>
     )
   }
 
-  const questionsHtml = marked(record.ai_response)
+  const questionsHtml = renderMarkdown(record.ai_response)
 
   return (
     <div className="detail-page">
@@ -70,7 +127,7 @@ export default function HistoryDetail() {
         <div className="detail-actions">
           <button onClick={handleShare} className="btn-action">分享</button>
           <button onClick={handleDelete} className="btn-action btn-delete">删除</button>
-          <Link to="/history" className="btn-back">返回列表</Link>
+          <Link to="/" className="btn-back">返回首页</Link>
         </div>
       </div>
 
@@ -91,7 +148,7 @@ export default function HistoryDetail() {
       </div>
 
       <div className="detail-content markdown-body">
-        <div dangerouslySetInnerHTML={{ __html: questionsHtml as string }} />
+        <div ref={contentRef} dangerouslySetInnerHTML={{ __html: questionsHtml as string }} />
       </div>
     </div>
   )

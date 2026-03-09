@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams, Link } from 'react-router-dom'
-import { marked } from 'marked'
+import { renderMarkdown } from '@/utils/markdownProcessor'
 import { getSharedRecord } from '@/api/history'
 import type { QuestionRecord } from '@/types'
 
@@ -52,7 +52,7 @@ export default function SharePage() {
     )
   }
 
-  const questionsHtml = marked(record.ai_response)
+  const questionsHtml = renderMarkdown(record.ai_response)
 
   return (
     <div className="share-page">

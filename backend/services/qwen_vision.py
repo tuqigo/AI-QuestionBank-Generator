@@ -8,7 +8,7 @@ from dashscope import MultiModalConversation
 from requests.exceptions import SSLError, RequestException
 
 from config import DASHSCOPE_API_KEY
-from services.qwen_client import generate_questions, _truncate_for_log
+from services.qwen_client import generate_questions, _truncate_for_log, _parse_title_and_content
 from utils.logger import qwen_logger
 
 VISION_MODEL = os.getenv("QWEN_VISION_MODEL", "qwen-vl-plus")
@@ -142,8 +142,10 @@ def recognize_question_from_image(image_base64: str, image_media_type: str = "jp
     return text.strip()
 
 
-def extend_questions_from_image(image_base64: str, image_media_type: str = "jpeg", hint: str = "") -> str:
-    """识别图片题目并生成同类型扩展题"""
+def extend_questions_from_image(image_base64: str, image_media_type: str = "jpeg", hint: str = "") -> tuple[str, str]:
+    """识别图片题目并生成同类型扩展题
+    返回：(标题，题目内容)
+    """
     start_time = time.time()
     qwen_logger.info("=" * 60)
     qwen_logger.info("【AI 调用开始】extend_questions_from_image")
@@ -160,7 +162,39 @@ def extend_questions_from_image(image_base64: str, image_media_type: str = "jpeg
     qwen_logger.info(f"[图片识别描述] {description[:100]}...")
     qwen_logger.info(f"[最终 prompt] {user_prompt}")
 
-    result = generate_questions(EXTEND_PROMPT_TEMPLATE.format(description=user_prompt))
+    # 直接调用千问 API，避免 prompt 被重复包装
+    from dashscope import Generation
+    messages = [
+        {"role": "system", "content": "你是小学 1-6 年级题库生成专家，根据用户需求生成练习题，输出 Markdown 格式。"},
+        {"role": "user", "content": EXTEND_PROMPT_TEMPLATE.format(description=user_prompt)},
+    ]
+
+    qwen_logger.info(f"[调用模型] {os.getenv('QWEN_MODEL', 'qwen-plus-latest')}")
+    api_start = time.time()
+
+    response = Generation.call(
+        model=os.getenv("QWEN_MODEL", "qwen-plus-latest"),
+        messages=messages,
+        result_format="message",
+    )
+
+    api_elapsed = time.time() - api_start
+    qwen_logger.info(f"[API 调用] 耗时：{api_elapsed:.2f} 秒")
+
+    if response.status_code != 200:
+        raise RuntimeError(f"千问 API 调用失败：{response.code} - {response.message}")
+
+    content = response.output.choices[0].message.content or ""
+
+    # 解析标题和内容
+    title, questions_content = _parse_title_and_content(content)
+    qwen_logger.info(f"[解析结果] 标题：{title}")
+
+    # 如果 AI 没有返回 TITLE 前缀，使用默认标题
+    if not title or title == "AI 题目生成":
+        title = f"扩展练习题（基于图片识别）"
+
+    result = questions_content
 
     total_elapsed = time.time() - start_time
     qwen_logger.info(f"[扩展题生成] 最终结果长度：{len(result) if result else 0} 字符")
@@ -169,4 +203,4 @@ def extend_questions_from_image(image_base64: str, image_media_type: str = "jpeg
     qwen_logger.info("【AI 调用结束】extend_questions_from_image")
     qwen_logger.info("=" * 60)
 
-    return result
+    return title, result

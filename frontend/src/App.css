@@ -126,6 +126,8 @@
   border-radius: var(--radius-md);
   color: var(--gray-600);
   transition: all 0.2s;
+  border: none;
+  cursor: pointer;
 }
 
 .btn-history svg {
@@ -133,9 +135,198 @@
   height: 18px;
 }
 
-.btn-history:hover {
+.btn-history:hover,
+.btn-history.active {
   background: var(--primary-50);
   color: var(--primary-600);
+}
+
+/* 历史记录下拉框 */
+.history-dropdown-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.history-dropdown-trigger {
+  pointer-events: auto;
+}
+
+.history-dropdown {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  right: 0;
+  width: 360px;
+  max-height: 500px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--gray-200);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: dropdown-slide 0.2s ease-out;
+}
+
+/* 只有当 wrapper 有 open 类时才显示下拉菜单 */
+.history-dropdown-wrapper.open .history-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.history-dropdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--gray-200);
+  background: var(--gray-50);
+}
+
+.history-dropdown-header h3 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin: 0;
+  flex: 1;
+}
+
+.history-dropdown-loading {
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--gray-500);
+  font-size: 0.875rem;
+}
+
+.history-dropdown-empty {
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+}
+
+.history-dropdown-empty p {
+  color: var(--gray-500);
+  font-size: 0.875rem;
+  margin: 0 0 var(--space-3);
+}
+
+.history-dropdown-empty a {
+  display: inline-block;
+  padding: var(--space-2) var(--space-4);
+  background: var(--primary-600);
+  color: white;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.history-dropdown-empty a:hover {
+  background: var(--primary-700);
+}
+
+.history-dropdown-list {
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.history-dropdown-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--gray-100);
+  transition: background 0.2s;
+}
+
+.history-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.history-dropdown-item:hover {
+  background: var(--gray-50);
+}
+
+.history-dropdown-item > a {
+  flex: 1;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  min-width: 0;
+}
+
+.history-item-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-800);
+  margin-bottom: var(--space-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-item-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+.history-item-type {
+  font-size: 0.75rem;
+}
+
+.btn-delete-item {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  color: var(--gray-400);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-delete-item:hover {
+  background: var(--error-50);
+  border-color: var(--error-500);
+  color: var(--error-600);
+}
+
+.btn-delete-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.history-dropdown-more {
+  padding: var(--space-3) var(--space-4);
+  text-align: center;
+  border-top: 1px solid var(--gray-200);
+  background: var(--gray-50);
+}
+
+.history-dropdown-more button {
+  padding: var(--space-2) var(--space-4);
+  background: var(--gray-200);
+  color: var(--gray-700);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.history-dropdown-more button:hover {
+  background: var(--gray-300);
 }
 
 /* ===== 主内容区 ===== */
@@ -703,6 +894,25 @@
   border-top: 2px dashed var(--gray-200);
 }
 
+/* 分数样式 */
+sup {
+  font-size: 0.8em;
+  vertical-align: super;
+  line-height: 0;
+}
+
+sub {
+  font-size: 0.8em;
+  vertical-align: sub;
+  line-height: 0;
+}
+
+/* 小数部分样式 */
+small {
+  font-size: 0.8em;
+  vertical-align: middle;
+}
+
 /* 打印样式 */
 @media print {
   .sidebar,
@@ -851,25 +1061,11 @@
   }
 }
 
-/* ===== 历史记录页面 ===== */
-.history-page {
+/* ===== 历史详情页面 ===== */
+.detail-page {
   min-height: 100vh;
   background: var(--bg-primary);
   padding: var(--space-6);
-}
-
-.history-header {
-  max-width: 1000px;
-  margin: 0 auto var(--space-6);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.history-header h2 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--gray-800);
 }
 
 .btn-back {
@@ -885,144 +1081,6 @@
 
 .btn-back:hover {
   background: var(--gray-200);
-}
-
-.history-list {
-  max-width: 1000px;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-}
-
-.history-card {
-  background: var(--bg-secondary);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  padding: var(--space-4);
-  transition: all 0.2s;
-}
-
-.history-card:hover {
-  box-shadow: var(--shadow-md);
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: var(--space-2);
-}
-
-.card-header h3 {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--gray-800);
-  margin: 0;
-}
-
-.card-type {
-  font-size: 0.75rem;
-  padding: var(--space-1) var(--space-2);
-  background: var(--primary-50);
-  color: var(--primary-600);
-  border-radius: var(--radius-full);
-}
-
-.card-preview {
-  font-size: 0.875rem;
-  color: var(--gray-600);
-  margin: var(--space-2) 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.card-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.card-date {
-  font-size: 0.75rem;
-  color: var(--gray-500);
-}
-
-.card-actions {
-  display: flex;
-  gap: var(--space-3);
-}
-
-.btn-link {
-  font-size: 0.875rem;
-  color: var(--primary-600);
-  text-decoration: none;
-  font-weight: 500;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-}
-
-.btn-link:hover {
-  text-decoration: underline;
-}
-
-.btn-delete {
-  color: var(--error-600);
-}
-
-.load-more {
-  max-width: 1000px;
-  margin: var(--space-6) auto 0;
-  text-align: center;
-}
-
-.load-more button {
-  padding: var(--space-3) var(--space-6);
-  background: var(--primary-600);
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.load-more button:hover {
-  background: var(--primary-700);
-}
-
-.empty-state {
-  max-width: 400px;
-  margin: var(--space-12) auto;
-  text-align: center;
-  padding: var(--space-8);
-  background: var(--bg-secondary);
-  border-radius: var(--radius-xl);
-}
-
-.empty-state p {
-  color: var(--gray-600);
-  margin-bottom: var(--space-4);
-}
-
-.empty-state a {
-  display: inline-block;
-  padding: var(--space-3) var(--space-6);
-  background: var(--primary-600);
-  color: white;
-  border-radius: var(--radius-md);
-  text-decoration: none;
-  font-weight: 500;
-}
-
-/* ===== 历史详情页面 ===== */
-.detail-page {
-  min-height: 100vh;
-  background: var(--bg-primary);
-  padding: var(--space-6);
 }
 
 .detail-header {
