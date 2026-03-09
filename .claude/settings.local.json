@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(pip show:*)",
+      "Bash(python:*)",
+      "Bash(pip:*)",
+      "Bash(curl:*)",
+      "WebSearch",
+      "WebFetch(domain:help.aliyun.com)",
+      "Bash(npm run:*)",
+      "Bash(dir D:\\\\project\\\\zuoyebang:*)",
+      "Bash(dir D:\\\\project\\\\zuoyebang\\\\frontend:*)",
+      "Bash(dir D:\\\\project\\\\zuoyebang\\\\backend:*)",
+      "Bash(dir D:\\\\project\\\\zuoyebang\\\\frontend\\\\src:*)",
+      "Bash(git:*)",
+      "Bash(sqlite3:*)",
+      "Bash(npx wrangler:*)",
+      "Bash(zip:*)",
+      "Bash(powershell:*)",
+      "Bash(python3:*)",
+      "Bash(grep:*)"
+    ]
+  }
+}
