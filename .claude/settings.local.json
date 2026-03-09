@@ -19,7 +19,9 @@
       "Bash(zip:*)",
       "Bash(powershell:*)",
       "Bash(python3:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

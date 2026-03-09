@@ -1,6 +1,7 @@
 import dashscope
 import time
 import json
+import re
 from dashscope import Generation
 from config import DASHSCOPE_API_KEY, QWEN_MODEL
 from utils.logger import qwen_logger
@@ -20,7 +21,40 @@ def _truncate_for_log(text: str, max_length: int = 500) -> str:
     return text[:max_length] + f"... [共 {len(text)} 字符]"
 
 
-def generate_questions(user_prompt: str) -> str:
+def _parse_title_and_content(content: str) -> tuple[str, str]:
+    """解析 AI 返回的内容，提取标题和正文
+    返回：(标题，题目内容)
+    """
+    if not content:
+        return "AI 题目生成", ""
+
+    lines = content.split('\n', 1)
+    title_line = lines[0].strip()
+
+    # 检查是否有 TITLE: 前缀
+    match = re.match(r'^TITLE:\s*(.+)$', title_line, re.IGNORECASE)
+    if match:
+        title = match.group(1).strip()
+        # 限制标题长度
+        if len(title) > 100:
+            title = title[:100] + "..."
+        remaining_content = lines[1] if len(lines) > 1 else ""
+        return title, remaining_content.strip()
+
+    # 如果没有 TITLE 前缀，尝试从内容中提取标题
+    # 通常第一行是 Markdown 标题 # 开头
+    first_line_match = re.match(r'^#\s*(.+)$', title_line)
+    if first_line_match:
+        return first_line_match.group(1).strip(), content
+
+    # 默认标题
+    return "AI 题目生成", content
+
+
+def generate_questions(user_prompt: str) -> tuple[str, str]:
+    """生成题目
+    返回：(标题，题目内容)
+    """
     start_time = time.time()
     qwen_logger.info("=" * 60)
     qwen_logger.info("【AI 调用开始】generate_questions")
@@ -50,23 +84,26 @@ def generate_questions(user_prompt: str) -> str:
 10. 比较大小/填运算符格式：使用方括号 `[   ]`（至少 3 个空格），如 `13 [   ] 17` 或 `12 [   ] 3 = 9`（填"＋"或"－"）。
 11. 填空题格式：使用较长的下划线 `______`（至少 8 个下划线）或方框 `[     ]` 作为答题区域。
 12. 题目不要有看图的
-13. 填空题括号必须留足空格：`（     ）`（至少10 个空格）、`[     ]`（至少10 个空格）
+13. 填空题括号必须留足空格：`（     ）`（至少 10 个空格）、`[     ]`（至少 10 个空格）
 15. 应用题需要在题目下方留出答题区域，格式：在题目后另起一行写"列式计算：______"并留 2 行空白（使用 `<br><br>` 或空行），方便学生写算式
+16. **重要**：在输出内容的最前面，用一行单独的文本输出标题，格式为：`TITLE: 你的标题`（不超过 20 字），标题要能概括这份题目的内容，如"TITLE: 小学一年级 100 以内加减法混合运算"。
 
 用户需求占位：{user_prompt}
 
 示例输出（严格示范格式）：
 
-# 小学一年级 口算练习（示例）
+TITLE: 小学一年级 100 以内加减法混合运算
+
+# 小学一年级 口算练习
 1. 7 + 2 =（         ）
 2. 9 - 4 =（         ）
 3. 10 - 5 + 3 =（         ）
 4. 在 [   ] 里填上">""<"或"="：13 [   ] 17
 5. 在 ○ 里填"＋"或"－"，使等式成立：12 [   ] 3 = 9
-5. 小明有 8 个苹果，吃了 3 个，还剩几个？
+6. 小明有 8 个苹果，吃了 3 个，还剩几个？
    列式计算：______
 
-6. 填空题：5 前面的数是 ______，7 后面的数是 ______。
+7. 填空题：5 前面的数是 ______，7 后面的数是 ______。
 ...
 10. 15 - 7 =（        ）
 11. 6 + 9 =（        ）
@@ -140,4 +177,8 @@ def generate_questions(user_prompt: str) -> str:
     qwen_logger.info("【AI 调用结束】")
     qwen_logger.info("=" * 60)
 
-    return content or ""
+    # 解析标题和内容
+    title, questions_content = _parse_title_and_content(content or "")
+    qwen_logger.info(f"[解析结果] 标题：{title}")
+
+    return title, questions_content

@@ -2,7 +2,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import questions, auth, extend
+from routers import questions, auth, extend, history
 
 app = FastAPI(title="好学生 AI 题库生成器 API")
 
@@ -20,6 +20,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(questions.router)
 app.include_router(extend.router)
+app.include_router(history.router)
 
 
 @app.get("/")

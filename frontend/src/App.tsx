@@ -1,11 +1,15 @@
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect, useCallback } from 'react'
 import { getToken, clearToken } from './auth'
 import LoginPage from './LoginPage'
 import MainContent from './MainContent'
+import HistoryList from './HistoryList'
+import HistoryDetail from './HistoryDetail'
+import SharePage from './SharePage'
 
 const API_BASE = '/api'
 
-export default function App() {
+function AppContent() {
   const [user, setUser] = useState<string | null>(null)
   const [checking, setChecking] = useState(true)
 
@@ -59,9 +63,24 @@ export default function App() {
     )
   }
 
-  if (!user) {
-    return <LoginPage onSuccess={fetchUser} />
-  }
+  return (
+    <Routes>
+      {/* 公开分享页面 - 无需登录 */}
+      <Route path="/share/h/:id" element={<SharePage />} />
 
-  return <MainContent email={user} onLogout={handleLogout} />
+      {/* 需要登录的页面 */}
+      <Route path="/" element={user ? <MainContent email={user} onLogout={handleLogout} fetchUser={fetchUser} /> : <Navigate to="/login" />} />
+      <Route path="/login" element={user ? <Navigate to="/" /> : <LoginPage onSuccess={fetchUser} />} />
+      <Route path="/history" element={user ? <HistoryList /> : <Navigate to="/login" />} />
+      <Route path="/history/:id" element={user ? <HistoryDetail /> : <Navigate to="/login" />} />
+    </Routes>
+  )
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
+  )
 }

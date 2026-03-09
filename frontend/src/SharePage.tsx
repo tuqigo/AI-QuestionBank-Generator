@@ -1,0 +1,81 @@
+import { useState, useEffect } from 'react'
+import { useParams, useSearchParams, Link } from 'react-router-dom'
+import { marked } from 'marked'
+import { getSharedRecord } from '@/api/history'
+import type { QuestionRecord } from '@/types'
+
+export default function SharePage() {
+  const { id } = useParams<{ id: string }>()
+  const [searchParams] = useSearchParams()
+  const token = searchParams.get('token') || ''
+
+  const [record, setRecord] = useState<QuestionRecord | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (!id || !token) {
+      setError('无效的分享链接')
+      setLoading(false)
+      return
+    }
+
+    getSharedRecord(parseInt(id), token)
+      .then((data: QuestionRecord) => setRecord(data))
+      .catch((err: unknown) => {
+        console.error('加载失败:', err)
+        setError('分享记录不存在或链接已失效')
+      })
+      .finally(() => setLoading(false))
+  }, [id, token])
+
+  if (loading) {
+    return (
+      <div className="share-page">
+        <div className="loading">加载中...</div>
+      </div>
+    )
+  }
+
+  if (error || !record) {
+    return (
+      <div className="share-page">
+        <div className="error-card">
+          <h2>❌ {error || '记录不存在'}</h2>
+          <p>该分享链接可能已失效或记录已被删除</p>
+          <div className="auth-hint">
+            <p>想生成属于自己的题目吗？</p>
+            <Link to="/login" className="btn-primary">登录 / 注册</Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const questionsHtml = marked(record.ai_response)
+
+  return (
+    <div className="share-page">
+      <div className="share-header">
+        <h1>{record.title}</h1>
+        <span className="share-badge">分享题目</span>
+      </div>
+
+      <div className="share-meta">
+        <span>创建时间：{new Date(record.created_at).toLocaleString('zh-CN')}</span>
+      </div>
+
+      <div className="share-content markdown-body">
+        <div dangerouslySetInnerHTML={{ __html: questionsHtml as string }} />
+      </div>
+
+      <div className="share-footer">
+        <p>想生成属于自己的题目吗？</p>
+        <div className="share-actions">
+          <Link to="/login" className="btn-primary">登录 / 注册</Link>
+          <Link to="/" className="btn-secondary">返回首页</Link>
+        </div>
+      </div>
+    </div>
+  )
+}
