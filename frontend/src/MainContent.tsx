@@ -41,12 +41,12 @@ const loadMathJax = (): Promise<void> => {
 const API_BASE = '/api'
 
 const SHORTCUTS = [
-  { label: '口算题', prompt: '小学一年级数学 30 以内加减法 10 道，带答案', icon: '🔢' },
-  { label: '填空题', prompt: '小学一年级语文 看拼音写汉字 10 道，带答案', icon: '📝' },
-  { label: '应用题', prompt: '小学二年级数学 简单应用题 10 道，带答案', icon: '📚' },
-  { label: '选择题', prompt: '小学三年级数学 选择题 10 道，带答案', icon: '✅' },
-  { label: '阅读理解', prompt: '小学四年级语文 阅读理解 2 篇，每篇 3 道题，带答案', icon: '📖' },
-  { label: '英语题', prompt: '小学三年级英语 单词翻译选择题 10 道，带答案', icon: '🔤' },
+  { label: '口算题', prompt: '小学一年级数学 30 以内加减法 10 道', icon: '🔢' },
+  { label: '综合题', prompt: '小学六年级 数学综合练习（分数运算、百分数、圆、比例、统计）', icon: '📝' },
+  { label: '应用题', prompt: '小学二年级数学 简单应用题 10 道', icon: '📚' },
+  { label: '选择题', prompt: '小学三年级数学 选择题 10 道', icon: '✅' },
+  { label: '阅读理解', prompt: '小学四年级语文 阅读理解 2 篇，每篇 3 道题', icon: '📖' },
+  { label: '英语题', prompt: '小学三年级英语 单词翻译选择题 10 道', icon: '🔤' },
 ]
 
 interface Props {
