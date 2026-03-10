@@ -53,7 +53,17 @@ def _parse_title_and_content(content: str) -> Tuple[str, str]:
 
 def generate_questions(user_prompt: str) -> Tuple[str, str]:
     """生成题目（同步版本，用于向后兼容）"""
-    return asyncio.run(generate_questions_async(user_prompt))
+    try:
+        # 检查是否已经在运行事件循环中
+        loop = asyncio.get_running_loop()
+        # 如果在事件循环中，使用 nest_asyncio 或创建新线程
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(asyncio.run, generate_questions_async(user_prompt))
+            return future.result()
+    except RuntimeError:
+        # 没有运行的事件循环，直接使用 asyncio.run
+        return asyncio.run(generate_questions_async(user_prompt))
 
 
 async def generate_questions_async(user_prompt: str) -> Tuple[str, str]:
