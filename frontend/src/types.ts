@@ -34,9 +34,11 @@ declare global {
         displayMath: string[][]
         processEscapes: boolean
         processEnvironments: boolean
+        packages?: string[]
       }
       options: {
         skipHtmlTags: string[]
+        ignoreHtmlClass?: string
       }
       svg: {
         fontCache: string
