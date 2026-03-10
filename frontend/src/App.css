@@ -1281,6 +1281,50 @@ small {
   font-size: 0.875rem;
 }
 
+.share-link-display {
+  max-width: 1000px;
+  margin: 0 auto var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--success-50);
+  border: 1px solid var(--success-200);
+  border-radius: var(--radius-md);
+  color: var(--success-700);
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.share-link-display a {
+  color: var(--primary-600);
+  text-decoration: none;
+  word-break: break-all;
+  flex: 1;
+  min-width: 200px;
+}
+
+.share-link-display a:hover {
+  text-decoration: underline;
+}
+
+.btn-copy {
+  padding: var(--space-1) var(--space-3);
+  background: var(--primary-600);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-copy:hover {
+  background: var(--primary-700);
+}
+
 /* ===== 分享页面 ===== */
 .share-page {
   min-height: 100vh;

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { renderMarkdown } from '@/utils/markdownProcessor'
-import { getHistoryDetail, deleteHistory, createShareUrl } from '@/api/history'
+import { getHistoryDetail, createShareUrl } from '@/api/history'
 import { handlePrint as printUtilsHandlePrint } from '@/utils/printUtils'
 import type { QuestionRecord } from '@/types'
 
@@ -84,17 +84,6 @@ export default function HistoryDetail() {
     }
   }, [record])
 
-  const handleDelete = async () => {
-    if (!confirm('确定要删除这条记录吗？')) return
-    if (!id) return
-    try {
-      await deleteHistory(parseInt(id))
-      navigate('/history')
-    } catch (err) {
-      alert('删除失败')
-    }
-  }
-
   const handleShare = async () => {
     if (!id) return
     try {
@@ -103,7 +92,6 @@ export default function HistoryDetail() {
       // 复制到剪贴板
       const fullUrl = window.location.origin + url
       await navigator.clipboard.writeText(fullUrl)
-      alert('分享链接已复制到剪贴板')
     } catch (err) {
       alert('生成分享链接失败')
     }
@@ -139,14 +127,23 @@ export default function HistoryDetail() {
         <div className="detail-actions">
           <button onClick={handlePrint} className="btn-action">打印</button>
           <button onClick={handleShare} className="btn-action">分享</button>
-          <button onClick={handleDelete} className="btn-action btn-delete">删除</button>
           <Link to="/" className="btn-back">返回首页</Link>
         </div>
       </div>
 
       {shareUrl && (
-        <div className="share-hint">
-          分享链接：{window.location.origin}{shareUrl}
+        <div className="share-link-display">
+          <span>分享链接：</span>
+          <a href={shareUrl} target="_blank" rel="noopener noreferrer">{window.location.origin}{shareUrl}</a>
+          <button
+            onClick={async () => {
+              await navigator.clipboard.writeText(window.location.origin + shareUrl)
+              alert('链接已复制到剪贴板')
+            }}
+            className="btn-copy"
+          >
+            复制链接
+          </button>
         </div>
       )}
 

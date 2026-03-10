@@ -178,8 +178,11 @@ async def create_share_url(
 
 
 @router.get("/share/{record_id}", response_model=QuestionRecordResponse)
-async def get_share_record(record_id: int, token: str = Query(...)):
+async def get_share_record(record_id: int, token: Optional[str] = Query(None)):
     """通过分享链接获取记录（无需登录）"""
+    if not token:
+        raise HTTPException(status_code=404, detail="分享链接无效：缺少 token 参数")
+
     record = get_record_by_share_token(token)
     if not record:
         raise HTTPException(status_code=404, detail="记录不存在或分享链接无效")
