@@ -87,12 +87,15 @@ async def generate_questions_async(user_prompt: str) -> Tuple[str, str]:
     qwen_logger.info("[API 调用] 开始调用千问 API...")
     api_start = time.time()
 
-    # 使用 asyncio.to_thread 将同步调用放入线程池
-    response = await asyncio.to_thread(
-        Generation.call,
-        model=QWEN_MODEL,
-        messages=messages,
-        result_format="message",
+    # 使用 loop.run_in_executor 将同步调用放入线程池（Python 3.8 兼容）
+    loop = asyncio.get_event_loop()
+    response = await loop.run_in_executor(
+        None,  # 使用默认线程池
+        lambda: Generation.call(
+            model=QWEN_MODEL,
+            messages=messages,
+            result_format="message",
+        )
     )
 
     api_elapsed = time.time() - api_start
