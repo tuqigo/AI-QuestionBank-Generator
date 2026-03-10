@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 
@@ -36,7 +36,7 @@ class QuestionRecordResponse(BaseModel):
 
 class QuestionRecordListResponse(BaseModel):
     """题目记录列表响应（游标分页）"""
-    data: list[QuestionRecordResponse]
+    data: List[QuestionRecordResponse]
     next_cursor: Optional[int] = None
     has_more: bool = False
 
