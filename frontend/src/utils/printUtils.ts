@@ -20,6 +20,14 @@ export function countQuestions(questions: string): number {
   return matches ? matches.length : 0
 }
 
+// 定义一个辅助函数来清理答案文本
+function cleanAnswerText(text: string) {
+  if (!text) return '';
+  // 使用正则表达式全局替换 "## 答案"（包括可能的前后空格）
+  // 正则中的 \\s* 匹配0个或多个空白字符（空格、制表符等）
+  return text.replace(/\s*## 答案\s*/g, '');
+}
+
 /**
  * 打印试卷
  * @param markdown - 完整的 markdown 内容
@@ -37,7 +45,8 @@ export const handlePrint = async (markdown: string, titleText?: string) => {
   // 移除题目中的# 标题，避免重复显示
   const questionsWithoutTitle = questions.replace(/^#\s+(.+)$/gm, '').trim()
   const questionsHtml = renderMarkdown(questionsWithoutTitle)
-  const answersHtml = answers ? renderMarkdown(answers) : ''
+  // 清理文本后再调用 renderMarkdown
+  const answersHtml = answers ? renderMarkdown(cleanAnswerText(answers)) : '';
 
   // 创建打印专用容器
   const printContainer = document.createElement('div')
@@ -53,7 +62,7 @@ export const handlePrint = async (markdown: string, titleText?: string) => {
     </div>
   `
   const contentHtml = answers
-    ? `${titleHtml}${infoFields}<div class="print-questions">${questionsHtml}</div><div class="print-page-break"></div><h2 class="print-answers-title">答案</h2><div class="print-answers">${answersHtml}</div>`
+    ? `${titleHtml}${infoFields}<div class="print-questions">${questionsHtml}</div><div class="print-page-break"></div><h2 class="print-answers-title">${defaultTitleText}-答案</h2><div class="print-answers">${answersHtml}</div>`
     : `${titleHtml}${infoFields}<div class="print-questions">${questionsHtml}</div>`
 
   printContainer.innerHTML = contentHtml
