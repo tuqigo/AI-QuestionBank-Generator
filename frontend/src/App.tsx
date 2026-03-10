@@ -5,6 +5,7 @@ import LoginPage from './LoginPage'
 import MainContent from './MainContent'
 import HistoryDetail from './HistoryDetail'
 import SharePage from './SharePage'
+import AdminApp from './admin/App'
 
 const API_BASE = '/api'
 
@@ -64,6 +65,9 @@ function AppContent() {
 
   return (
     <Routes>
+      {/* 管理后台 */}
+      <Route path="/admin/*" element={<AdminApp />} />
+
       {/* 公开分享页面 - 无需登录 */}
       <Route path="/share/h/:id" element={<SharePage />} />
 

@@ -30,9 +30,18 @@ def _init_db():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 email TEXT UNIQUE NOT NULL,
                 hashed_password TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                is_disabled INTEGER DEFAULT 0
             )
         """)
+        # 检查是否需要添加 is_disabled 列（兼容已有数据库）
+        try:
+            conn.execute("ALTER TABLE users ADD COLUMN is_disabled INTEGER DEFAULT 0")
+            conn.commit()
+            user_logger.info("为用户表添加 is_disabled 列成功")
+        except Exception:
+            # 列已存在，忽略
+            pass
         conn.commit()
         user_logger.info("数据库表初始化完成")
     finally:
@@ -136,5 +145,100 @@ def get_user_by_id(user_id: int) -> Optional[UserInDB]:
         else:
             user_logger.warning(f"用户不存在：ID={user_id}")
             return None
+    finally:
+        conn.close()
+
+
+def get_user_by_id_with_status(user_id: int) -> Optional[dict]:
+    """根据 ID 查询用户（含状态）"""
+    user_logger.info(f"根据 ID 查询用户（含状态）：{user_id}")
+    conn = _get_connection()
+    try:
+        cursor = conn.execute(
+            "SELECT id, email, created_at, is_disabled FROM users WHERE id = ?",
+            (user_id,)
+        )
+        row = cursor.fetchone()
+        if row:
+            user_logger.info(f"用户存在：ID={user_id}")
+            return {
+                "id": row["id"],
+                "email": row["email"],
+                "created_at": row["created_at"],
+                "is_disabled": bool(row["is_disabled"])
+            }
+        else:
+            user_logger.warning(f"用户不存在：ID={user_id}")
+            return None
+    finally:
+        conn.close()
+
+
+def get_all_users(
+    page: int = 1,
+    page_size: int = 20
+) -> tuple[list[dict], int, bool]:
+    """获取所有用户列表（分页）
+    返回：(用户列表，总数，是否有更多)
+    """
+    user_logger.info(f"获取用户列表：page={page}, page_size={page_size}")
+    conn = _get_connection()
+    try:
+        # 计算总数
+        count_row = conn.execute(
+            "SELECT COUNT(*) as cnt FROM users"
+        ).fetchone()
+        total = count_row["cnt"] if count_row else 0
+
+        # 分页查询
+        offset = (page - 1) * page_size
+        rows = conn.execute(
+            """
+            SELECT id, email, created_at, is_disabled
+            FROM users
+            ORDER BY id DESC
+            LIMIT ? OFFSET ?
+            """,
+            (page_size, offset)
+        ).fetchall()
+
+        users = []
+        for row in rows:
+            users.append({
+                "id": row["id"],
+                "email": row["email"],
+                "created_at": row["created_at"],
+                "is_disabled": bool(row["is_disabled"])
+            })
+
+        has_more = offset + len(rows) < total
+
+        return users, total, has_more
+    except Exception as e:
+        user_logger.error(f"获取用户列表失败：{e}")
+        return [], 0, False
+    finally:
+        conn.close()
+
+
+def set_user_disabled(user_id: int, is_disabled: bool) -> bool:
+    """设置用户禁用状态"""
+    user_logger.info(f"设置用户禁用状态：user_id={user_id}, is_disabled={is_disabled}")
+    conn = _get_connection()
+    try:
+        cursor = conn.execute(
+            "UPDATE users SET is_disabled = ? WHERE id = ?",
+            (1 if is_disabled else 0, user_id)
+        )
+        conn.commit()
+        if cursor.rowcount > 0:
+            user_logger.info(f"用户状态更新成功：user_id={user_id}")
+            return True
+        else:
+            user_logger.warning(f"用户不存在：user_id={user_id}")
+            return False
+    except Exception as e:
+        user_logger.error(f"更新用户状态失败：{e}")
+        return False
     finally:
         conn.close()
