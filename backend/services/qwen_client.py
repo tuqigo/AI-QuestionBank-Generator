@@ -3,23 +3,11 @@ import time
 import json
 import re
 from dashscope import Generation
-from config import DASHSCOPE_API_KEY, QWEN_MODEL
+from config import DASHSCOPE_API_KEY, QWEN_MODEL, QUESTION_SYSTEM_PROMPT, QUESTION_PROMPT_TEMPLATE
 from utils.logger import qwen_logger
 
 # 全局设置 API key
 dashscope.api_key = DASHSCOPE_API_KEY
-
-SYSTEM_PROMPT = """你是小学 1 到 6 年级的题库生成专家，要根据用户需求生成题目。题目类型、难度必须符合用户指定的年级，输出用 Markdown 格式，包含题目、选项和答案。要是用户没说题目数量，就默认生成 15 道。请先输出全部题目，最后用 ## 答案 单独一段列出所有答案。
-
-重要格式要求：
-1. 数学公式必须使用 LaTeX 格式，用 $ 包裹，例如：$\\frac{3}{4}$、$\\pi \\approx 3.14$、$1.2 \\times 0.5$
-2. 填空题使用（         ）或 [   ] 作为答题区域
-3. 判断题使用（     ）打"√"或"×"
-4. 比较大小使用 [   ] 填">""<"或"="
-5. 题号格式：1. 2. 3. （阿拉伯数字加英文句点）
-6. 不要使用 html2pdf 或截图相关的格式，只需要纯文本 Markdown
-7. 输出不要包含任何生成模型、API 或调试信息
-"""
 
 
 def _truncate_for_log(text: str, max_length: int = 500) -> str:
@@ -78,62 +66,15 @@ def generate_questions(user_prompt: str) -> tuple[str, str]:
         qwen_logger.error("DASHSCOPE_API_KEY 未配置")
         raise ValueError("DASHSCOPE_API_KEY 未配置，请在 .env 中设置")
 
-    user_content = f"""
-你是小学 1–6 年级题库生成专家。任务：根据用户的输入需求生成练习题并以 Markdown 输出，便于前端直接渲染与打印。
-
-要求：
-1. 题型、难度必须与目标年级严格匹配（若用户未指定年级，默认按一年级出题）。
-2. 若用户未指定题目数量，默认生成 15 道题；若指定数量则按数量生成。
-3. 支持题型：选择题、填空题、判断题、计算题（含竖式）、应用题等。
-4. 数学公式必须使用 LaTeX 格式，用 $ 包裹，例如：$\\frac{{3}}{{4}}$、$\\pi \\approx 3.14$、$1.2 \\times 0.5$、$\\frac{{2}}{{5}} + \\frac{{1}}{{3}}$
-5. 填空题：使用（         ）或 [   ] 作为答题区域，至少留 8 个空格
-6. 判断题：使用（     ）让学⽣打"√"或"×"
-7. ⽐较⼤⼩：使⽤ [   ] 让学⽣填">""<"或"="，如：$\\frac{{5}}{{6}}$ [   ] 0.85
-8. 选择题选项：每个选项单独⼀⾏，⼤写字⺟加英文句点，如"A. 选项内容"
-9. 答案不出现在题目部分，所有题⽬之后再单独输出"答案"页，答案前⽤ <!-- PAGE_BREAK --> 分隔
-10. 输出不要包含任何生成模型、API 或调试信息
-11. 输出语⾔为中文，格式严格遵循 Markdown
-12. 题号格式：使⽤阿拉伯数字加英文句点，如"1."、"2."、"10."，题号与题干之间⽤⼀个空格分隔
-13. 在输出内容的最前⾯，⽤⼀⾏单独的⽂本输出标题，格式为：TITLE: 你的标题（不超过 30 字）
-
-⽤户需求占位：{user_prompt}
-
-⽰例输出（严格示范格式）：
-
-TITLE: ⼩学六年级 数学综合练习（分数、⼩数、圆周率）
-
-# ⼩学六年级 数学综合练习（分数、⼩数、圆周率）
-
-1. 把分数 $\\frac{{3}}{{4}}$ 化成⼩数是（         ）
-2. 0.625 写成最简分数是（         ）
-3. 计算：$\\frac{{2}}{{5}} + \\frac{{1}}{{3}} = $（         ）（结果⽤最简分数表示）
-4. 计算：$1.2 \\times 0.5 = $（         ）
-5. 圆的直径是 8 cm，它的周长是（         ）cm。（取 $\\pi \\approx 3.14$）
-6. 判断题：$\\frac{{7}}{{14}} = 0.5$。（     ）（对的打"√"，错的打"×"）
-7. 在 [   ] ⾥填上">""<"或"＝"：$\\frac{{5}}{{6}}$ [   ] 0.85
-8. ⼀个圆的半径是 5 cm，它的⾯积是（         ）cm²。（取 $\\pi \\approx 3.14$）
-
-<!-- PAGE_BREAK -->
-
-## 答案（单独⼀⻚）
-1. 0.75  难度：简单
-2. $\\frac{{5}}{{8}}$  难度：中等
-3. $\\frac{{11}}{{15}}$  难度：中等
-4. 0.6  难度：简单
-5. 25.12  难度：中等
-6. √  难度：简单
-7. ＞  难度：中等
-8. 78.5  难度：困难
-
-"""
+    user_content = QUESTION_PROMPT_TEMPLATE.format(user_prompt=user_prompt)
     messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": QUESTION_SYSTEM_PROMPT},
         {"role": "user", "content": user_content},
     ]
 
     # 记录完整的请求信息
     qwen_logger.info(f"[调用模型] {QWEN_MODEL}")
-    qwen_logger.info(f"[System Prompt] {_truncate_for_log(SYSTEM_PROMPT, 300)}")
+    qwen_logger.info(f"[System Prompt] {_truncate_for_log(QUESTION_SYSTEM_PROMPT, 300)}")
     qwen_logger.info(f"[User Prompt 完整内容] {_truncate_for_log(user_content, 800)}")
     qwen_logger.info(f"[Messages 结构] {json.dumps(messages, ensure_ascii=False)[:2000]}...")
 
