@@ -108,3 +108,5 @@ JWT_SECRET=your-random-secret
   - Python - snake_case
   - TypeScript - camelCase/PascalCase
 
+## 重要 python版本3.8
+

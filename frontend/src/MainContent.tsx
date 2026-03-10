@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { renderMarkdown } from './utils/markdownProcessor'
+import { handlePrint as printUtilsHandlePrint, countQuestions, splitQuestionsAndAnswers } from './utils/printUtils'
 import type { GenerateResponse } from './types'
 import { fetchWithAuth, clearToken } from './auth'
 import HistoryDropdown from './HistoryList'
@@ -47,24 +48,6 @@ const SHORTCUTS = [
   { label: '阅读理解', prompt: '小学四年级语文 阅读理解 2 篇，每篇 3 道题，带答案', icon: '📖' },
   { label: '英语题', prompt: '小学三年级英语 单词翻译选择题 10 道，带答案', icon: '🔤' },
 ]
-
-function splitQuestionsAndAnswers(md: string): { questions: string; answers: string | null } {
-  const idx = md.indexOf('## 答案')
-  if (idx === -1) return { questions: md, answers: null }
-  const questions = md.slice(0, idx).trim().replace(/<!--\s*PAGE_BREAK\s*-->/g, '')
-  const answers = md.slice(idx).trim().replace(/<!--\s*PAGE_BREAK\s*-->/g, '')
-  return { questions, answers }
-}
-
-/**
- * 计算题目数量 - 匹配行首数字加点号的格式
- */
-function countQuestions(questions: string): number {
-  if (!questions || typeof questions !== 'string') return 0
-  const matches = questions.match(/^\d+\./gm)
-  return matches ? matches.length : 0
-}
-
 
 interface Props {
   email: string
@@ -144,54 +127,11 @@ export default function MainContent({ email, onLogout }: Props) {
   }
 
   /**
-   * 打印功能 - 使用浏览器原生打印，MathJax SVG 渲染保证质量
+   * 打印功能 - 使用统一打印工具
    */
   const handlePrint = async () => {
     if (!markdown) return
-
-    const { questions, answers } = splitQuestionsAndAnswers(markdown)
-
-    // 提取 AI 生成的标题
-    const titleMatch = questions.match(/^#\s+(.+)$/m)
-    const titleText = titleMatch ? titleMatch[1] : '练习题'
-
-    // 移除题目中的# 标题，避免重复显示
-    const questionsWithoutTitle = questions.replace(/^#\s+(.+)$/gm, '').trim()
-    const questionsHtml = renderMarkdown(questionsWithoutTitle)
-    const answersHtml = answers ? renderMarkdown(answers) : ''
-
-    // 创建打印专用容器
-    const printContainer = document.createElement('div')
-    printContainer.id = 'print-container'
-    printContainer.className = 'print-paper'
-
-    const titleHtml = `<h1 class="print-title">${titleText}</h1>`
-    const infoFields = `
-      <div class="print-info-fields">
-        <span>姓名：__________________</span>
-        <span>班级：__________________</span>
-        <span>得分：__________________</span>
-      </div>
-    `
-    const contentHtml = answers
-      ? `${titleHtml}${infoFields}<div class="print-questions">${questionsHtml}</div><div class="print-page-break"></div><h2 class="print-answers-title">答案</h2><div class="print-answers">${answersHtml}</div>`
-      : `${titleHtml}${infoFields}<div class="print-questions">${questionsHtml}</div>`
-
-    printContainer.innerHTML = contentHtml
-    document.body.appendChild(printContainer)
-
-    // 等待 MathJax 重新渲染打印容器中的公式
-    if (window.MathJax && window.MathJax.typesetPromise) {
-      await window.MathJax.typesetPromise([printContainer])
-    }
-
-    // 调用浏览器打印
-    window.print()
-
-    // 打印完成后移除容器
-    setTimeout(() => {
-      document.body.removeChild(printContainer)
-    }, 500)
+    await printUtilsHandlePrint(markdown)
   }
 
   const { questions, answers } = splitQuestionsAndAnswers(markdown)

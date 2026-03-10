@@ -2,16 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { renderMarkdown } from '@/utils/markdownProcessor'
 import { getHistoryDetail, deleteHistory, createShareUrl } from '@/api/history'
+import { handlePrint as printUtilsHandlePrint } from '@/utils/printUtils'
 import type { QuestionRecord } from '@/types'
-
-// 分割题目和答案
-function splitQuestionsAndAnswers(md: string): { questions: string; answers: string | null } {
-  const idx = md.indexOf('## 答案')
-  if (idx === -1) return { questions: md, answers: null }
-  const questions = md.slice(0, idx).trim().replace(/<!--\s*PAGE_BREAK\s*-->/g, '')
-  const answers = md.slice(idx).trim().replace(/<!--\s*PAGE_BREAK\s*-->/g, '')
-  return { questions, answers }
-}
 
 // 加载 MathJax SVG 脚本
 const loadMathJax = (): Promise<void> => {
@@ -118,54 +110,11 @@ export default function HistoryDetail() {
   }
 
   /**
-   * 打印功能 - 使用浏览器原生打印，MathJax SVG 渲染保证质量
+   * 打印功能 - 使用统一打印工具
    */
   const handlePrint = async () => {
     if (!record) return
-
-    const { questions, answers } = splitQuestionsAndAnswers(record.ai_response)
-
-    // 提取 AI 生成的标题
-    const titleMatch = questions.match(/^#\s+(.+)$/m)
-    const titleText = titleMatch ? titleMatch[1] : record.title
-
-    // 移除题目中的# 标题，避免重复显示
-    const questionsWithoutTitle = questions.replace(/^#\s+(.+)$/gm, '').trim()
-    const questionsHtml = renderMarkdown(questionsWithoutTitle)
-    const answersHtml = answers ? renderMarkdown(answers) : ''
-
-    // 创建打印专用容器
-    const printContainer = document.createElement('div')
-    printContainer.id = 'print-container'
-    printContainer.className = 'print-paper'
-
-    const titleHtml = `<h1 class="print-title">${titleText}</h1>`
-    const infoFields = `
-      <div class="print-info-fields">
-        <span>姓名：__________________</span>
-        <span>班级：__________________</span>
-        <span>得分：__________________</span>
-      </div>
-    `
-    const contentHtml = answers
-      ? `${titleHtml}${infoFields}<div class="print-questions">${questionsHtml}</div><div class="print-page-break"></div><h2 class="print-answers-title">答案</h2><div class="print-answers">${answersHtml}</div>`
-      : `${titleHtml}${infoFields}<div class="print-questions">${questionsHtml}</div>`
-
-    printContainer.innerHTML = contentHtml
-    document.body.appendChild(printContainer)
-
-    // 等待 MathJax 重新渲染打印容器中的公式
-    if (window.MathJax && window.MathJax.typesetPromise) {
-      await window.MathJax.typesetPromise([printContainer])
-    }
-
-    // 调用浏览器打印
-    window.print()
-
-    // 打印完成后移除容器
-    setTimeout(() => {
-      document.body.removeChild(printContainer)
-    }, 500)
+    await printUtilsHandlePrint(record.ai_response)
   }
 
   if (loading) {
