@@ -444,7 +444,7 @@ export default function MainContent({ email, onLogout }: Props) {
                   type="button"
                   className="btn-icon-action"
                   onClick={handlePrint}
-                  title="打印试卷（可另存为 PDF）"
+                  title="打印题目（可另存为 PDF）"
                 >
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <polyline points="6,9 6,2 18,2 18,9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

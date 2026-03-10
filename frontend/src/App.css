@@ -957,6 +957,11 @@ small {
   font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif;
 }
 
+/* 屏幕模式下隐藏打印容器 - 但允许 PDF 容器用于生成 PDF */
+#print-container {
+  display: none;
+}
+
 .print-title {
   text-align: center;
   font-size: 18px;
@@ -1006,7 +1011,7 @@ small {
   line-height: 1.8;
 }
 
-/* 打印样式 */
+/* 打印样式 - 屏幕打印模式 */
 @media print {
   @page {
     size: A4;
@@ -1034,6 +1039,7 @@ small {
   }
 
   #print-container {
+    display: block !important;
     position: absolute;
     top: 0;
     left: 0;
