@@ -11,15 +11,18 @@ const loadMathJax = (): Promise<void> => {
       resolve()
       return
     }
+    // 先设置配置
     window.MathJax = {
       tex: {
         inlineMath: [['$', '$'], ['\\(', '\\)']],
         displayMath: [['$$', '$$'], ['\\[', '\\]']],
         processEscapes: false,
-        processEnvironments: false
+        processEnvironments: true,
+        packages: ['base', 'ams', 'require']
       },
       options: {
-        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+        ignoreHtmlClass: 'tex2jax_ignore'
       },
       svg: {
         fontCache: 'global'

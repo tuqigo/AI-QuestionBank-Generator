@@ -20,10 +20,12 @@ const loadMathJax = (): Promise<void> => {
         inlineMath: [['$', '$'], ['\\(', '\\)']],
         displayMath: [['$$', '$$'], ['\\[', '\\]']],
         processEscapes: false,
-        processEnvironments: false
+        processEnvironments: true,
+        packages: ['base', 'ams', 'require']
       },
       options: {
-        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+        ignoreHtmlClass: 'tex2jax_ignore'
       },
       svg: {
         fontCache: 'global'
@@ -217,7 +219,7 @@ export default function MainContent({ email, onLogout }: Props) {
                 <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
-            <h1>好学生 AI 题库生成器</h1>
+            <h1>好学生AI题库</h1>
           </div>
           <div className="header-right">
             <div

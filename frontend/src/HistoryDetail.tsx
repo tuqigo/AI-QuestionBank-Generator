@@ -18,10 +18,12 @@ const loadMathJax = (): Promise<void> => {
         inlineMath: [['$', '$'], ['\\(', '\\)']],
         displayMath: [['$$', '$$'], ['\\[', '\\]']],
         processEscapes: false,
-        processEnvironments: false
+        processEnvironments: true,
+        packages: ['base', 'ams', 'require']
       },
       options: {
-        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+        ignoreHtmlClass: 'tex2jax_ignore'
       },
       svg: {
         fontCache: 'global'
