@@ -4,6 +4,7 @@ import base64
 import time
 import json
 import os
+from typing import Tuple
 from dashscope import MultiModalConversation
 from requests.exceptions import SSLError, RequestException
 
@@ -118,7 +119,7 @@ def recognize_question_from_image(image_base64: str, image_media_type: str = "jp
     return text.strip()
 
 
-def extend_questions_from_image(image_base64: str, image_media_type: str = "jpeg", hint: str = "") -> tuple[str, str]:
+def extend_questions_from_image(image_base64: str, image_media_type: str = "jpeg", hint: str = "") -> Tuple[str, str]:
     """识别图片题目并生成同类型扩展题
     返回：(标题，题目内容)
     """

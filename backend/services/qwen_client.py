@@ -3,6 +3,7 @@ import time
 import json
 import re
 import asyncio
+from typing import Tuple
 from dashscope import Generation
 from config import DASHSCOPE_API_KEY, QWEN_MODEL, QUESTION_SYSTEM_PROMPT, QUESTION_PROMPT_TEMPLATE
 from utils.logger import qwen_logger
@@ -20,7 +21,7 @@ def _truncate_for_log(text: str, max_length: int = 500) -> str:
     return text[:max_length] + f"... [共 {len(text)} 字符]"
 
 
-def _parse_title_and_content(content: str) -> tuple[str, str]:
+def _parse_title_and_content(content: str) -> Tuple[str, str]:
     """解析 AI 返回的内容，提取标题和正文
     返回：(标题，题目内容)
     """
@@ -50,12 +51,12 @@ def _parse_title_and_content(content: str) -> tuple[str, str]:
     return "AI 题目生成", content
 
 
-def generate_questions(user_prompt: str) -> tuple[str, str]:
+def generate_questions(user_prompt: str) -> Tuple[str, str]:
     """生成题目（同步版本，用于向后兼容）"""
     return asyncio.run(generate_questions_async(user_prompt))
 
 
-async def generate_questions_async(user_prompt: str) -> tuple[str, str]:
+async def generate_questions_async(user_prompt: str) -> Tuple[str, str]:
     """生成题目（异步版本）"""
     start_time = time.time()
     qwen_logger.info("=" * 60)
