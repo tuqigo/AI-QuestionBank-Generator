@@ -1,13 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { marked } from 'marked'
-import { renderMarkdown, renderMarkdownForPrinting, renderMarkdownForPdf } from './utils/markdownProcessor'
+import { renderMarkdown } from './utils/markdownProcessor'
 import type { GenerateResponse } from './types'
 import { fetchWithAuth, clearToken } from './auth'
 import HistoryDropdown from './HistoryList'
 import './App.css'
 
-// 加载 MathJax 脚本
+// 加载 MathJax SVG 脚本（用于打印质量最高的公式渲染）
 const loadMathJax = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     if (window.MathJax) {
@@ -24,13 +23,16 @@ const loadMathJax = (): Promise<void> => {
       },
       options: {
         skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      },
+      svg: {
+        fontCache: 'global'
       }
     }
     const script = document.createElement('script')
-    script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'
+    script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js'
     script.async = true
     script.onload = () => resolve()
-    script.onerror = () => reject(new Error('Failed to load MathJax'))
+    script.onerror = () => reject(new Error('Failed to load MathJax SVG'))
     document.head.appendChild(script)
   })
 }
@@ -49,7 +51,6 @@ const SHORTCUTS = [
 function splitQuestionsAndAnswers(md: string): { questions: string; answers: string | null } {
   const idx = md.indexOf('## 答案')
   if (idx === -1) return { questions: md, answers: null }
-  // 移除 <!-- PAGE_BREAK --> 标记，因为分页由 PDF 生成时处理
   const questions = md.slice(0, idx).trim().replace(/<!--\s*PAGE_BREAK\s*-->/g, '')
   const answers = md.slice(idx).trim().replace(/<!--\s*PAGE_BREAK\s*-->/g, '')
   return { questions, answers }
@@ -80,6 +81,7 @@ export default function MainContent({ email, onLogout }: Props) {
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [extendLoading, setExtendLoading] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
+  const [printPreviewMode, setPrintPreviewMode] = useState(false)
 
   const generate = async () => {
     const p = prompt.trim()
@@ -142,38 +144,49 @@ export default function MainContent({ email, onLogout }: Props) {
     }
   }
 
-  const handlePrint = () => {
+  /**
+   * 打印功能 - 使用浏览器原生打印，MathJax SVG 渲染保证质量
+   */
+  const handlePrint = async () => {
     if (!markdown) return
+
     const { questions, answers } = splitQuestionsAndAnswers(markdown)
 
-    // 创建打印专用容器
-    const printContainer = document.createElement('div')
-    printContainer.id = 'print-container'
-    printContainer.style.cssText = `
-      padding: 20mm 15mm;
-      font-size: 14px;
-      line-height: 1.8;
-      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
-      color: #000;
-      word-wrap: break-word;
-    `
-
-    // 提取 AI 生成的标题（第一个# 标题），如果没有则使用默认标题
+    // 提取 AI 生成的标题
     const titleMatch = questions.match(/^#\s+(.+)$/m)
     const titleText = titleMatch ? titleMatch[1] : '练习题'
 
     // 移除题目中的# 标题，避免重复显示
     const questionsWithoutTitle = questions.replace(/^#\s+(.+)$/gm, '').trim()
-    const questionsHtmlProcessed = (renderMarkdownForPrinting(questionsWithoutTitle))
+    const questionsHtml = renderMarkdown(questionsWithoutTitle)
+    const answersHtml = answers ? renderMarkdown(answers) : ''
 
-    const titleHtml = `<h1 style="text-align: center; margin-bottom: 20px; font-size: 18px;">${titleText}</h1>`
+    // 创建打印专用容器
+    const printContainer = document.createElement('div')
+    printContainer.id = 'print-container'
+    printContainer.className = 'print-paper'
+
+    const titleHtml = `<h1 class="print-title">${titleText}</h1>`
+    const infoFields = `
+      <div class="print-info-fields">
+        <span>姓名：__________________</span>
+        <span>班级：__________________</span>
+        <span>得分：__________________</span>
+      </div>
+    `
     const contentHtml = answers
-      ? `<div>${titleHtml}<div>${questionsHtmlProcessed}</div><div style="page-break-before: always; margin-top: 30px;"><h2 style="margin-bottom: 15px; font-size: 16px;">答案</h2>${answersHtml}</div></div>`
-      : `<div>${titleHtml}<div style="margin-top: 15px;">${questionsHtmlProcessed}</div></div>`
+      ? `${titleHtml}${infoFields}<div class="print-questions">${questionsHtml}</div><div class="print-page-break"></div><h2 class="print-answers-title">答案</h2><div class="print-answers">${answersHtml}</div>`
+      : `${titleHtml}${infoFields}<div class="print-questions">${questionsHtml}</div>`
 
     printContainer.innerHTML = contentHtml
     document.body.appendChild(printContainer)
 
+    // 等待 MathJax 重新渲染打印容器中的公式
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      await window.MathJax.typesetPromise([printContainer])
+    }
+
+    // 调用浏览器打印
     window.print()
 
     // 打印完成后移除容器
@@ -182,61 +195,21 @@ export default function MainContent({ email, onLogout }: Props) {
     }, 500)
   }
 
-  const handleDownloadPdf = () => {
-    if (!markdown) return
-    const { questions, answers } = splitQuestionsAndAnswers(markdown)
-
-    // 提取 AI 生成的标题（第一个# 标题）
-    const titleMatch = questions.match(/^#\s+(.+)$/m)
-    const titleText = titleMatch ? titleMatch[1] : '练习题'
-
-    // 移除题目中的# 标题，避免重复显示
-    const questionsWithoutTitle = questions.replace(/^#\s+(.+)$/gm, '').trim()
-
-    const questionsHtml = (renderMarkdownForPdf(questionsWithoutTitle))
-    const answersHtml = answers ? (renderMarkdownForPdf(answers)) : ''
-
-    import('html2pdf.js').then(({ default: html2pdf }) => {
-      const container = document.createElement('div')
-      container.style.cssText = `
-        padding: 15mm 20mm;
-        font-size: 14px;
-        line-height: 1.8;
-        font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
-        color: #000;
-        word-wrap: break-word;
-      `
-      const titleHtml = `<h1 style="text-align: center; margin-bottom: 15px; font-size: 18px;">${titleText}</h1>`
-      const pageBreakStyle = `
-        <style>
-          .pdf-container { font-size: 14px; line-height: 1.8; }
-          .page-break { page-break-before: always; }
-        </style>
-      `
-      const contentHtml = answers
-        ? `<div class="pdf-container">${pageBreakStyle}${titleHtml}<div>${questionsHtml}</div><div class="page-break" style="margin-top: 20px;"></div><h2 style="margin-bottom: 15px; font-size: 16px;">答案</h2><div>${answersHtml}</div></div>`
-        : `<div class="pdf-container">${pageBreakStyle}${titleHtml}<div style="margin-top: 10px;">${questionsHtml}</div></div>`
-      container.innerHTML = contentHtml
-      document.body.appendChild(container)
-      const opt = {
-        margin: [10, 15, 10, 15] as [number, number, number, number],
-        filename: `${titleText}_${new Date().toISOString().slice(0, 10)}.pdf`,
-        image: { type: 'jpeg' as 'jpeg', quality: 1 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' as 'portrait', compress: true },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-      }
-      html2pdf().set(opt).from(container).save().then(() => document.body.removeChild(container))
-    })
+  /**
+   * 切换打印预览模式
+   */
+  const togglePrintPreview = () => {
+    setPrintPreviewMode(!printPreviewMode)
   }
 
   const { questions, answers } = splitQuestionsAndAnswers(markdown)
-  const questionsHtml = markdown ? (renderMarkdown(String(questions || ''))) : ''
-  const answersHtml = answers ? (renderMarkdown(String(answers))) : ''
+  const questionsHtml = markdown ? renderMarkdown(String(questions || '')) : ''
+  const answersHtml = answers ? renderMarkdown(String(answers)) : ''
 
   // 引用预览容器，用于 MathJax 渲染
   const questionsRef = useRef<HTMLDivElement>(null)
   const answersRef = useRef<HTMLDivElement>(null)
+  const printPreviewRef = useRef<HTMLDivElement>(null)
 
   // 引用历史下拉容器，用于正确处理鼠标离开事件
   const historyDropdownRef = useRef<HTMLDivElement>(null)
@@ -249,9 +222,7 @@ export default function MainContent({ email, onLogout }: Props) {
       if (!markdown) return
 
       try {
-        console.log('Loading MathJax...')
         await loadMathJax()
-        console.log('MathJax loaded:', !!window.MathJax)
 
         if (!mounted) return
 
@@ -259,19 +230,13 @@ export default function MainContent({ email, onLogout }: Props) {
         await new Promise(resolve => setTimeout(resolve, 100))
 
         // 收集需要渲染的元素（排除 null）
-        const elements = [questionsRef.current, answersRef.current].filter(Boolean) as HTMLElement[]
-        console.log('MathJax rendering elements:', elements)
+        const elements = [questionsRef.current, answersRef.current, printPreviewRef.current].filter(Boolean) as HTMLElement[]
 
         if (elements.length > 0 && window.MathJax) {
-          // 尝试使用 typeset（同步）或 typesetPromise（异步）
-          if (window.MathJax.typeset) {
+          if (window.MathJax.typesetPromise) {
+            await window.MathJax.typesetPromise(elements)
+          } else if (window.MathJax.typeset) {
             window.MathJax.typeset(elements)
-            console.log('MathJax typeset called')
-          } else if (window.MathJax.typesetPromise) {
-            await window.MathJax.typesetPromise(elements).catch((err: unknown) => {
-              console.log('MathJax typesetPromise failed:', err)
-            })
-            console.log('MathJax typesetPromise called')
           }
         }
       } catch (error) {
@@ -284,7 +249,7 @@ export default function MainContent({ email, onLogout }: Props) {
     return () => {
       mounted = false
     }
-  }, [markdown])
+  }, [markdown, printPreviewMode])
 
   return (
     <div className="app">
@@ -305,17 +270,13 @@ export default function MainContent({ email, onLogout }: Props) {
               className="history-dropdown-wrapper"
               ref={historyDropdownRef}
               onMouseOver={(e) => {
-                // 鼠标在 wrapper 或其任何子元素上时，保持打开
-                // 这包括按钮和下拉菜单
                 const target = e.target as Node
                 if (historyDropdownRef.current && historyDropdownRef.current.contains(target)) {
                   setHistoryOpen(true)
                 }
               }}
               onMouseLeave={(e) => {
-                // 只有当鼠标真正离开整个区域（按钮 + 下拉菜单）时才关闭
                 const relatedTarget = e.relatedTarget as Node
-                // 如果 relatedTarget 不在 wrapper 内，则关闭
                 if (!relatedTarget || !historyDropdownRef.current!.contains(relatedTarget)) {
                   setHistoryOpen(false)
                 }
@@ -389,7 +350,7 @@ export default function MainContent({ email, onLogout }: Props) {
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="例如：小学一年级 10 以内加减法 20 道，带答案"
+                placeholder="例如：小学六年级数学 分数小数混合运算 15 道"
                 rows={4}
                 className="prompt-input"
               />
@@ -536,21 +497,21 @@ export default function MainContent({ email, onLogout }: Props) {
                 </button>
                 <button
                   type="button"
-                  className="btn-icon-action"
-                  onClick={handleDownloadPdf}
-                  title="下载 PDF"
+                  className={`btn-icon-action ${printPreviewMode ? 'active' : ''}`}
+                  onClick={togglePrintPreview}
+                  title="打印预览（A4 效果）"
                 >
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <polyline points="7,10 12,15 17,10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
+                    <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" strokeWidth="2"/>
+                    <line x1="9" y1="21" x2="9" y2="9" stroke="currentColor" strokeWidth="2"/>
                   </svg>
                 </button>
                 <button
                   type="button"
                   className="btn-icon-action"
                   onClick={handlePrint}
-                  title="打印题目"
+                  title="打印试卷（可另存为 PDF）"
                 >
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <polyline points="6,9 6,2 18,2 18,9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -561,14 +522,43 @@ export default function MainContent({ email, onLogout }: Props) {
               </div>
             )}
           </div>
-          <div className="preview-card">
+          <div className={`preview-card ${printPreviewMode ? 'print-preview-mode' : ''}`}>
             {markdown ? (
-              <div className="preview-body markdown-body">
-                <div ref={questionsRef} dangerouslySetInnerHTML={{ __html: questionsHtml }} />
-                {answersHtml && (
-                  <div ref={answersRef} className="answer-section" dangerouslySetInnerHTML={{ __html: answersHtml }} />
-                )}
-              </div>
+              printPreviewMode ? (
+                // 打印预览模式 - A4 纸张效果
+                <div ref={printPreviewRef} className="print-paper-wrapper">
+                  <div className="print-paper">
+                    <h1 className="print-title">{questions.match(/^#\s+(.+)$/m)?.[1] || '练习题'}</h1>
+                    <div className="print-info-fields">
+                      <span>姓名：__________________</span>
+                      <span>班级：__________________</span>
+                      <span>得分：__________________</span>
+                    </div>
+                    <div
+                      className="print-questions markdown-body"
+                      dangerouslySetInnerHTML={{ __html: questionsHtml }}
+                    />
+                    {answersHtml && (
+                      <>
+                        <div className="print-page-break"></div>
+                        <h2 className="print-answers-title">答案</h2>
+                        <div
+                          className="print-answers markdown-body"
+                          dangerouslySetInnerHTML={{ __html: answersHtml }}
+                        />
+                      </>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                // 普通预览模式
+                <div className="preview-body markdown-body">
+                  <div ref={questionsRef} dangerouslySetInnerHTML={{ __html: questionsHtml }} />
+                  {answersHtml && (
+                    <div ref={answersRef} className="answer-section" dangerouslySetInnerHTML={{ __html: answersHtml }} />
+                  )}
+                </div>
+              )
             ) : (
               <div className="placeholder">
                 <div className="placeholder-icon">
@@ -577,7 +567,7 @@ export default function MainContent({ email, onLogout }: Props) {
                   </svg>
                 </div>
                 <p>输入提示词并点击「生成题目」</p>
-                <p className="placeholder-hint">题目和答案将在此处预览</p>
+                <p className="placeholder-hint">题目和答案将在此处预览，支持直接打印或另存为 PDF</p>
               </div>
             )}
           </div>

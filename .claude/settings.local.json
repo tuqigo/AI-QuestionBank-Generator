@@ -21,7 +21,9 @@
       "Bash(python3:*)",
       "Bash(grep:*)",
       "Bash(npm install:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(cd D:\\\\project\\\\AI-QuestionBank-Generator\\\\frontend && npm install markdown-it @types/markdown-it --save && npm uninstall html2pdf.js --save)",
+      "Bash(cd /d/project/AI-QuestionBank-Generator/frontend && npm install markdown-it @types/markdown-it --save && npm uninstall html2pdf.js --save)"
     ]
   }
 }

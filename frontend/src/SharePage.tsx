@@ -4,6 +4,36 @@ import { renderMarkdown } from '@/utils/markdownProcessor'
 import { getSharedRecord } from '@/api/history'
 import type { QuestionRecord } from '@/types'
 
+// 加载 MathJax SVG 脚本
+const loadMathJax = (): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    if (window.MathJax) {
+      resolve()
+      return
+    }
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: false,
+        processEnvironments: false
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      },
+      svg: {
+        fontCache: 'global'
+      }
+    }
+    const script = document.createElement('script')
+    script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js'
+    script.async = true
+    script.onload = () => resolve()
+    script.onerror = () => reject(new Error('Failed to load MathJax SVG'))
+    document.head.appendChild(script)
+  })
+}
+
 export default function SharePage() {
   const { id } = useParams<{ id: string }>()
   const [searchParams] = useSearchParams()
@@ -28,6 +58,34 @@ export default function SharePage() {
       })
       .finally(() => setLoading(false))
   }, [id, token])
+
+  // 加载 MathJax 并渲染公式
+  useEffect(() => {
+    let mounted = true
+
+    const initAndRenderMathJax = async () => {
+      if (!record) return
+
+      try {
+        await loadMathJax()
+        if (mounted && window.MathJax) {
+          await new Promise(resolve => setTimeout(resolve, 100))
+          const content = document.querySelector('.share-content')
+          if (content && window.MathJax.typeset) {
+            window.MathJax.typeset([content as HTMLElement])
+          }
+        }
+      } catch (error) {
+        console.error('Failed to process MathJax:', error)
+      }
+    }
+
+    initAndRenderMathJax()
+
+    return () => {
+      mounted = false
+    }
+  }, [record])
 
   if (loading) {
     return (

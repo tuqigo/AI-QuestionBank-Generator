@@ -21,7 +21,8 @@
     "wrangler": "^3.101.0"
   },
   "dependencies": {
-    "html2pdf.js": "^0.14.0",
+    "@types/markdown-it": "^14.1.2",
+    "markdown-it": "^14.1.1",
     "marked": "^17.0.4",
     "mathjax": "^4.1.1",
     "react": "^19.2.4",

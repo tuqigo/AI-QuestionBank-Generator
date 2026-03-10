@@ -4,7 +4,7 @@ import { renderMarkdown } from '@/utils/markdownProcessor'
 import { getHistoryDetail, deleteHistory, createShareUrl } from '@/api/history'
 import type { QuestionRecord } from '@/types'
 
-// 加载 MathJax 脚本
+// 加载 MathJax SVG 脚本
 const loadMathJax = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     if (window.MathJax) {
@@ -21,13 +21,16 @@ const loadMathJax = (): Promise<void> => {
       },
       options: {
         skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      },
+      svg: {
+        fontCache: 'global'
       }
     }
     const script = document.createElement('script')
-    script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js'
+    script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js'
     script.async = true
     script.onload = () => resolve()
-    script.onerror = () => reject(new Error('Failed to load MathJax'))
+    script.onerror = () => reject(new Error('Failed to load MathJax SVG'))
     document.head.appendChild(script)
   })
 }

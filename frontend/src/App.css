@@ -713,6 +713,12 @@
   cursor: not-allowed;
 }
 
+.btn-icon-action.active {
+  background: var(--primary-50);
+  border-color: var(--primary-600);
+  color: var(--primary-600);
+}
+
 .preview-card {
   flex: 1;
   background: var(--bg-secondary);
@@ -721,6 +727,26 @@
   padding: var(--space-6);
   min-height: 0;
   overflow-y: auto;
+}
+
+/* 打印预览模式 */
+.preview-card.print-preview-mode {
+  background: var(--gray-100);
+  padding: var(--space-4);
+}
+
+.print-paper-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.print-paper-wrapper .print-paper {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 20mm 15mm;
+  background: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 /* 占位符 */
@@ -913,69 +939,88 @@ small {
   vertical-align: middle;
 }
 
+/* 打印纸张容器 - A4 尺寸 */
+.print-paper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 210mm;
+  min-height: 297mm;
+  padding: 20mm 15mm;
+  background: white;
+  color: #000;
+  font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+}
+
+.print-title {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 15px 0;
+  color: #000;
+}
+
+.print-info-fields {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 25px;
+  font-size: 14px;
+  color: #000;
+}
+
+.print-info-fields span {
+  flex: 1;
+  border-bottom: 1px solid #000;
+  padding-bottom: 5px;
+}
+
+.print-questions {
+  font-size: 14px;
+  line-height: 1.8;
+}
+
+.print-page-break {
+  page-break-before: always;
+  break-before: page;
+  margin: 50px 0;
+  border-top: 2px dashed #000;
+  padding-top: 20px;
+}
+
+.print-answers-title {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 15px 0;
+  color: #000;
+}
+
+.print-answers {
+  font-size: 14px;
+  line-height: 1.8;
+}
+
 /* 打印样式 */
 @media print {
+  @page {
+    size: A4;
+    margin: 15mm;
+  }
+
+  body {
+    width: 210mm;
+  }
+
   .sidebar,
   .header,
   .preview-header,
   .btn-icon-action,
   .preview-header-actions,
-  .question-count {
-    display: none !important;
-  }
-
-  .main {
-    padding: 0;
-    margin: 0;
-  }
-
+  .question-count,
+  .main,
   .preview {
-    width: 100%;
-    max-width: none;
-  }
-
-  .preview-card {
-    box-shadow: none;
-    padding: 0;
-    border-radius: 0;
-    min-height: auto;
-  }
-
-  .markdown-body {
-    font-size: 14px;
-    line-height: 1.8;
-  }
-
-  /* 确保列表序号显示 */
-  .markdown-body :global(ol),
-  .markdown-body :global(ul) {
-    display: block !important;
-  }
-
-  .markdown-body :global(li) {
-    display: list-item !important;
-  }
-
-  .markdown-body :global(ol) {
-    list-style-type: decimal !important;
-    padding-left: 2em;
-  }
-
-  /* 题号样式 - 确保打印时显示 */
-  .question-number {
-    display: inline-block !important;
-    min-width: 28px;
-    font-weight: 600;
-    color: #000 !important;
-  }
-
-  /* 答案部分打印时显示 */
-  .answer-section {
-    display: block !important;
-    page-break-before: always;
-    margin-top: 30px;
-    padding-top: 20px;
-    border-top: 2px dashed #000;
+    display: none !important;
   }
 
   /* 隐藏打印容器外的所有内容 */
@@ -987,7 +1032,61 @@ small {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
+    width: 210mm;
+    min-height: 297mm;
+    padding: 0;
+    margin: 0;
+    background: white;
+  }
+
+  /* 确保列表序号显示 */
+  .markdown-body :global(ol),
+  .markdown-body :global(ul),
+  .print-questions ol,
+  .print-questions ul,
+  .print-answers ol,
+  .print-answers ul {
+    display: block !important;
+  }
+
+  .markdown-body :global(li),
+  .print-questions li,
+  .print-answers li {
+    display: list-item !important;
+  }
+
+  .print-questions ol,
+  .print-answers ol {
+    list-style-type: decimal !important;
+    padding-left: 2em;
+  }
+
+  /* 题号样式 - 确保打印时显示 */
+  .question-number,
+  .print-questions .question-number {
+    display: inline-block !important;
+    min-width: 28px;
+    font-weight: 600;
+    color: #000 !important;
+  }
+
+  /* 空白填空框样式 */
+  .blank-box,
+  .blank-parentheses,
+  .blank-line {
+    border-color: #000 !important;
+    background: white !important;
+  }
+
+  /* MathJax SVG 公式确保显示 */
+  mjx-container {
+    display: inline-block !important;
+  }
+
+  /* 答案部分分页 */
+  .print-page-break {
+    page-break-before: always;
+    break-before: page;
   }
 }
 

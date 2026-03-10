@@ -24,3 +24,25 @@ export interface QuestionRecordListResponse {
 export interface ShareUrlResponse {
   share_url: string
 }
+
+// MathJax 类型定义
+declare global {
+  interface Window {
+    MathJax?: {
+      tex: {
+        inlineMath: string[][]
+        displayMath: string[][]
+        processEscapes: boolean
+        processEnvironments: boolean
+      }
+      options: {
+        skipHtmlTags: string[]
+      }
+      svg: {
+        fontCache: string
+      }
+      typeset?: (elements: HTMLElement[]) => void
+      typesetPromise?: (elements: HTMLElement[]) => Promise<void>
+    }
+  }
+}
