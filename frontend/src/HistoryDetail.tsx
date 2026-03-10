@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { renderMarkdown } from '@/utils/markdownProcessor'
 import { getHistoryDetail, createShareUrl } from '@/api/history'
@@ -45,6 +45,15 @@ export default function HistoryDetail() {
   const [loading, setLoading] = useState(true)
   const [shareUrl, setShareUrl] = useState<string | null>(null)
   const contentRef = useRef<HTMLDivElement>(null)
+
+  // 缓存渲染后的 HTML，避免 shareUrl 等 state 变化导致 HTML 重新计算
+  const questionsHtml = useMemo(() =>
+    record ? renderMarkdown(record.ai_response) : '',
+    [record]
+  )
+
+  // 缓存 dangerouslySetInnerHTML 对象，避免每次渲染创建新对象导致 React 重新设置 innerHTML
+  const questionsProps = useMemo(() => ({ __html: questionsHtml }), [questionsHtml])
 
   useEffect(() => {
     if (!id) return
@@ -120,8 +129,6 @@ export default function HistoryDetail() {
     )
   }
 
-  const questionsHtml = renderMarkdown(record.ai_response)
-
   return (
     <div className="detail-page">
       <div className="detail-header">
@@ -160,7 +167,7 @@ export default function HistoryDetail() {
       </div>
 
       <div className="detail-content markdown-body">
-        <div ref={contentRef} dangerouslySetInnerHTML={{ __html: questionsHtml as string }} />
+        <div ref={contentRef} dangerouslySetInnerHTML={questionsProps} />
       </div>
     </div>
   )

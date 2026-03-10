@@ -136,17 +136,25 @@ export default function MainContent({ email, onLogout }: Props) {
     await printUtilsHandlePrint(markdown)
   }
 
-  const { questions, answers } = splitQuestionsAndAnswers(markdown)
+  // 使用 useMemo 缓存分割结果，避免每次渲染都重新计算导致引用变化
+  const { questions, answers } = useMemo(() =>
+    markdown ? splitQuestionsAndAnswers(markdown) : { questions: '', answers: null },
+    [markdown]
+  )
 
   // 使用 useMemo 缓存 HTML 内容，避免不必要的重新渲染导致 MathJax 渲染丢失
   const questionsHtml = useMemo(() =>
     markdown ? renderMarkdown(String(questions || '')) : '',
-    [markdown, questions]
+    [markdown]
   )
   const answersHtml = useMemo(() =>
     answers ? renderMarkdown(String(answers)) : '',
     [answers]
   )
+
+  // 缓存 dangerouslySetInnerHTML 对象，避免每次渲染创建新对象导致 React 重新设置 innerHTML
+  const questionsProps = useMemo(() => ({ __html: questionsHtml }), [questionsHtml])
+  const answersProps = useMemo(() => ({ __html: answersHtml }), [answersHtml])
 
   // 引用预览容器，用于 MathJax 渲染
   const questionsRef = useRef<HTMLDivElement>(null)
@@ -154,6 +162,10 @@ export default function MainContent({ email, onLogout }: Props) {
 
   // 引用历史下拉容器，用于正确处理鼠标离开事件
   const historyDropdownRef = useRef<HTMLDivElement>(null)
+
+  // 使用 refs 来跟踪上次渲染的 HTML，避免 React 重新渲染时覆盖 MathJax 的成果
+  const prevQuestionsHtmlRef = useRef<string>('')
+  const prevAnswersHtmlRef = useRef<string>('')
 
   // 添加一个触发器，用于在需要时强制重新渲染 MathJax
   const [mathJaxTrigger, setMathJaxTrigger] = useState(0)
@@ -458,9 +470,9 @@ export default function MainContent({ email, onLogout }: Props) {
           <div className="preview-card">
             {markdown ? (
               <div className="preview-body markdown-body">
-                <div ref={questionsRef} dangerouslySetInnerHTML={{ __html: questionsHtml }} />
+                <div ref={questionsRef} dangerouslySetInnerHTML={questionsProps} />
                 {answersHtml && (
-                  <div ref={answersRef} className="answer-section" dangerouslySetInnerHTML={{ __html: answersHtml }} />
+                  <div ref={answersRef} className="answer-section" dangerouslySetInnerHTML={answersProps} />
                 )}
               </div>
             ) : (
