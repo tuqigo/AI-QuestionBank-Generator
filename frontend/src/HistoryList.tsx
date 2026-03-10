@@ -13,7 +13,7 @@ const HistoryDropdown = forwardRef<HTMLDivElement, HistoryDropdownProps>(functio
   const [records, setRecords] = useState<QuestionRecord[]>([])
   const [nextCursor, setNextCursor] = useState<number | null>(null)
   const [hasMore, setHasMore] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState<number | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -32,6 +32,7 @@ const HistoryDropdown = forwardRef<HTMLDivElement, HistoryDropdownProps>(functio
 
   useEffect(() => {
     if (isOpen) {
+      setLoading(true)
       loadHistory()
     }
   }, [isOpen])
@@ -66,6 +67,17 @@ const HistoryDropdown = forwardRef<HTMLDivElement, HistoryDropdownProps>(functio
     <div className="history-dropdown history-dropdown-content" ref={dropdownRef}>
       <div className="history-dropdown-header">
         <h3>历史记录</h3>
+        <button
+          type="button"
+          className="btn-history-close"
+          onClick={onClose}
+          title="关闭"
+        >
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
       </div>
 
       {loading ? (

@@ -192,6 +192,31 @@
   flex: 1;
 }
 
+.btn-history-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--gray-500);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-history-close:hover {
+  background: var(--gray-200);
+  color: var(--gray-700);
+}
+
+.btn-history-close svg {
+  width: 18px;
+  height: 18px;
+}
+
 .history-dropdown-loading {
   padding: var(--space-8);
   text-align: center;
@@ -727,26 +752,6 @@
   padding: var(--space-6);
   min-height: 0;
   overflow-y: auto;
-}
-
-/* 打印预览模式 */
-.preview-card.print-preview-mode {
-  background: var(--gray-100);
-  padding: var(--space-4);
-}
-
-.print-paper-wrapper {
-  display: flex;
-  justify-content: center;
-  padding: var(--space-4);
-}
-
-.print-paper-wrapper .print-paper {
-  width: 210mm;
-  min-height: 297mm;
-  padding: 20mm 15mm;
-  background: white;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 /* 占位符 */

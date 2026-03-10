@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 
-from services.qwen_client import generate_questions
+from services.qwen_client import generate_questions_async
 from services.question_record_store import create_record, QuestionRecordCreate
 from routers.auth import get_current_user_email
 from services.user_store import get_user as get_user_by_email
@@ -37,8 +37,8 @@ async def generate(
 
     try:
         api_logger.info(f"开始调用题目生成服务，email: {email}")
-        # 调用 AI 生成题目，返回 (标题，内容)
-        title, markdown = generate_questions(prompt)
+        # 调用 AI 生成题目，返回 (标题，内容) - 使用异步版本
+        title, markdown = await generate_questions_async(prompt)
 
         # 获取用户 ID
         user = get_user_by_email(email)

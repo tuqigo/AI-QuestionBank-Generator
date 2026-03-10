@@ -2,6 +2,7 @@ import dashscope
 import time
 import json
 import re
+import asyncio
 from dashscope import Generation
 from config import DASHSCOPE_API_KEY, QWEN_MODEL, QUESTION_SYSTEM_PROMPT, QUESTION_PROMPT_TEMPLATE
 from utils.logger import qwen_logger
@@ -50,9 +51,12 @@ def _parse_title_and_content(content: str) -> tuple[str, str]:
 
 
 def generate_questions(user_prompt: str) -> tuple[str, str]:
-    """生成题目
-    返回：(标题，题目内容)
-    """
+    """生成题目（同步版本，用于向后兼容）"""
+    return asyncio.run(generate_questions_async(user_prompt))
+
+
+async def generate_questions_async(user_prompt: str) -> tuple[str, str]:
+    """生成题目（异步版本）"""
     start_time = time.time()
     qwen_logger.info("=" * 60)
     qwen_logger.info("【AI 调用开始】generate_questions")
@@ -78,11 +82,13 @@ def generate_questions(user_prompt: str) -> tuple[str, str]:
     qwen_logger.info(f"[User Prompt 完整内容] {_truncate_for_log(user_content, 800)}")
     qwen_logger.info(f"[Messages 结构] {json.dumps(messages, ensure_ascii=False)[:2000]}...")
 
-    # 调用 API
+    # 调用 API（在线程池中执行，避免阻塞事件循环）
     qwen_logger.info("[API 调用] 开始调用千问 API...")
     api_start = time.time()
 
-    response = Generation.call(
+    # 使用 asyncio.to_thread 将同步调用放入线程池
+    response = await asyncio.to_thread(
+        Generation.call,
         model=QWEN_MODEL,
         messages=messages,
         result_format="message",

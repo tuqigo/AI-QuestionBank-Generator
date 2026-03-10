@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { renderMarkdown } from './utils/markdownProcessor'
 import type { GenerateResponse } from './types'
@@ -81,7 +81,6 @@ export default function MainContent({ email, onLogout }: Props) {
   const [imageFile, setImageFile] = useState<File | null>(null)
   const [extendLoading, setExtendLoading] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
-  const [printPreviewMode, setPrintPreviewMode] = useState(false)
 
   const generate = async () => {
     const p = prompt.trim()
@@ -195,24 +194,39 @@ export default function MainContent({ email, onLogout }: Props) {
     }, 500)
   }
 
-  /**
-   * 切换打印预览模式
-   */
-  const togglePrintPreview = () => {
-    setPrintPreviewMode(!printPreviewMode)
-  }
-
   const { questions, answers } = splitQuestionsAndAnswers(markdown)
-  const questionsHtml = markdown ? renderMarkdown(String(questions || '')) : ''
-  const answersHtml = answers ? renderMarkdown(String(answers)) : ''
+
+  // 使用 useMemo 缓存 HTML 内容，避免不必要的重新渲染导致 MathJax 渲染丢失
+  const questionsHtml = useMemo(() =>
+    markdown ? renderMarkdown(String(questions || '')) : '',
+    [markdown, questions]
+  )
+  const answersHtml = useMemo(() =>
+    answers ? renderMarkdown(String(answers)) : '',
+    [answers]
+  )
 
   // 引用预览容器，用于 MathJax 渲染
   const questionsRef = useRef<HTMLDivElement>(null)
   const answersRef = useRef<HTMLDivElement>(null)
-  const printPreviewRef = useRef<HTMLDivElement>(null)
 
   // 引用历史下拉容器，用于正确处理鼠标离开事件
   const historyDropdownRef = useRef<HTMLDivElement>(null)
+
+  // 添加一个触发器，用于在需要时强制重新渲染 MathJax
+  const [mathJaxTrigger, setMathJaxTrigger] = useState(0)
+
+  // 跟踪上一次 historyOpen 的状态
+  const prevHistoryOpenRef = useRef<boolean>(false)
+
+  // 当 historyOpen 变化时，触发 MathJax 重新渲染（因为 DOM 可能被重新创建）
+  useEffect(() => {
+    if (markdown && prevHistoryOpenRef.current !== historyOpen) {
+      // historyOpen 状态变化，触发 MathJax 重新渲染
+      setMathJaxTrigger(prev => prev + 1)
+    }
+    prevHistoryOpenRef.current = historyOpen
+  }, [historyOpen, markdown])
 
   // 加载 MathJax 并在 markdown 变化时渲染公式
   useEffect(() => {
@@ -230,7 +244,7 @@ export default function MainContent({ email, onLogout }: Props) {
         await new Promise(resolve => setTimeout(resolve, 100))
 
         // 收集需要渲染的元素（排除 null）
-        const elements = [questionsRef.current, answersRef.current, printPreviewRef.current].filter(Boolean) as HTMLElement[]
+        const elements = [questionsRef.current, answersRef.current].filter(Boolean) as HTMLElement[]
 
         if (elements.length > 0 && window.MathJax) {
           if (window.MathJax.typesetPromise) {
@@ -249,7 +263,7 @@ export default function MainContent({ email, onLogout }: Props) {
     return () => {
       mounted = false
     }
-  }, [markdown, printPreviewMode])
+  }, [markdown, mathJaxTrigger])
 
   return (
     <div className="app">
@@ -269,21 +283,10 @@ export default function MainContent({ email, onLogout }: Props) {
             <div
               className="history-dropdown-wrapper"
               ref={historyDropdownRef}
-              onMouseOver={(e) => {
-                const target = e.target as Node
-                if (historyDropdownRef.current && historyDropdownRef.current.contains(target)) {
-                  setHistoryOpen(true)
-                }
-              }}
-              onMouseLeave={(e) => {
-                const relatedTarget = e.relatedTarget as Node
-                if (!relatedTarget || !historyDropdownRef.current!.contains(relatedTarget)) {
-                  setHistoryOpen(false)
-                }
-              }}
             >
               <button
                 className={`btn-history history-dropdown-trigger ${historyOpen ? 'active' : ''}`}
+                onClick={() => setHistoryOpen(!historyOpen)}
                 title="历史记录"
               >
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -497,18 +500,6 @@ export default function MainContent({ email, onLogout }: Props) {
                 </button>
                 <button
                   type="button"
-                  className={`btn-icon-action ${printPreviewMode ? 'active' : ''}`}
-                  onClick={togglePrintPreview}
-                  title="打印预览（A4 效果）"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2"/>
-                    <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" strokeWidth="2"/>
-                    <line x1="9" y1="21" x2="9" y2="9" stroke="currentColor" strokeWidth="2"/>
-                  </svg>
-                </button>
-                <button
-                  type="button"
                   className="btn-icon-action"
                   onClick={handlePrint}
                   title="打印试卷（可另存为 PDF）"
@@ -522,43 +513,14 @@ export default function MainContent({ email, onLogout }: Props) {
               </div>
             )}
           </div>
-          <div className={`preview-card ${printPreviewMode ? 'print-preview-mode' : ''}`}>
+          <div className="preview-card">
             {markdown ? (
-              printPreviewMode ? (
-                // 打印预览模式 - A4 纸张效果
-                <div ref={printPreviewRef} className="print-paper-wrapper">
-                  <div className="print-paper">
-                    <h1 className="print-title">{questions.match(/^#\s+(.+)$/m)?.[1] || '练习题'}</h1>
-                    <div className="print-info-fields">
-                      <span>姓名：__________________</span>
-                      <span>班级：__________________</span>
-                      <span>得分：__________________</span>
-                    </div>
-                    <div
-                      className="print-questions markdown-body"
-                      dangerouslySetInnerHTML={{ __html: questionsHtml }}
-                    />
-                    {answersHtml && (
-                      <>
-                        <div className="print-page-break"></div>
-                        <h2 className="print-answers-title">答案</h2>
-                        <div
-                          className="print-answers markdown-body"
-                          dangerouslySetInnerHTML={{ __html: answersHtml }}
-                        />
-                      </>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                // 普通预览模式
-                <div className="preview-body markdown-body">
-                  <div ref={questionsRef} dangerouslySetInnerHTML={{ __html: questionsHtml }} />
-                  {answersHtml && (
-                    <div ref={answersRef} className="answer-section" dangerouslySetInnerHTML={{ __html: answersHtml }} />
-                  )}
-                </div>
-              )
+              <div className="preview-body markdown-body">
+                <div ref={questionsRef} dangerouslySetInnerHTML={{ __html: questionsHtml }} />
+                {answersHtml && (
+                  <div ref={answersRef} className="answer-section" dangerouslySetInnerHTML={{ __html: answersHtml }} />
+                )}
+              </div>
             ) : (
               <div className="placeholder">
                 <div className="placeholder-icon">
