@@ -2,7 +2,7 @@
 
 import sqlite3
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Tuple
 
 from models.user import UserInDB
 from services.auth import get_password_hash
@@ -177,7 +177,7 @@ def get_user_by_id_with_status(user_id: int) -> Optional[dict]:
 def get_all_users(
     page: int = 1,
     page_size: int = 20
-) -> tuple[list[dict], int, bool]:
+) -> Tuple[List[dict], int, bool]:
     """获取所有用户列表（分页）
     返回：(用户列表，总数，是否有更多)
     """
