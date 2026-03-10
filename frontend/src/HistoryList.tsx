@@ -92,13 +92,22 @@ const HistoryDropdown = forwardRef<HTMLDivElement, HistoryDropdownProps>(functio
           <div className="history-dropdown-list">
             {records.map(record => (
               <div key={record.id} className="history-dropdown-item">
-                <Link to={`/history/${record.id}`} onClick={onClose}>
+                <a
+                  href={`/history/${record.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    onClose()
+                    window.open(`/history/${record.id}`, '_blank', 'noopener,noreferrer')
+                  }}
+                >
                   <div className="history-item-title">{record.title}</div>
                   <div className="history-item-meta">
                     <span className="history-item-type">{record.prompt_type === 'image' ? '📷' : '📝'}</span>
                     <span className="history-item-date">{formatDate(record.created_at)}</span>
                   </div>
-                </Link>
+                </a>
                 <button
                   onClick={(e) => {
                     e.preventDefault()
