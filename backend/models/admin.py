@@ -1,6 +1,6 @@
 """管理员相关 Pydantic 模型"""
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 
@@ -32,7 +32,7 @@ class UserDetailResponse(UserResponse):
 
 class UserListResponse(BaseModel):
     """用户列表响应"""
-    data: list[UserResponse]
+    data: List[UserResponse]
     total: int
     page: int
     page_size: int
@@ -52,7 +52,7 @@ class OperationLogResponse(BaseModel):
 
 class OperationLogListResponse(BaseModel):
     """操作日志列表响应"""
-    data: list[OperationLogResponse]
+    data: List[OperationLogResponse]
     total: int
     page: int
     page_size: int

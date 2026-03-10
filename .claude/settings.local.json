@@ -23,7 +23,8 @@
       "Bash(npm install:*)",
       "Bash(npx tsc:*)",
       "Bash(cd D:\\\\project\\\\AI-QuestionBank-Generator\\\\frontend && npm install markdown-it @types/markdown-it --save && npm uninstall html2pdf.js --save)",
-      "Bash(cd /d/project/AI-QuestionBank-Generator/frontend && npm install markdown-it @types/markdown-it --save && npm uninstall html2pdf.js --save)"
+      "Bash(cd /d/project/AI-QuestionBank-Generator/frontend && npm install markdown-it @types/markdown-it --save && npm uninstall html2pdf.js --save)",
+      "Bash(ssh root@racknerd \"ls -la /root/AI-QuestionBank-Generator/backend/routers/\" 2>&1)"
     ]
   }
 }
