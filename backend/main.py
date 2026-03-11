@@ -22,6 +22,8 @@ app.include_router(questions.router)
 app.include_router(extend.router)
 app.include_router(history.router)
 app.include_router(admin.router)
+# 注册分享路由（独立前缀，避免路由冲突）
+app.include_router(history.share_router)
 
 
 @app.get("/")

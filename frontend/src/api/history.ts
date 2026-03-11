@@ -68,7 +68,7 @@ export async function createShareUrl(id: number): Promise<string> {
 
 /** 通过分享 token 获取记录（无需登录） */
 export async function getSharedRecord(id: number, token: string): Promise<QuestionRecord> {
-  const url = `${API_BASE}/history/share/${id}?token=${encodeURIComponent(token)}`
+  const url = `${API_BASE}/share/history/${id}?token=${encodeURIComponent(token)}`
   const res = await fetch(url)
 
   if (!res.ok) {
