@@ -129,6 +129,19 @@
   color: #666;
 }
 
+.record-view-hint {
+  display: inline-block;
+  margin-left: 12px;
+  font-size: 12px;
+  color: #667eea;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.record-item:hover .record-view-hint {
+  opacity: 1;
+}
+
 .load-more-container {
   display: flex;
   justify-content: center;

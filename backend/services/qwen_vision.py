@@ -4,18 +4,19 @@ import base64
 import time
 import json
 import os
-from typing import Tuple
+from typing import Tuple, Optional
 from dashscope import MultiModalConversation
 from requests.exceptions import SSLError, RequestException
 
 from config import DASHSCOPE_API_KEY, VISION_SYSTEM_PROMPT
 from services.qwen_client import generate_questions
 from utils.logger import qwen_logger
+from services.ai_generation_record_store import create_record, AiGenerationRecordCreate
 
 VISION_MODEL = os.getenv("QWEN_VISION_MODEL", "qwen-vl-plus")
 
 
-def recognize_question_from_image(image_base64: str, image_media_type: str = "jpeg", max_retries: int = 3) -> str:
+def recognize_question_from_image(image_base64: str, image_media_type: str = "jpeg", max_retries: int = 3, user_id: Optional[int] = None) -> str:
     """识别图片中的题目，返回描述文字"""
     start_time = time.time()
     qwen_logger.info("=" * 60)
@@ -26,7 +27,22 @@ def recognize_question_from_image(image_base64: str, image_media_type: str = "jp
 
     if not DASHSCOPE_API_KEY:
         qwen_logger.error("DASHSCOPE_API_KEY 未配置")
-        raise ValueError("DASHSCOPE_API_KEY 未配置")
+        error_msg = "DASHSCOPE_API_KEY 未配置"
+        # 记录失败日志
+        if user_id:
+            try:
+                record = AiGenerationRecordCreate(
+                    user_id=user_id,
+                    prompt="图片识别",
+                    prompt_type="vision",
+                    success=False,
+                    duration=round(time.time() - start_time, 2),
+                    error_message=error_msg
+                )
+                create_record(record)
+            except Exception as e:
+                qwen_logger.error(f"[记录保存] AI 生成记录保存失败：{e}")
+        raise ValueError(error_msg)
 
     data_uri = f"data:image/{image_media_type};base64,{image_base64}"
     messages = [
@@ -46,7 +62,6 @@ def recognize_question_from_image(image_base64: str, image_media_type: str = "jp
     # 调用 API（带重试）
     qwen_logger.info("[API 调用] 开始调用千问视觉 API...")
 
-    last_error = None
     for attempt in range(max_retries):
         api_start = time.time()
 
@@ -75,6 +90,20 @@ def recognize_question_from_image(image_base64: str, image_media_type: str = "jp
             if response.status_code != 200:
                 error_msg = f"千问视觉 API 调用失败：code={response.code}, message={response.message}"
                 qwen_logger.error(f"[API 错误] {error_msg}")
+                # 记录失败日志
+                if user_id:
+                    try:
+                        record = AiGenerationRecordCreate(
+                            user_id=user_id,
+                            prompt="图片识别",
+                            prompt_type="vision",
+                            success=False,
+                            duration=round(time.time() - start_time, 2),
+                            error_message=error_msg
+                        )
+                        create_record(record)
+                    except Exception as e:
+                        qwen_logger.error(f"[记录保存] AI 生成记录保存失败：{e}")
                 # 如果是可重试的错误，继续重试
                 if response.code in ['Stochastic', 'GatewayTimeout', 'ServiceUnavailable']:
                     if attempt < max_retries - 1:
@@ -88,7 +117,6 @@ def recognize_question_from_image(image_base64: str, image_media_type: str = "jp
             break
 
         except (SSLError, RequestException) as e:
-            last_error = e
             qwen_logger.warning(f"[网络错误] 第 {attempt + 1} 次尝试失败：{str(e)}")
             if attempt < max_retries - 1:
                 wait_time = 2 ** attempt  # 指数退避
@@ -116,10 +144,25 @@ def recognize_question_from_image(image_base64: str, image_media_type: str = "jp
     qwen_logger.info("【AI 调用结束】")
     qwen_logger.info("=" * 60)
 
+    # 记录成功日志
+    if user_id:
+        try:
+            record = AiGenerationRecordCreate(
+                user_id=user_id,
+                prompt="图片识别",
+                prompt_type="vision",
+                success=True,
+                duration=round(total_elapsed, 2)
+            )
+            create_record(record)
+            qwen_logger.info(f"[记录保存] AI 生成记录保存成功：user_id={user_id}")
+        except Exception as e:
+            qwen_logger.error(f"[记录保存] AI 生成记录保存失败：{e}")
+
     return text.strip()
 
 
-def extend_questions_from_image(image_base64: str, image_media_type: str = "jpeg", hint: str = "") -> Tuple[str, str]:
+def extend_questions_from_image(image_base64: str, image_media_type: str = "jpeg", hint: str = "", user_id: Optional[int] = None) -> Tuple[str, str]:
     """识别图片题目并生成同类型扩展题
     返回：(标题，题目内容)
     """
@@ -131,7 +174,7 @@ def extend_questions_from_image(image_base64: str, image_media_type: str = "jpeg
     qwen_logger.info(f"[用户补充] hint: {hint[:100] if hint else '无'}")
 
     # 第一步：识别图片中的题目
-    description = recognize_question_from_image(image_base64, image_media_type)
+    description = recognize_question_from_image(image_base64, image_media_type, user_id=user_id)
 
     # 第二步：组合用户 prompt（图片识别结果 + 用户补充）
     if hint:
@@ -143,7 +186,7 @@ def extend_questions_from_image(image_base64: str, image_media_type: str = "jpeg
     qwen_logger.info(f"[最终 prompt] {user_prompt}")
 
     # 第三步：复用 generate_questions 生成题目（逻辑完全一致）
-    title, questions_content = generate_questions(user_prompt)
+    title, questions_content = generate_questions(user_prompt, user_id=user_id)
 
     # 如果 AI 没有返回 TITLE 前缀，使用默认标题
     if not title or title == "AI 题目生成":

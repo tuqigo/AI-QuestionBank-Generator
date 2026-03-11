@@ -85,6 +85,10 @@ export default function UserDetailPage() {
     navigate('/admin/users')
   }
 
+  const handleViewRecord = (recordId: number) => {
+    navigate(`/admin/user-records/${recordId}`)
+  }
+
   const formatDate = (dateString: string) => {
     // 确保时间字符串带 Z 后缀，让 JavaScript 知道这是 UTC 时间
     const utcStr = dateString.endsWith('Z') ? dateString : dateString + 'Z'
@@ -188,13 +192,19 @@ export default function UserDetailPage() {
           ) : (
             <>
               {records.map((record) => (
-                <div key={record.id} className="record-item">
+                <div
+                  key={record.id}
+                  className="record-item"
+                  onClick={() => handleViewRecord(record.id)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <div className="record-header">
                     <span className="record-id">#{record.id}</span>
                     <span className="record-date">{formatDate(record.created_at)}</span>
                   </div>
                   <h4 className="record-title">{record.title}</h4>
                   <span className="record-type">类型：{record.prompt_type}</span>
+                  <span className="record-view-hint">点击查看详情</span>
                 </div>
               ))}
 

@@ -40,13 +40,13 @@ async def generate(
 
     try:
         api_logger.info(f"开始调用题目生成服务，email: {email}")
-        # 调用 AI 生成题目，返回 (标题，内容) - 使用异步版本
-        title, markdown = await generate_questions_async(prompt)
-
         # 获取用户 ID
         user = get_user_by_email(email)
         if not user:
             raise HTTPException(status_code=404, detail="用户不存在")
+
+        # 调用 AI 生成题目，返回 (标题，内容) - 使用异步版本
+        title, markdown = await generate_questions_async(prompt, user_id=user.id)
 
         # 保存历史记录（异步，不阻塞主流程）
         try:

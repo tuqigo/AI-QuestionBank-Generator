@@ -1,5 +1,5 @@
 """管理员后台路由"""
-from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi import APIRouter, HTTPException, Depends, Request, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional
 
@@ -9,10 +9,12 @@ from models.admin import (
     OperationLogResponse, OperationLogListResponse,
     DisableUserRequest
 )
+from models.ai_generation_record import AiGenerationRecordFilter
 from services.admin_auth import verify_admin_password, create_admin_token, decode_admin_token, get_admin_token_expire_seconds
 from services.admin_operation_log import log_operation, get_operation_logs
 from services.user_store import get_all_users, get_user_by_id_with_status, set_user_disabled
-from services.question_record_store import get_user_records
+from services.question_record_store import get_user_records, get_record_by_id as get_question_record_by_id
+from services.ai_generation_record_store import get_records, get_record_by_id, get_user_records as get_ai_user_records
 from utils.logger import api_logger
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
@@ -217,3 +219,116 @@ async def get_operation_logs_list(
         page_size=page_size,
         has_more=has_more
     )
+
+
+# ========== AI 生成记录管理 ==========
+
+@router.get("/ai-records")
+async def get_ai_generation_records(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    user_id: Optional[int] = Query(None),
+    success: Optional[bool] = Query(None),
+    prompt_type: Optional[str] = Query(None),
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
+    admin: str = Depends(get_current_admin)
+):
+    """获取 AI 生成记录列表（支持筛选）"""
+    ip = admin  # 使用 admin 作为 IP 记录的占位
+
+    try:
+        filter = AiGenerationRecordFilter(
+            user_id=user_id,
+            success=success,
+            prompt_type=prompt_type,
+            date_from=date_from,
+            date_to=date_to
+        )
+        records, total, has_more = get_records(filter, page, page_size)
+
+        log_operation(
+            operator="admin",
+            action="view_ai_records",
+            target_type="ai_record",
+            ip=ip,
+            details=f"page={page}, page_size={page_size}"
+        )
+
+        return {
+            "data": records,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "has_more": has_more
+        }
+    except Exception as e:
+        api_logger.error(f"获取 AI 记录失败：{e}")
+        raise HTTPException(status_code=500, detail="获取 AI 记录失败")
+
+
+@router.get("/ai-records/{record_id}")
+async def get_ai_record_detail(
+    record_id: int,
+    req: Request,
+    admin: str = Depends(get_current_admin)
+):
+    """获取 AI 生成记录详情"""
+    ip = req.client.host if req.client else "unknown"
+
+    try:
+        record = get_record_by_id(record_id)
+        if not record:
+            raise HTTPException(status_code=404, detail="记录不存在")
+
+        log_operation(
+            operator="admin",
+            action="view_ai_record_detail",
+            target_type="ai_record",
+            target_id=record_id,
+            ip=ip
+        )
+
+        return record
+    except HTTPException:
+        raise
+    except Exception as e:
+        api_logger.error(f"获取 AI 记录详情失败：{e}")
+        raise HTTPException(status_code=500, detail="获取 AI 记录详情失败")
+
+
+@router.get("/user-records/{record_id}")
+async def get_user_record_detail(
+    record_id: int,
+    req: Request,
+    admin: str = Depends(get_current_admin)
+):
+    """获取用户题目记录详情（用于管理后台查看）"""
+    ip = req.client.host if req.client else "unknown"
+
+    try:
+        record = get_question_record_by_id(record_id)
+        if not record:
+            raise HTTPException(status_code=404, detail="记录不存在")
+
+        log_operation(
+            operator="admin",
+            action="view_user_record_detail",
+            target_type="user_record",
+            target_id=record_id,
+            ip=ip
+        )
+
+        return {
+            "id": record.id,
+            "title": record.title,
+            "prompt_type": record.prompt_type,
+            "prompt_content": record.prompt_content,
+            "ai_response": record.ai_response,
+            "created_at": str(record.created_at)
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        api_logger.error(f"获取用户题目记录详情失败：{e}")
+        raise HTTPException(status_code=500, detail="获取用户题目记录详情失败")

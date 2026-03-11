@@ -6,6 +6,9 @@ import LoginPage from './pages/LoginPage'
 import UsersPage from './pages/UsersPage'
 import UserDetailPage from './pages/UserDetailPage'
 import OperationLogsPage from './pages/OperationLogsPage'
+import AiRecordsPage from './pages/AiRecordsPage'
+import AiRecordDetailPage from './pages/AiRecordDetailPage'
+import UserRecordDetailPage from './pages/UserRecordDetailPage'
 import './App.css'
 
 // 受保护的路由组件
@@ -80,6 +83,14 @@ function AdminLayout() {
             用户管理
           </a>
           <a
+            href="/admin/ai-records"
+            className={isActive('/admin/ai-records') ? 'active' : ''}
+            onClick={(e) => { e.preventDefault(); navigate('/admin/ai-records') }}
+          >
+            <span className="nav-icon">📝</span>
+            AI 生成记录
+          </a>
+          <a
             href="/admin/logs"
             className={isActive('/admin/logs') ? 'active' : ''}
             onClick={(e) => { e.preventDefault(); navigate('/admin/logs') }}
@@ -115,6 +126,9 @@ export default function AdminApp() {
           <Route path="" element={<Navigate to="users" replace />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="users/:id" element={<UserDetailPage />} />
+          <Route path="ai-records" element={<AiRecordsPage />} />
+          <Route path="ai-records/:id" element={<AiRecordDetailPage />} />
+          <Route path="user-records/:id" element={<UserRecordDetailPage />} />
           <Route path="logs" element={<OperationLogsPage />} />
         </Route>
       </Route>

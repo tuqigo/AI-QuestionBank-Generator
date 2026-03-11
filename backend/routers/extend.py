@@ -49,15 +49,17 @@ async def extend_from_image(
     content = await file.read()
     if len(content) > MAX_FILE_SIZE:
         raise HTTPException(status_code=400, detail="图片大小不能超过 5MB")
+
+    # 获取用户 ID
+    user = get_user(email)
+    user_id = user.id if user else None
+
     try:
         image_base64 = base64.b64encode(content).decode("utf-8")
         media_type = get_media_type(file.content_type or "")
-        title, markdown = extend_questions_from_image(image_base64, media_type, hint.strip())
+        title, markdown = extend_questions_from_image(image_base64, media_type, hint.strip(), user_id=user_id)
 
-        # 保存历史记录
-        user = get_user(email)
-        record_id = None
-        short_id = None
+        # 保存历史记录（题目记录）
         if user:
             try:
                 record = QuestionRecordCreate(
@@ -72,7 +74,7 @@ async def extend_from_image(
             except Exception as e:
                 api_logger.error(f"图片扩展历史记录保存失败：{e}")
 
-        return ExtendResponse(title=title, markdown=markdown, record_id=record_id, short_id=short_id)
+        return ExtendResponse(title=title, markdown=markdown, record_id=None, short_id=None)
     except ValueError as e:
         raise HTTPException(status_code=500, detail=str(e))
     except RuntimeError as e:

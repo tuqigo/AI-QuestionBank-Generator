@@ -3,10 +3,11 @@ import time
 import json
 import re
 import asyncio
-from typing import Tuple
+from typing import Tuple, Optional
 from dashscope import Generation
 from config import DASHSCOPE_API_KEY, QWEN_MODEL, QUESTION_SYSTEM_PROMPT, QUESTION_PROMPT_TEMPLATE
 from utils.logger import qwen_logger
+from services.ai_generation_record_store import create_record, AiGenerationRecordCreate
 
 # 全局设置 API key
 dashscope.api_key = DASHSCOPE_API_KEY
@@ -51,22 +52,16 @@ def _parse_title_and_content(content: str) -> Tuple[str, str]:
     return "AI 题目生成", content
 
 
-def generate_questions(user_prompt: str) -> Tuple[str, str]:
+def generate_questions(user_prompt: str, user_id: Optional[int] = None) -> Tuple[str, str]:
     """生成题目（同步版本，用于向后兼容）"""
-    try:
-        # 检查是否已经在运行事件循环中
-        loop = asyncio.get_running_loop()
-        # 如果在事件循环中，使用 nest_asyncio 或创建新线程
-        import concurrent.futures
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            future = executor.submit(asyncio.run, generate_questions_async(user_prompt))
-            return future.result()
-    except RuntimeError:
-        # 没有运行的事件循环，直接使用 asyncio.run
-        return asyncio.run(generate_questions_async(user_prompt))
+    import concurrent.futures
+    # 始终在线程池中执行，避免事件循环问题
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(lambda: asyncio.run(generate_questions_async(user_prompt, user_id)))
+        return future.result()
 
 
-async def generate_questions_async(user_prompt: str) -> Tuple[str, str]:
+async def generate_questions_async(user_prompt: str, user_id: Optional[int] = None) -> Tuple[str, str]:
     """生成题目（异步版本）"""
     start_time = time.time()
     qwen_logger.info("=" * 60)
@@ -79,7 +74,22 @@ async def generate_questions_async(user_prompt: str) -> Tuple[str, str]:
 
     if not DASHSCOPE_API_KEY:
         qwen_logger.error("DASHSCOPE_API_KEY 未配置")
-        raise ValueError("DASHSCOPE_API_KEY 未配置，请在 .env 中设置")
+        error_msg = "DASHSCOPE_API_KEY 未配置，请在 .env 中设置"
+        # 记录失败日志
+        if user_id:
+            try:
+                record = AiGenerationRecordCreate(
+                    user_id=user_id,
+                    prompt=user_prompt,
+                    prompt_type="text",
+                    success=False,
+                    duration=round(time.time() - start_time, 2),
+                    error_message=error_msg
+                )
+                create_record(record)
+            except Exception as e:
+                qwen_logger.error(f"[记录保存] AI 生成记录保存失败：{e}")
+        raise ValueError(error_msg)
 
     user_content = QUESTION_PROMPT_TEMPLATE.format(user_prompt=user_prompt)
     messages = [
@@ -123,8 +133,23 @@ async def generate_questions_async(user_prompt: str) -> Tuple[str, str]:
                         f"total_tokens: {response.usage.get('total_tokens', 'N/A')}")
 
     if response.status_code != 200:
-        qwen_logger.error(f"[API 错误] 千问 API 调用失败：code={response.code}, message={response.message}")
-        raise RuntimeError(f"千问 API 调用失败：{response.code} - {response.message}")
+        error_msg = f"千问 API 调用失败：code={response.code}, message={response.message}"
+        qwen_logger.error(f"[API 错误] {error_msg}")
+        # 记录失败日志
+        if user_id:
+            try:
+                record = AiGenerationRecordCreate(
+                    user_id=user_id,
+                    prompt=user_prompt,
+                    prompt_type="text",
+                    success=False,
+                    duration=round(time.time() - start_time, 2),
+                    error_message=error_msg
+                )
+                create_record(record)
+            except Exception as e:
+                qwen_logger.error(f"[记录保存] AI 生成记录保存失败：{e}")
+        raise RuntimeError(error_msg)
 
     content = response.output.choices[0].message.content
     total_elapsed = time.time() - start_time
@@ -139,5 +164,20 @@ async def generate_questions_async(user_prompt: str) -> Tuple[str, str]:
     # 解析标题和内容
     title, questions_content = _parse_title_and_content(content or "")
     qwen_logger.info(f"[解析结果] 标题：{title}")
+
+    # 记录成功日志（异步，不阻塞）
+    if user_id:
+        try:
+            record = AiGenerationRecordCreate(
+                user_id=user_id,
+                prompt=user_prompt,
+                prompt_type="text",
+                success=True,
+                duration=round(total_elapsed, 2)
+            )
+            create_record(record)
+            qwen_logger.info(f"[记录保存] AI 生成记录保存成功：user_id={user_id}")
+        except Exception as e:
+            qwen_logger.error(f"[记录保存] AI 生成记录保存失败：{e}")
 
     return title, questions_content
