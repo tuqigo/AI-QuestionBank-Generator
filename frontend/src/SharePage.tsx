@@ -123,7 +123,10 @@ export default function SharePage() {
       </div>
 
       <div className="share-meta">
-        <span>创建时间：{new Date(record.created_at).toLocaleString('zh-CN')}</span>
+        <span>创建时间：{(() => {
+          const d = new Date(record.created_at)
+          return d.toLocaleString('zh-CN')
+        })()}</span>
       </div>
 
       <div className="share-content markdown-body">

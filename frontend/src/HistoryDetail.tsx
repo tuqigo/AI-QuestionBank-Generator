@@ -182,7 +182,10 @@ export default function HistoryDetail() {
 
       <div className="detail-meta">
         <span>类型：{record.prompt_type === 'image' ? '图片' : '文字'}</span>
-        <span>创建时间：{new Date(record.created_at).toLocaleString('zh-CN')}</span>
+        <span>创建时间：{(() => {
+          const d = new Date(record.created_at)
+          return d.toLocaleString('zh-CN')
+        })()}</span>
       </div>
 
       <div className="detail-prompt">

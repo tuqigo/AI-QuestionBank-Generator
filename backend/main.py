@@ -1,15 +1,8 @@
 import os
-import sys
-import time
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from routers import questions, auth, extend, history, admin
-
-# ========== 设置北京时间为默认时区 ==========
-os.environ['TZ'] = 'Asia/Shanghai'
-if sys.platform != 'win32':
-    time.tzset()
 
 app = FastAPI(title="好学生AI题库 API")
 

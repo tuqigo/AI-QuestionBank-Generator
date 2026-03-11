@@ -53,6 +53,7 @@ const HistoryDropdown = forwardRef<HTMLDivElement, HistoryDropdownProps>(functio
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
+    // UTC 时间自动转本地时区
     return date.toLocaleString('zh-CN', {
       month: '2-digit',
       day: '2-digit',

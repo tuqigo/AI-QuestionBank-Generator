@@ -25,12 +25,13 @@ def _init_db():
     conn = _get_connection()
     try:
         # 创建表（如果不存在）
+        # 使用 datetime('now') 存储 UTC 时间（SQLite 默认行为）
         conn.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 email TEXT UNIQUE NOT NULL,
                 hashed_password TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                created_at TIMESTAMP DEFAULT (datetime('now')),
                 is_disabled INTEGER DEFAULT 0
             )
         """)
@@ -84,7 +85,7 @@ def create_user(email: str, password: str = "") -> UserInDB:
             user_logger.warning(f"用户已存在：{email}")
             raise ValueError("邮箱已被注册")
 
-        # 插入新用户 - 支持空密码
+        # 插入新用户 - 使用数据库默认的 UTC 时间
         if password:
             hashed = get_password_hash(password)
         else:

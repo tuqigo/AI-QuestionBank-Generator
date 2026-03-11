@@ -3,13 +3,14 @@
 import sqlite3
 import random
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Literal
 
 from utils.logger import auth_logger
 
 # 数据库文件路径
 DB_PATH = Path(__file__).parent.parent / "data" / "users.db"
+
 
 # 验证码用途
 OtpPurpose = Literal["register", "reset_password"]
@@ -28,6 +29,7 @@ def _init_db():
     conn = _get_connection()
     try:
         # 创建表（如果不存在）
+        # 使用 datetime('now') 存储 UTC 时间（SQLite 默认行为）
         conn.execute("""
             CREATE TABLE IF NOT EXISTS otp_codes (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,7 +37,7 @@ def _init_db():
                 code TEXT NOT NULL,
                 purpose TEXT NOT NULL DEFAULT 'register',
                 attempts INTEGER DEFAULT 0,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                created_at TIMESTAMP DEFAULT (datetime('now')),
                 expires_at TIMESTAMP NOT NULL
             )
         """)
@@ -68,7 +70,10 @@ def store_otp(email: str, code: str, purpose: OtpPurpose = "register", expire_mi
     """存储 OTP 验证码"""
     conn = _get_connection()
     try:
-        expires_at = datetime.now() + timedelta(minutes=expire_minutes)
+        # 使用 UTC 时间
+        expires_at = datetime.now(timezone.utc) + timedelta(minutes=expire_minutes)
+        expires_at_str = expires_at.strftime('%Y-%m-%d %H:%M:%S')
+
         # 使同一邮箱同用途的旧验证码失效
         conn.execute(
             "UPDATE otp_codes SET expires_at = datetime('now') WHERE email = ? AND purpose = ? AND expires_at > datetime('now')",
@@ -77,7 +82,7 @@ def store_otp(email: str, code: str, purpose: OtpPurpose = "register", expire_mi
         # 插入新验证码
         conn.execute(
             "INSERT INTO otp_codes (email, code, purpose, expires_at) VALUES (?, ?, ?, ?)",
-            (email, code, purpose, expires_at)
+            (email, code, purpose, expires_at_str)
         )
         conn.commit()
         auth_logger.info(f"OTP 存储成功，email: {email}, purpose: {purpose}")
@@ -104,7 +109,7 @@ def verify_otp(email: str, code: str, purpose: OtpPurpose = "register") -> bool:
 
         # 检查是否已过期
         expires_at = datetime.strptime(row["expires_at"], "%Y-%m-%d %H:%M:%S.%f") if "." in row["expires_at"] else datetime.strptime(row["expires_at"], "%Y-%m-%d %H:%M:%S")
-        if datetime.now() > expires_at:
+        if datetime.now(timezone.utc).replace(tzinfo=None) > expires_at:
             auth_logger.warning(f"OTP 验证失败 - 验证码已过期，email: {email}, purpose: {purpose}")
             return False
 
@@ -140,7 +145,10 @@ def check_rate_limit(email: str, purpose: OtpPurpose = "register", ip_address: O
     """检查速率限制 - 返回 True 表示可以发送，False 表示被限制"""
     conn = _get_connection()
     try:
-        reset_at = datetime.now() + timedelta(minutes=window_minutes)
+        # 使用 UTC 时间
+        reset_at = datetime.now(timezone.utc) + timedelta(minutes=window_minutes)
+        reset_at_str = reset_at.strftime('%Y-%m-%d %H:%M:%S')
+
         cursor = conn.execute(
             "SELECT request_count, reset_at FROM otp_rate_limit WHERE email = ? AND purpose = ? AND ip_address IS ? ORDER BY id DESC LIMIT 1",
             (email, purpose, ip_address)
@@ -150,7 +158,7 @@ def check_rate_limit(email: str, purpose: OtpPurpose = "register", ip_address: O
             # 首次请求
             conn.execute(
                 "INSERT INTO otp_rate_limit (email, purpose, ip_address, reset_at) VALUES (?, ?, ?, ?)",
-                (email, purpose, ip_address, reset_at)
+                (email, purpose, ip_address, reset_at_str)
             )
             conn.commit()
             auth_logger.debug(f"速率限制检查通过 - 首次请求，email: {email}, purpose: {purpose}")
@@ -158,11 +166,11 @@ def check_rate_limit(email: str, purpose: OtpPurpose = "register", ip_address: O
 
         # 检查是否需要重置
         reset_time = datetime.strptime(row["reset_at"], "%Y-%m-%d %H:%M:%S.%f") if "." in row["reset_at"] else datetime.strptime(row["reset_at"], "%Y-%m-%d %H:%M:%S")
-        if datetime.now() > reset_time:
+        if datetime.now(timezone.utc).replace(tzinfo=None) > reset_time:
             # 重置计数器
             conn.execute(
                 "UPDATE otp_rate_limit SET request_count = 1, reset_at = ? WHERE email = ? AND purpose = ? AND ip_address IS ?",
-                (reset_at, email, purpose, ip_address)
+                (reset_at_str, email, purpose, ip_address)
             )
             conn.commit()
             auth_logger.debug(f"速率限制检查通过 - 已重置，email: {email}, purpose: {purpose}")

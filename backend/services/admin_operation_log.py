@@ -2,7 +2,6 @@
 import sqlite3
 from pathlib import Path
 from typing import Optional, List, Tuple
-from datetime import datetime
 
 from utils.logger import api_logger
 
@@ -31,7 +30,7 @@ def _init_db():
                 target_id INTEGER,
                 ip TEXT,
                 details TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT (datetime('now'))
             )
         """)
         conn.execute("""

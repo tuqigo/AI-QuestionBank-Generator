@@ -26,6 +26,7 @@ def _init_db():
     conn = _get_connection()
     try:
         # 创建用户题目记录表
+        # 使用 datetime('now') 存储 UTC 时间（SQLite 默认行为）
         conn.execute("""
             CREATE TABLE IF NOT EXISTS user_question_records (
                 id              INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -38,7 +39,7 @@ def _init_db():
                 short_id        TEXT UNIQUE,
                 share_token     VARCHAR(64) UNIQUE,
                 is_deleted      INTEGER DEFAULT 0,
-                created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at      TIMESTAMP DEFAULT (datetime('now'))
             )
         """)
         # 创建索引
