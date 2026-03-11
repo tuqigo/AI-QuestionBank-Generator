@@ -109,6 +109,19 @@ async def get_history_list(
         raise HTTPException(status_code=500, detail="获取历史记录失败")
 
 
+@router.get("/share/{record_id}", response_model=QuestionRecordResponse)
+async def get_share_record(record_id: int, token: Optional[str] = Query(None)):
+    """通过分享链接获取记录（无需登录）"""
+    if not token:
+        raise HTTPException(status_code=404, detail="分享链接无效：缺少 token 参数")
+
+    record = get_record_by_share_token(token)
+    if not record:
+        raise HTTPException(status_code=404, detail="记录不存在或分享链接无效")
+
+    return record
+
+
 @router.get("/{record_id}", response_model=QuestionRecordResponse)
 async def get_history_detail(
     record_id: int,
@@ -175,16 +188,3 @@ async def create_share_url(
 
     # 返回分享链接（前端会拼接完整 URL）
     return ShareUrlResponse(share_url=f"/share/h/{record_id}?token={token}")
-
-
-@router.get("/share/{record_id}", response_model=QuestionRecordResponse)
-async def get_share_record(record_id: int, token: Optional[str] = Query(None)):
-    """通过分享链接获取记录（无需登录）"""
-    if not token:
-        raise HTTPException(status_code=404, detail="分享链接无效：缺少 token 参数")
-
-    record = get_record_by_share_token(token)
-    if not record:
-        raise HTTPException(status_code=404, detail="记录不存在或分享链接无效")
-
-    return record
