@@ -5,6 +5,7 @@ import { handlePrint as printUtilsHandlePrint, countQuestions, splitQuestionsAnd
 import type { GenerateResponse } from './types'
 import { fetchWithAuth, clearToken } from './auth'
 import HistoryDropdown from './HistoryList'
+import ProgressModal from './components/ProgressModal'
 import './App.css'
 
 // 加载 MathJax SVG 脚本（用于打印质量最高的公式渲染）
@@ -67,6 +68,10 @@ export default function MainContent({ email, onLogout }: Props) {
   const [extendLoading, setExtendLoading] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
 
+  // 进度条状态
+  const [progressStage, setProgressStage] = useState<'preparing' | 'connecting' | 'generating' | 'processing' | 'complete'>('preparing')
+  const [showProgress, setShowProgress] = useState(false)
+
   const generate = async () => {
     const p = prompt.trim()
     if (!p) {
@@ -75,6 +80,29 @@ export default function MainContent({ email, onLogout }: Props) {
     }
     setError('')
     setLoading(true)
+    setShowProgress(true)
+    setProgressStage('preparing')
+
+    // 模拟阶段推进（因为无法获取后端真实进度）
+    const stageTimers: ReturnType<typeof setTimeout>[] = []
+
+    // 200ms 后进入"连接 AI"阶段
+    stageTimers.push(setTimeout(() => {
+      setProgressStage('connecting')
+    }, 200))
+
+    // 800ms 后进入"生成中"阶段
+    stageTimers.push(setTimeout(() => {
+      setProgressStage('generating')
+    }, 800))
+
+    // 8 秒后如果还在生成中，显示"整理中"
+    stageTimers.push(setTimeout(() => {
+      if (progressStage === 'generating') {
+        setProgressStage('processing')
+      }
+    }, 8000))
+
     try {
       const res = await fetchWithAuth(`${API_BASE}/questions/generate`, {
         method: 'POST',
@@ -90,10 +118,21 @@ export default function MainContent({ email, onLogout }: Props) {
       if (!res.ok) throw new Error((data as { detail?: string }).detail || '生成失败')
       const genRes = data as GenerateResponse
       setMarkdown(genRes.markdown)
+
+      // 完成后显示完成状态
+      setProgressStage('complete')
+
+      // 500ms 后关闭进度条
+      setTimeout(() => {
+        setShowProgress(false)
+      }, 500)
     } catch (e) {
       setError(e instanceof Error ? e.message : '生成失败')
+      setShowProgress(false)
     } finally {
       setLoading(false)
+      // 清除所有定时器
+      stageTimers.forEach(clearTimeout)
     }
   }
 
@@ -104,6 +143,26 @@ export default function MainContent({ email, onLogout }: Props) {
     }
     setError('')
     setExtendLoading(true)
+    setShowProgress(true)
+    setProgressStage('preparing')
+
+    // 模拟阶段推进
+    const stageTimers: ReturnType<typeof setTimeout>[] = []
+
+    stageTimers.push(setTimeout(() => {
+      setProgressStage('connecting')
+    }, 200))
+
+    stageTimers.push(setTimeout(() => {
+      setProgressStage('generating')
+    }, 800))
+
+    stageTimers.push(setTimeout(() => {
+      if (progressStage === 'generating') {
+        setProgressStage('processing')
+      }
+    }, 8000))
+
     try {
       const formData = new FormData()
       formData.append('file', imageFile)
@@ -120,11 +179,19 @@ export default function MainContent({ email, onLogout }: Props) {
       }
       if (!res.ok) throw new Error((data as { detail?: string }).detail || '生成失败')
       setMarkdown((data as { markdown: string }).markdown)
+
+      setProgressStage('complete')
+
+      setTimeout(() => {
+        setShowProgress(false)
+      }, 500)
       setImageFile(null)
     } catch (e) {
       setError(e instanceof Error ? e.message : '生成失败')
+      setShowProgress(false)
     } finally {
       setExtendLoading(false)
+      stageTimers.forEach(clearTimeout)
     }
   }
 
@@ -221,6 +288,9 @@ export default function MainContent({ email, onLogout }: Props) {
 
   return (
     <div className="app">
+      {/* 进度条 Modal */}
+      <ProgressModal isOpen={showProgress} stage={progressStage} />
+
       {/* 顶部导航栏 */}
       <header className="header">
         <div className="header-content">
