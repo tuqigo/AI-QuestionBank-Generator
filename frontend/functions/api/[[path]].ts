@@ -19,14 +19,26 @@ export const onRequest: Handler = async (context) => {
     const { request } = context;
     const url = new URL(request.url);
 
-    // 构建后端请求 URL（后端地址已包含 /api 或不包含，直接拼接完整路径）
-    // 前端请求 /api/xxx，后端期望接收 /api/xxx
-    const targetUrl = `${backendUrl}${url.pathname}`;
+    // 移除 BACKEND_URL 尾部斜杠，避免拼接出双斜杠
+    const baseUrl = backendUrl.endsWith('/') ? backendUrl.slice(0, -1) : backendUrl;
+
+    // 构建后端请求 URL，包含 pathname 和 search 参数
+    const targetUrl = `${baseUrl}${url.pathname}${url.search}`;
 
     // 复制请求头，移除 hop-by-hop 头
     const headers = new Headers(request.headers);
     headers.delete("host");
     headers.delete("content-length");
+    headers.delete("connection");
+    headers.delete("keep-alive");
+    headers.delete("upgrade");
+    headers.delete("te");
+
+    // 添加转发信息，便于后端记录真实客户端 IP
+    const clientIP = request.headers.get("CF-Connecting-IP") || "";
+    headers.set("X-Forwarded-For", clientIP);
+    headers.set("X-Forwarded-Host", url.host);
+    headers.set("X-Forwarded-Proto", url.protocol.slice(0, -1));
 
     // 添加 CORS 头
     const corsHeaders = {
@@ -45,22 +57,32 @@ export const onRequest: Handler = async (context) => {
     // 转发请求到后端
     const response = await fetch(targetUrl, {
       method: request.method,
-      headers: {
-        ...Object.fromEntries(headers),
-      },
-      body: request.method !== "GET" && request.method !== "HEAD" ? request.body : undefined,
+      headers,
+      body: request.body,
     });
 
-    // 复制响应头和状态码
+    // 复制响应头，保留原始响应头
     const responseHeaders = new Headers(response.headers);
+
+    // 设置 CORS 头（覆盖可能存在的冲突头）
     responseHeaders.set("Access-Control-Allow-Origin", "*");
+    responseHeaders.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    responseHeaders.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
     return new Response(response.body, {
       status: response.status,
       headers: responseHeaders,
     });
   } catch (error) {
-    console.error("API proxy error:", error);
+    const { request } = context;
+    const url = new URL(request.url);
+
+    console.error("API proxy error:", {
+      method: request.method,
+      path: `${url.pathname}${url.search}`,
+      error: error instanceof Error ? error.message : String(error)
+    });
+
     return new Response(
       JSON.stringify({ error: "Failed to proxy request to backend" }),
       {
