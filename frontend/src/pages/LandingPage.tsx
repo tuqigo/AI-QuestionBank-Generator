@@ -117,13 +117,17 @@ export default function LandingPage() {
     return () => clearInterval(typingInterval)
   }, [])
 
-  const handleOpenModal = (mode: 'register' | 'login' = 'register') => {
+  const handleOpenModal = (mode: 'register' | 'login') => {
     setLoginModalMode(mode)
     setShowLoginModal(true)
   }
 
   const handleLoginClick = () => {
     handleOpenModal('login')
+  }
+
+  const handleRegisterClick = () => {
+    handleOpenModal('register')
   }
 
   const features = [
@@ -241,7 +245,7 @@ export default function LandingPage() {
             <button className="btn-nav-login" onClick={handleLoginClick}>
               登录
             </button>
-            <button className="btn-nav-register" onClick={() => handleOpenModal('register')}>
+            <button className="btn-nav-register" onClick={handleRegisterClick}>
               免费开始
             </button>
           </div>
@@ -276,7 +280,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <button className="btn-hero-cta" onClick={handleOpenModal}>
+          <button className="btn-hero-cta" onClick={handleRegisterClick}>
             🚀 免费试用 - 立即开始
           </button>
 
@@ -336,7 +340,7 @@ export default function LandingPage() {
         <h2 className="section-title">试卷示例</h2>
         <div className="demos-grid">
           {demos.map((demo, index) => (
-            <div key={index} className="demo-card" onClick={handleOpenModal}>
+            <div key={index} className="demo-card" onClick={handleRegisterClick}>
               <div className={`demo-preview ${demo.color}`}>
                 <span className="demo-subject">{demo.subject}</span>
                 <span className="demo-grade">{demo.grade}</span>
@@ -384,7 +388,7 @@ export default function LandingPage() {
       {/* 7. 底部 CTA */}
       <section className="landing-cta">
         <h2 className="cta-title">立即开始，让孩子爱上学习</h2>
-        <button className="btn-cta-primary" onClick={handleOpenModal}>
+        <button className="btn-cta-primary" onClick={handleRegisterClick}>
           🎁 免费注册 - 送 7 天 VIP
         </button>
       </section>
