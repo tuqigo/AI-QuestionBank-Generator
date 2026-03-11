@@ -25,7 +25,10 @@
       "Bash(cd D:\\\\project\\\\AI-QuestionBank-Generator\\\\frontend && npm install markdown-it @types/markdown-it --save && npm uninstall html2pdf.js --save)",
       "Bash(cd /d/project/AI-QuestionBank-Generator/frontend && npm install markdown-it @types/markdown-it --save && npm uninstall html2pdf.js --save)",
       "Bash(ssh root@racknerd \"ls -la /root/AI-QuestionBank-Generator/backend/routers/\" 2>&1)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(find . -name \"*.db\" -o -name \"*.sqlite\" -o -name \"*.sqlite3\" 2>/dev/null | head -20)",
+      "Read(//etc/**)",
+      "Bash(timedatectl)"
     ]
   }
 }
