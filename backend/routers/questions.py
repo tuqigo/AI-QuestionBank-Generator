@@ -1,8 +1,9 @@
+from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 
 from services.qwen_client import generate_questions_async
-from services.question_record_store import create_record, QuestionRecordCreate
+from services.question_record_store import create_record, QuestionRecordCreate, get_record_by_short_id
 from routers.auth import get_current_user_email
 from services.user_store import get_user as get_user_by_email
 from utils.logger import api_logger, qwen_logger
@@ -17,6 +18,8 @@ class GenerateRequest(BaseModel):
 class GenerateResponse(BaseModel):
     title: str
     markdown: str
+    record_id: Optional[int] = None
+    short_id: Optional[str] = None
 
 
 @router.post("/generate", response_model=GenerateResponse)
@@ -54,14 +57,16 @@ async def generate(
                 ai_response=markdown,
                 image_path=None,
             )
-            record_id = create_record(user.id, record)
-            api_logger.info(f"历史记录保存成功：id={record_id}, user_id={user.id}")
+            record_id, short_id = create_record(user.id, record)
+            api_logger.info(f"历史记录保存成功：id={record_id}, short_id={short_id}, user_id={user.id}")
         except Exception as e:
             api_logger.error(f"历史记录保存失败：{e}")
+            record_id = None
+            short_id = None
             # 保存失败不阻塞主流程
 
         api_logger.info(f"题目生成成功，email: {email}, 标题：{title}, 内容长度：{len(markdown) if markdown else 0}")
-        return GenerateResponse(title=title, markdown=markdown)
+        return GenerateResponse(title=title, markdown=markdown, record_id=record_id, short_id=short_id)
     except ValueError as e:
         api_logger.error(f"题目生成失败 - 配置错误，email: {email}, error: {e}")
         raise HTTPException(status_code=500, detail=str(e))

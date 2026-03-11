@@ -22,6 +22,7 @@ class QuestionRecordUpdate(BaseModel):
 class QuestionRecordResponse(BaseModel):
     """题目记录响应模型"""
     id: int
+    short_id: str  # 对外暴露的短 ID
     title: str
     prompt_type: str
     prompt_content: str

@@ -1,7 +1,9 @@
 """图片上传生成扩展题"""
 
 import base64
+from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
+from pydantic import BaseModel
 
 from routers.auth import get_current_user_email
 from services.qwen_vision import extend_questions_from_image
@@ -13,6 +15,14 @@ router = APIRouter(prefix="/api/questions", tags=["questions"])
 
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+
+
+class ExtendResponse(BaseModel):
+    """扩展题响应"""
+    title: str
+    markdown: str
+    record_id: Optional[int] = None
+    short_id: Optional[str] = None
 
 
 def get_media_type(content_type: str) -> str:
@@ -27,7 +37,7 @@ def get_media_type(content_type: str) -> str:
     return "jpeg"
 
 
-@router.post("/extend-from-image")
+@router.post("/extend-from-image", response_model=ExtendResponse)
 async def extend_from_image(
     file: UploadFile = File(...),
     hint: str = Form(""),
@@ -46,6 +56,8 @@ async def extend_from_image(
 
         # 保存历史记录
         user = get_user(email)
+        record_id = None
+        short_id = None
         if user:
             try:
                 record = QuestionRecordCreate(
@@ -55,12 +67,12 @@ async def extend_from_image(
                     ai_response=markdown,
                     image_path=None,
                 )
-                record_id = create_record(user.id, record)
-                api_logger.info(f"图片扩展历史记录保存成功：id={record_id}, user_id={user.id}")
+                record_id, short_id = create_record(user.id, record)
+                api_logger.info(f"图片扩展历史记录保存成功：id={record_id}, short_id={short_id}, user_id={user.id}")
             except Exception as e:
                 api_logger.error(f"图片扩展历史记录保存失败：{e}")
 
-        return {"title": title, "markdown": markdown}
+        return ExtendResponse(title=title, markdown=markdown, record_id=record_id, short_id=short_id)
     except ValueError as e:
         raise HTTPException(status_code=500, detail=str(e))
     except RuntimeError as e:

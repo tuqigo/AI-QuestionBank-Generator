@@ -6,6 +6,7 @@ from routers.auth import get_current_user_email
 from services.question_record_store import (
     create_record,
     get_record_by_id,
+    get_record_by_short_id,
     get_record_by_share_token,
     get_user_records,
     soft_delete_record,
@@ -74,9 +75,9 @@ async def create_history(
     )
 
     try:
-        record_id = create_record(user_id, record)
-        api_logger.info(f"历史记录创建成功：id={record_id}, user_id={user_id}")
-        return {"id": record_id, "message": "保存成功"}
+        record_id, short_id = create_record(user_id, record)
+        api_logger.info(f"历史记录创建成功：id={record_id}, short_id={short_id}, user_id={user_id}")
+        return {"id": record_id, "short_id": short_id, "message": "保存成功"}
     except Exception as e:
         api_logger.error(f"创建历史记录失败：{e}")
         # 保存失败不阻塞主流程，返回成功但记录日志
@@ -111,10 +112,10 @@ async def get_history_list(
 
 @router.get("/{record_id}", response_model=QuestionRecordResponse)
 async def get_history_detail(
-    record_id: int,
+    record_id: str,
     email: str = Depends(get_current_user_email),
 ):
-    """获取单条历史记录详情"""
+    """获取单条历史记录详情（支持 short_id）"""
     user = get_user_by_email(email)
 
     if not user:
@@ -122,7 +123,8 @@ async def get_history_detail(
 
     user_id = user.id
 
-    record = get_record_by_id(record_id, user_id)
+    # 尝试用 short_id 查询
+    record = get_record_by_short_id(record_id, user_id)
     if not record:
         raise HTTPException(status_code=404, detail="记录不存在")
 
@@ -131,7 +133,7 @@ async def get_history_detail(
 
 @router.delete("/{record_id}")
 async def delete_history(
-    record_id: int,
+    record_id: str,
     email: str = Depends(get_current_user_email),
 ):
     """删除历史记录（软删除）"""
@@ -142,7 +144,12 @@ async def delete_history(
 
     user_id = user.id
 
-    success = soft_delete_record(record_id, user_id)
+    # 先通过 short_id 获取记录，得到真正的 id
+    record = get_record_by_short_id(record_id, user_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="记录不存在")
+
+    success = soft_delete_record(record.id, user_id)
     if not success:
         raise HTTPException(status_code=404, detail="记录不存在")
 
@@ -151,7 +158,7 @@ async def delete_history(
 
 @router.post("/{record_id}/share", response_model=ShareUrlResponse)
 async def create_share_url(
-    record_id: int,
+    record_id: str,
     request: Request,
     email: str = Depends(get_current_user_email),
 ):
@@ -163,18 +170,18 @@ async def create_share_url(
 
     user_id = user.id
 
-    # 检查记录是否存在
-    record = get_record_by_id(record_id, user_id)
+    # 先通过 short_id 获取记录，得到真正的 id
+    record = get_record_by_short_id(record_id, user_id)
     if not record:
         raise HTTPException(status_code=404, detail="记录不存在")
 
     # 生成或获取 share token
-    token = generate_share_token(record_id, user_id)
+    token = generate_share_token(record.id, user_id)
     if not token:
         raise HTTPException(status_code=500, detail="生成分享链接失败")
 
-    # 返回分享链接（前端会拼接完整 URL）
-    return ShareUrlResponse(share_url=f"/share/h/{record_id}?token={token}")
+    # 返回分享链接（前端会拼接完整 URL）- 使用 short_id
+    return ShareUrlResponse(share_url=f"/share/h/{record.short_id}?token={token}")
 
 
 # ========== 分享接口（独立路由，避免与 /{record_id} 冲突）==========
@@ -183,7 +190,7 @@ share_router = APIRouter(prefix="/api/share/history", tags=["share"])
 
 
 @share_router.get("/{record_id}", response_model=QuestionRecordResponse)
-async def get_share_record(record_id: int, token: Optional[str] = Query(None)):
+async def get_share_record(record_id: str, token: Optional[str] = Query(None)):
     """通过分享链接获取记录（无需登录）"""
     if not token:
         raise HTTPException(status_code=404, detail="分享链接无效：缺少 token 参数")

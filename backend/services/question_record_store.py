@@ -6,6 +6,7 @@ from typing import Optional, List, Tuple
 from datetime import datetime
 
 from models.question_record import QuestionRecordCreate, QuestionRecordResponse
+from utils.short_id import generate_short_id
 from utils.logger import user_logger
 
 # 数据库文件路径
@@ -34,6 +35,7 @@ def _init_db():
                 prompt_content  TEXT NOT NULL,
                 image_path      VARCHAR(500),
                 ai_response     TEXT NOT NULL,
+                short_id        TEXT UNIQUE,
                 share_token     VARCHAR(64) UNIQUE,
                 is_deleted      INTEGER DEFAULT 0,
                 created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -48,6 +50,10 @@ def _init_db():
             CREATE INDEX IF NOT EXISTS idx_user_question_records_share_token
             ON user_question_records(share_token)
         """)
+        conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_user_question_records_short_id
+            ON user_question_records(short_id)
+        """)
         conn.commit()
         user_logger.info("用户题目记录表初始化完成")
     except Exception as e:
@@ -61,27 +67,45 @@ def _init_db():
 _init_db()
 
 
-def create_record(user_id: int, record: QuestionRecordCreate) -> int:
-    """创建题目记录，返回新记录的 ID"""
+def create_record(user_id: int, record: QuestionRecordCreate) -> Tuple[int, str]:
+    """创建题目记录，返回新记录的 (ID, short_id)"""
     user_logger.info(f"创建题目记录：user_id={user_id}, title={record.title[:50]}...")
     conn = _get_connection()
     try:
+        # 生成唯一的 short_id
+        short_id = _generate_unique_short_id(conn)
+
         cursor = conn.execute(
             """
             INSERT INTO user_question_records
-            (user_id, title, prompt_type, prompt_content, image_path, ai_response)
-            VALUES (?, ?, ?, ?, ?, ?)
+            (user_id, title, prompt_type, prompt_content, image_path, ai_response, short_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
             (user_id, record.title, record.prompt_type, record.prompt_content,
-             record.image_path, record.ai_response)
+             record.image_path, record.ai_response, short_id)
         )
         conn.commit()
         record_id = cursor.lastrowid
-        user_logger.info(f"题目记录创建成功：id={record_id}")
-        return record_id
+        user_logger.info(f"题目记录创建成功：id={record_id}, short_id={short_id}")
+        return record_id, short_id
     except Exception as e:
         user_logger.error(f"创建题目记录失败：{e}")
         raise
+
+
+def _generate_unique_short_id(conn: sqlite3.Connection) -> str:
+    """生成唯一的 short_id（检查冲突）"""
+    max_attempts = 10
+    for _ in range(max_attempts):
+        short_id = generate_short_id()
+        # 检查是否已存在
+        row = conn.execute(
+            "SELECT 1 FROM user_question_records WHERE short_id = ?",
+            (short_id,)
+        ).fetchone()
+        if not row:
+            return short_id
+    raise RuntimeError("生成 short_id 失败：多次尝试后仍冲突")
 
 
 def get_record_by_id(record_id: int, user_id: Optional[int] = None) -> Optional[QuestionRecordResponse]:
@@ -94,7 +118,7 @@ def get_record_by_id(record_id: int, user_id: Optional[int] = None) -> Optional[
         if user_id:
             cursor = conn.execute(
                 """
-                SELECT id, title, prompt_type, prompt_content, image_path,
+                SELECT id, short_id, title, prompt_type, prompt_content, image_path,
                        ai_response, is_deleted, created_at
                 FROM user_question_records
                 WHERE id = ? AND user_id = ? AND is_deleted = 0
@@ -104,12 +128,47 @@ def get_record_by_id(record_id: int, user_id: Optional[int] = None) -> Optional[
         else:
             cursor = conn.execute(
                 """
-                SELECT id, title, prompt_type, prompt_content, image_path,
+                SELECT id, short_id, title, prompt_type, prompt_content, image_path,
                        ai_response, is_deleted, created_at
                 FROM user_question_records
                 WHERE id = ? AND is_deleted = 0
                 """,
                 (record_id,)
+            )
+        row = cursor.fetchone()
+        if row:
+            return _row_to_response(row)
+        return None
+    finally:
+        conn.close()
+
+
+def get_record_by_short_id(short_id: str, user_id: Optional[int] = None) -> Optional[QuestionRecordResponse]:
+    """根据 short_id 获取记录
+    user_id 用于权限校验，为 None 时不校验（用于分享场景）
+    """
+    user_logger.info(f"获取题目记录：short_id={short_id}, user_id={user_id}")
+    conn = _get_connection()
+    try:
+        if user_id:
+            cursor = conn.execute(
+                """
+                SELECT id, short_id, title, prompt_type, prompt_content, image_path,
+                       ai_response, is_deleted, created_at
+                FROM user_question_records
+                WHERE short_id = ? AND user_id = ? AND is_deleted = 0
+                """,
+                (short_id, user_id)
+            )
+        else:
+            cursor = conn.execute(
+                """
+                SELECT id, short_id, title, prompt_type, prompt_content, image_path,
+                       ai_response, is_deleted, created_at
+                FROM user_question_records
+                WHERE short_id = ? AND is_deleted = 0
+                """,
+                (short_id,)
             )
         row = cursor.fetchone()
         if row:
@@ -126,7 +185,7 @@ def get_record_by_share_token(share_token: str) -> Optional[QuestionRecordRespon
     try:
         cursor = conn.execute(
             """
-            SELECT id, title, prompt_type, prompt_content, image_path,
+            SELECT id, short_id, title, prompt_type, prompt_content, image_path,
                    ai_response, is_deleted, created_at
             FROM user_question_records
             WHERE share_token = ? AND is_deleted = 0
@@ -156,7 +215,7 @@ def get_user_records(
         if cursor:
             rows = conn.execute(
                 """
-                SELECT id, title, prompt_type, prompt_content, image_path,
+                SELECT id, short_id, title, prompt_type, prompt_content, image_path,
                        ai_response, is_deleted, created_at
                 FROM user_question_records
                 WHERE user_id = ? AND is_deleted = 0 AND id < ?
@@ -168,7 +227,7 @@ def get_user_records(
         else:
             rows = conn.execute(
                 """
-                SELECT id, title, prompt_type, prompt_content, image_path,
+                SELECT id, short_id, title, prompt_type, prompt_content, image_path,
                        ai_response, is_deleted, created_at
                 FROM user_question_records
                 WHERE user_id = ? AND is_deleted = 0
@@ -299,6 +358,7 @@ def _row_to_response(row: sqlite3.Row) -> QuestionRecordResponse:
     """将数据库行转换为响应对象"""
     return QuestionRecordResponse(
         id=row["id"],
+        short_id=row["short_id"],
         title=row["title"],
         prompt_type=row["prompt_type"],
         prompt_content=row["prompt_content"],

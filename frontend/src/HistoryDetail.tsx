@@ -76,7 +76,7 @@ export default function HistoryDetail() {
 
   useEffect(() => {
     if (!id) return
-    getHistoryDetail(parseInt(id))
+    getHistoryDetail(id)
       .then((data: QuestionRecord) => setRecord(data))
       .catch((err: unknown) => {
         console.error('加载失败:', err)
@@ -122,7 +122,7 @@ export default function HistoryDetail() {
   const handleShare = async () => {
     if (!id) return
     try {
-      const url = await createShareUrl(parseInt(id))
+      const url = await createShareUrl(id)
       setShareUrl(url)
       // 复制到剪贴板
       const fullUrl = window.location.origin + url

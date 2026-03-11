@@ -28,8 +28,8 @@ export async function getHistoryList(
 }
 
 /** 获取单条历史记录详情 */
-export async function getHistoryDetail(id: number): Promise<QuestionRecord> {
-  const res = await fetchWithAuth(`${API_BASE}/history/${id}`)
+export async function getHistoryDetail(shortId: string): Promise<QuestionRecord> {
+  const res = await fetchWithAuth(`${API_BASE}/history/${shortId}`)
 
   if (!res.ok) {
     const error = await res.text()
@@ -40,8 +40,8 @@ export async function getHistoryDetail(id: number): Promise<QuestionRecord> {
 }
 
 /** 删除历史记录 */
-export async function deleteHistory(id: number): Promise<void> {
-  const res = await fetchWithAuth(`${API_BASE}/history/${id}`, {
+export async function deleteHistory(shortId: string): Promise<void> {
+  const res = await fetchWithAuth(`${API_BASE}/history/${shortId}`, {
     method: 'DELETE',
   })
 
@@ -52,8 +52,8 @@ export async function deleteHistory(id: number): Promise<void> {
 }
 
 /** 生成分享链接 */
-export async function createShareUrl(id: number): Promise<string> {
-  const res = await fetchWithAuth(`${API_BASE}/history/${id}/share`, {
+export async function createShareUrl(shortId: string): Promise<string> {
+  const res = await fetchWithAuth(`${API_BASE}/history/${shortId}/share`, {
     method: 'POST',
   })
 
@@ -67,8 +67,8 @@ export async function createShareUrl(id: number): Promise<string> {
 }
 
 /** 通过分享 token 获取记录（无需登录） */
-export async function getSharedRecord(id: number, token: string): Promise<QuestionRecord> {
-  const url = `${API_BASE}/share/history/${id}?token=${encodeURIComponent(token)}`
+export async function getSharedRecord(shortId: string, token: string): Promise<QuestionRecord> {
+  const url = `${API_BASE}/share/history/${shortId}?token=${encodeURIComponent(token)}`
   const res = await fetch(url)
 
   if (!res.ok) {

@@ -53,7 +53,7 @@ export default function SharePage() {
       return
     }
 
-    getSharedRecord(parseInt(id), token)
+    getSharedRecord(id, token)
       .then((data: QuestionRecord) => setRecord(data))
       .catch((err: unknown) => {
         console.error('加载失败:', err)

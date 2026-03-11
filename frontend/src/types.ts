@@ -1,11 +1,14 @@
 export interface GenerateResponse {
   title: string
   markdown: string
+  record_id?: number
+  short_id?: string
 }
 
 // 历史记录相关类型
 export interface QuestionRecord {
   id: number
+  short_id: string
   title: string
   prompt_type: 'text' | 'image'
   prompt_content: string

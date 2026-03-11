@@ -37,12 +37,12 @@ const HistoryDropdown = forwardRef<HTMLDivElement, HistoryDropdownProps>(functio
     }
   }, [isOpen])
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (shortId: string) => {
     if (!confirm('确定要删除这条记录吗？')) return
-    setDeleting(id)
+    setDeleting(shortId as unknown as number)
     try {
-      await deleteHistory(id)
-      setRecords(records.filter(r => r.id !== id))
+      await deleteHistory(shortId)
+      setRecords(records.filter(r => r.short_id !== shortId))
     } catch (error) {
       console.error('删除失败:', error)
       alert('删除失败')
@@ -91,15 +91,15 @@ const HistoryDropdown = forwardRef<HTMLDivElement, HistoryDropdownProps>(functio
         <>
           <div className="history-dropdown-list">
             {records.map(record => (
-              <div key={record.id} className="history-dropdown-item">
+              <div key={record.short_id} className="history-dropdown-item">
                 <a
-                  href={`/history/${record.id}`}
+                  href={`/history/${record.short_id}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => {
                     e.preventDefault()
                     onClose()
-                    window.open(`/history/${record.id}`, '_blank', 'noopener,noreferrer')
+                    window.open(`/history/${record.short_id}`, '_blank', 'noopener,noreferrer')
                   }}
                 >
                   <div className="history-item-title">{record.title}</div>
@@ -111,13 +111,13 @@ const HistoryDropdown = forwardRef<HTMLDivElement, HistoryDropdownProps>(functio
                 <button
                   onClick={(e) => {
                     e.preventDefault()
-                    handleDelete(record.id)
+                    handleDelete(record.short_id)
                   }}
-                  disabled={deleting === record.id}
+                  disabled={deleting === (record.short_id as unknown as number)}
                   className="btn-delete-item"
                   title="删除"
                 >
-                  {deleting === record.id ? '...' : '×'}
+                  {deleting === (record.short_id as unknown as number) ? '...' : '×'}
                 </button>
               </div>
             ))}
