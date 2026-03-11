@@ -1,14 +1,24 @@
 import { useEffect, useState, useRef } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import './LandingPage.css'
 import LoginModal from '../components/LoginModal'
+import { getToken } from '../auth'
 
 export default function LandingPage() {
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [inputValue, setInputValue] = useState('')
   const [showLoginModal, setShowLoginModal] = useState(false)
   const [loginModalMode, setLoginModalMode] = useState<'register' | 'login'>('register')
   const inputRef = useRef<HTMLInputElement>(null)
+
+  // 已登录用户直接跳转到工作台
+  useEffect(() => {
+    const token = getToken()
+    if (token) {
+      navigate('/workbench')
+    }
+  }, [navigate])
 
   // SEO: 动态设置 meta 标签
   useEffect(() => {
