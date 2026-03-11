@@ -14,41 +14,45 @@ const md = new MarkdownIt({
 // 禁用 backtick 和 math 冲突的处理
 md.disable(['smartquotes']);
 
-// 用于存储被保护的数学内容
-let mathPlaceholders: Map<string, string> = new Map();
-
 /**
  * 保护数学内容不被 markdown-it 处理
+ * 返回：处理后的内容和占位符 Map
  */
-function protectMath(content: string): string {
-  mathPlaceholders.clear();
+function protectMath(content: string): { content: string; placeholders: Map<string, string> } {
+  const placeholders = new Map<string, string>();
   let idx = 0;
 
-  // 保护 $$...$$ (display math)
-  content = content.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
-    const placeholder = `MATH_DISPLAY_${idx++}`;
-    mathPlaceholders.set(placeholder, match);
+  // 保护 $$...$$ (display math) - 先处理 display math，避免被 inline 匹配
+  content = content.replace(/\$\$((?:[^$]|\\\$)+?)\$\$/g, (match, math) => {
+    // 使用特殊占位符格式，避免被 markdown 处理
+    const placeholder = `\u0002MATH_DISPLAY_${idx++}\u0003`;
+    placeholders.set(placeholder, match);
     return placeholder;
   });
 
-  // 保护 $...$ (inline math) - 需要确保不是已经处理过的
-  content = content.replace(/(?<!\$)\$([^\$]+?)\$(?!\$)/g, (match, math) => {
-    const placeholder = `MATH_INLINE_${idx++}`;
-    mathPlaceholders.set(placeholder, match);
+  // 保护 $...$ (inline math)
+  // 匹配 $...$ 内容，允许内部包含转义字符（如 \\% \\frac 等）
+  // 使用 [^$] 匹配任何非$字符（包括反斜杠）
+  content = content.replace(/(?<!\$)\$((?:[^$]|\$(?!\$))+?)\$(?!\$)/g, (match, math) => {
+    // 使用特殊占位符格式，避免被 markdown 处理
+    const placeholder = `\u0002MATH_INLINE_${idx++}\u0003`;
+    placeholders.set(placeholder, `$${math}$`);
     return placeholder;
   });
 
-  return content;
+  return { content, placeholders };
 }
 
 /**
  * 恢复被保护的数学内容
  */
-function restoreMath(content: string): string {
-  for (const [placeholder, original] of mathPlaceholders) {
-    content = content.replace(new RegExp(placeholder, 'g'), original);
+function restoreMath(content: string, placeholders: Map<string, string>): string {
+  for (const [placeholder, original] of placeholders) {
+    // 转义占位符中的特殊字符，确保正则表达式正确匹配
+    const escapedPlaceholder = placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escapedPlaceholder, 'g');
+    content = content.replace(regex, original);
   }
-  mathPlaceholders.clear();
   return content;
 }
 
@@ -61,8 +65,9 @@ export function processMarkdown(mdContent: string): string {
 
   let processed = mdContent;
 
-  // 保护数学内容
-  processed = protectMath(processed);
+  // 保护数学内容（使用局部 Map，避免多次调用冲突）
+  const { content: protectedContent, placeholders } = protectMath(processed);
+  processed = protectedContent;
 
   // 处理 [   ] 方框填空（2 个空格以上）- 在 markdown-it 之前处理
   processed = processed.replace(/\[ {2,}\]/g, '<span class="blank-box"></span>');
@@ -91,7 +96,7 @@ export function processMarkdown(mdContent: string): string {
   processed = md.render(processed);
 
   // 恢复数学内容
-  processed = restoreMath(processed);
+  processed = restoreMath(processed, placeholders);
 
   return processed;
 }

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { renderMarkdown } from '@/utils/markdownProcessor'
 import { getHistoryDetail, createShareUrl } from '@/api/history'
-import { handlePrint as printUtilsHandlePrint } from '@/utils/printUtils'
+import { handlePrint as printUtilsHandlePrint, splitQuestionsAndAnswers } from '@/utils/printUtils'
 import type { QuestionRecord } from '@/types'
 
 // 加载 MathJax SVG 脚本
@@ -38,22 +38,41 @@ const loadMathJax = (): Promise<void> => {
   })
 }
 
+// 清理答案标题文本
+function cleanAnswerText(text: string) {
+  if (!text) return ''
+  return text.replace(/\s*## 答案\s*/g, '')
+}
+
 export default function HistoryDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [record, setRecord] = useState<QuestionRecord | null>(null)
   const [loading, setLoading] = useState(true)
   const [shareUrl, setShareUrl] = useState<string | null>(null)
-  const contentRef = useRef<HTMLDivElement>(null)
+  const questionsRef = useRef<HTMLDivElement>(null)
+  const answersRef = useRef<HTMLDivElement>(null)
 
-  // 缓存渲染后的 HTML，避免 shareUrl 等 state 变化导致 HTML 重新计算
-  const questionsHtml = useMemo(() =>
-    record ? renderMarkdown(record.ai_response) : '',
+  // 分割题目和答案，分别渲染
+  const { questions, answers } = useMemo(() =>
+    record ? splitQuestionsAndAnswers(record.ai_response) : { questions: '', answers: null },
     [record]
   )
 
-  // 缓存 dangerouslySetInnerHTML 对象，避免每次渲染创建新对象导致 React 重新设置 innerHTML
+  // 分别渲染题目和答案的 HTML
+  const questionsHtml = useMemo(() =>
+    record ? renderMarkdown(questions) : '',
+    [record, questions]
+  )
+
+  const answersHtml = useMemo(() =>
+    answers ? renderMarkdown(cleanAnswerText(answers)) : '',
+    [answers]
+  )
+
+  // 缓存 dangerouslySetInnerHTML 对象
   const questionsProps = useMemo(() => ({ __html: questionsHtml }), [questionsHtml])
+  const answersProps = useMemo(() => ({ __html: answersHtml }), [answersHtml])
 
   useEffect(() => {
     if (!id) return
@@ -77,10 +96,15 @@ export default function HistoryDetail() {
       try {
         await loadMathJax()
         if (mounted && window.MathJax) {
+          // 等待 DOM 更新
           await new Promise(resolve => setTimeout(resolve, 100))
-          if (contentRef.current && window.MathJax.typeset) {
-            window.MathJax.typeset([contentRef.current])
-            console.log('HistoryDetail MathJax rendered')
+
+          // 收集需要渲染的元素（排除 null）
+          const elements = [questionsRef.current, answersRef.current].filter(Boolean) as HTMLElement[]
+
+          if (elements.length > 0 && window.MathJax.typesetPromise) {
+            await window.MathJax.typesetPromise(elements)
+            console.log('HistoryDetail MathJax rendered', { elementsCount: elements.length })
           }
         }
       } catch (error) {
@@ -167,7 +191,10 @@ export default function HistoryDetail() {
       </div>
 
       <div className="detail-content markdown-body">
-        <div ref={contentRef} dangerouslySetInnerHTML={questionsProps} />
+        <div ref={questionsRef} dangerouslySetInnerHTML={questionsProps} />
+        {answersHtml && (
+          <div ref={answersRef} className="answer-section" dangerouslySetInnerHTML={answersProps} />
+        )}
       </div>
     </div>
   )
