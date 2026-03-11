@@ -2,11 +2,17 @@
 import sqlite3
 from pathlib import Path
 from typing import Optional, List, Tuple
+from datetime import datetime, timezone
 
 from utils.logger import api_logger
 
 # 数据库文件路径
 DB_PATH = Path(__file__).parent.parent / "data" / "users.db"
+
+
+def _utc_now() -> str:
+    """返回 UTC 时间字符串（带 Z 后缀）"""
+    return datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
 
 
 def _get_connection() -> sqlite3.Connection:
@@ -68,10 +74,10 @@ def log_operation(
         cursor = conn.execute(
             """
             INSERT INTO admin_operation_logs
-            (operator, action, target_type, target_id, ip, details)
-            VALUES (?, ?, ?, ?, ?, ?)
+            (operator, action, target_type, target_id, ip, details, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
-            (operator, action, target_type, target_id, ip, details)
+            (operator, action, target_type, target_id, ip, details, _utc_now())
         )
         conn.commit()
         log_id = cursor.lastrowid

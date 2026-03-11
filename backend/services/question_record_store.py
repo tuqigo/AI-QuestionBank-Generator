@@ -3,7 +3,7 @@
 import sqlite3
 from pathlib import Path
 from typing import Optional, List, Tuple
-from datetime import datetime
+from datetime import datetime, timezone
 
 from models.question_record import QuestionRecordCreate, QuestionRecordResponse
 from utils.short_id import generate_short_id
@@ -11,6 +11,11 @@ from utils.logger import user_logger
 
 # 数据库文件路径
 DB_PATH = Path(__file__).parent.parent / "data" / "users.db"
+
+
+def _utc_now() -> str:
+    """返回 UTC 时间字符串（带 Z 后缀）"""
+    return datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
 
 
 def _get_connection() -> sqlite3.Connection:
@@ -79,11 +84,11 @@ def create_record(user_id: int, record: QuestionRecordCreate) -> Tuple[int, str]
         cursor = conn.execute(
             """
             INSERT INTO user_question_records
-            (user_id, title, prompt_type, prompt_content, image_path, ai_response, short_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            (user_id, title, prompt_type, prompt_content, image_path, ai_response, short_id, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (user_id, record.title, record.prompt_type, record.prompt_content,
-             record.image_path, record.ai_response, short_id)
+             record.image_path, record.ai_response, short_id, _utc_now())
         )
         conn.commit()
         record_id = cursor.lastrowid

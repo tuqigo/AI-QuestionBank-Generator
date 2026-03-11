@@ -40,8 +40,9 @@ export default function UsersPage() {
   }
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    // UTC 时间自动转本地时区
+    // 确保时间字符串带 Z 后缀，让 JavaScript 知道这是 UTC 时间
+    const utcStr = dateString.endsWith('Z') ? dateString : dateString + 'Z'
+    const date = new Date(utcStr)
     return date.toLocaleDateString('zh-CN', {
       year: 'numeric',
       month: '2-digit',

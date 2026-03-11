@@ -3,6 +3,7 @@
 import sqlite3
 from pathlib import Path
 from typing import Optional, List, Tuple
+from datetime import datetime, timezone
 
 from models.user import UserInDB
 from services.auth import get_password_hash
@@ -10,6 +11,11 @@ from utils.logger import user_logger
 
 # 数据库文件路径
 DB_PATH = Path(__file__).parent.parent / "data" / "users.db"
+
+
+def _utc_now() -> str:
+    """返回 UTC 时间字符串（带 Z 后缀）"""
+    return datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
 
 
 def _get_connection() -> sqlite3.Connection:
@@ -25,13 +31,13 @@ def _init_db():
     conn = _get_connection()
     try:
         # 创建表（如果不存在）
-        # 使用 datetime('now') 存储 UTC 时间（SQLite 默认行为）
+        # 使用 CURRENT_TIMESTAMP 存储服务器时区时间
         conn.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 email TEXT UNIQUE NOT NULL,
                 hashed_password TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT (datetime('now')),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 is_disabled INTEGER DEFAULT 0
             )
         """)
@@ -85,14 +91,14 @@ def create_user(email: str, password: str = "") -> UserInDB:
             user_logger.warning(f"用户已存在：{email}")
             raise ValueError("邮箱已被注册")
 
-        # 插入新用户 - 使用数据库默认的 UTC 时间
+        # 插入新用户 - 使用 UTC 时间（带 Z 后缀）
         if password:
             hashed = get_password_hash(password)
         else:
             hashed = ""
         cursor = conn.execute(
-            "INSERT INTO users (email, hashed_password) VALUES (?, ?)",
-            (email, hashed)
+            "INSERT INTO users (email, hashed_password, created_at) VALUES (?, ?, ?)",
+            (email, hashed, _utc_now())
         )
         conn.commit()
         user_logger.info(f"用户创建成功：{email}")

@@ -124,8 +124,8 @@ export default function SharePage() {
 
       <div className="share-meta">
         <span>创建时间：{(() => {
-          const d = new Date(record.created_at)
-          return d.toLocaleString('zh-CN')
+          const utcStr = record.created_at.endsWith('Z') ? record.created_at : record.created_at + 'Z'
+          return new Date(utcStr).toLocaleString('zh-CN')
         })()}</span>
       </div>
 
