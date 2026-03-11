@@ -1,11 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect, useCallback } from 'react'
 import { getToken, clearToken } from './auth'
-import LoginPage from './LoginPage'
 import MainContent from './MainContent'
 import HistoryDetail from './HistoryDetail'
 import SharePage from './SharePage'
 import AdminApp from './admin/App'
+import LandingPage from './pages/LandingPage'
 
 const API_BASE = '/api'
 
@@ -71,10 +71,14 @@ function AppContent() {
       {/* 公开分享页面 - 无需登录 */}
       <Route path="/share/h/:id" element={<SharePage />} />
 
-      {/* 需要登录的页面 */}
-      <Route path="/" element={user ? <MainContent email={user} onLogout={handleLogout} fetchUser={fetchUser} /> : <Navigate to="/login" />} />
-      <Route path="/login" element={user ? <Navigate to="/" /> : <LoginPage onSuccess={fetchUser} />} />
-      <Route path="/history/:id" element={user ? <HistoryDetail /> : <Navigate to="/login" />} />
+      {/* 【新增】首页 Landing Page - 公开访问 */}
+      <Route path="/" element={<LandingPage />} />
+
+      {/* 需要登录的页面 - 主内容 */}
+      <Route path="/workbench" element={user ? <MainContent email={user} onLogout={handleLogout} fetchUser={fetchUser} /> : <Navigate to="/" />} />
+
+      {/* 历史详情页 */}
+      <Route path="/history/:id" element={user ? <HistoryDetail /> : <Navigate to="/" />} />
     </Routes>
   )
 }

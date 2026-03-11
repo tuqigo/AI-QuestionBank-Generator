@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams, Link } from 'react-router-dom'
+import { getToken } from '@/auth'
 import { renderMarkdown } from '@/utils/markdownProcessor'
 import { getSharedRecord } from '@/api/history'
 import type { QuestionRecord } from '@/types'
@@ -45,6 +46,12 @@ export default function SharePage() {
   const [record, setRecord] = useState<QuestionRecord | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  // 检查登录状态
+  useEffect(() => {
+    setIsLoggedIn(!!getToken())
+  }, [])
 
   useEffect(() => {
     if (!id || !token) {
@@ -106,7 +113,7 @@ export default function SharePage() {
           <p>该分享链接可能已失效或记录已被删除</p>
           <div className="auth-hint">
             <p>想生成属于自己的题目吗？</p>
-            <Link to="/login" className="btn-primary">登录 / 注册</Link>
+            <a href="/?action=register" className="btn-primary">登录 / 注册</a>
           </div>
         </div>
       </div>
@@ -132,14 +139,21 @@ export default function SharePage() {
       <div className="share-content markdown-body">
         <div dangerouslySetInnerHTML={{ __html: questionsHtml as string }} />
       </div>
+      {!isLoggedIn && (
+        <>
+          <div className="share-footer">
 
-      <div className="share-footer">
-        <p>想生成属于自己的题目吗？</p>
-        <div className="share-actions">
-          <Link to="/login" className="btn-primary">登录 / 注册</Link>
-          <Link to="/" className="btn-secondary">返回首页</Link>
-        </div>
-      </div>
+
+            <p>想生成属于自己的题目吗？</p>
+            <div className="share-actions">
+              <a href="/?action=register" className="btn-primary">登录 / 注册</a>
+              <Link to="/" className="btn-secondary">返回首页</Link>
+            </div>
+
+
+          </div>
+        </>
+      )}
     </div>
   )
 }
