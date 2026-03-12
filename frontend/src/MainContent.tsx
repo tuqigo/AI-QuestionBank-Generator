@@ -138,7 +138,18 @@ export default function MainContent({ email, onLogout }: Props) {
         }
       }, 500)
     } catch (e) {
-      setError(e instanceof Error ? e.message : '生成失败')
+      // 友好的错误提示
+      let errorMessage = '生成失败，请稍后重试'
+      if (e instanceof Error) {
+        if (e.message.includes('超时')) {
+          errorMessage = '题目生成时间过长，请减少题目数量或简化要求后重试'
+        } else if (e.message.includes('网络')) {
+          errorMessage = '网络连接失败，请检查网络后重试'
+        } else {
+          errorMessage = '系统内部错误，稍后再试！'
+        }
+      }
+      setError(errorMessage)
       setShowProgress(false)
     } finally {
       setLoading(false)
@@ -205,7 +216,18 @@ export default function MainContent({ email, onLogout }: Props) {
       }, 500)
       setImageFile(null)
     } catch (e) {
-      setError(e instanceof Error ? e.message : '生成失败')
+      // 友好的错误提示
+      let errorMessage = '生成失败，请稍后重试'
+      if (e instanceof Error) {
+        if (e.message.includes('超时')) {
+          errorMessage = '题目生成时间过长，请减少题目数量或简化要求后重试'
+        } else if (e.message.includes('网络')) {
+          errorMessage = '网络连接失败，请检查网络后重试'
+        } else {
+          errorMessage = e.message
+        }
+      }
+      setError(errorMessage)
       setShowProgress(false)
     } finally {
       setExtendLoading(false)

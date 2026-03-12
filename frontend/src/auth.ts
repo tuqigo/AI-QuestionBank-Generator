@@ -1,5 +1,8 @@
 const TOKEN_KEY = 'qbank_token'
 
+// 接口超时时间：120 秒
+const REQUEST_TIMEOUT = 120 * 1000
+
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY)
 }
@@ -21,5 +24,26 @@ export async function fetchWithAuth(
   if (token) {
     headers.set('Authorization', `Bearer ${token}`)
   }
-  return fetch(url, { ...options, headers })
+
+  // 创建 AbortController 用于超时控制
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => {
+    controller.abort()
+  }, REQUEST_TIMEOUT)
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+      signal: controller.signal
+    })
+    clearTimeout(timeoutId)
+    return response
+  } catch (error) {
+    clearTimeout(timeoutId)
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('请求超时，题目生成时间过长，请稍后重试')
+    }
+    throw error
+  }
 }
