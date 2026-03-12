@@ -4,6 +4,7 @@ import { renderMarkdown } from '@/utils/markdownProcessor'
 import { getHistoryDetail, createShareUrl } from '@/api/history'
 import { handlePrint as printUtilsHandlePrint, splitQuestionsAndAnswers } from '@/utils/printUtils'
 import type { QuestionRecord } from '@/types'
+import './HistoryDetail.css'
 
 // 加载 MathJax SVG 脚本
 const loadMathJax = (): Promise<void> => {

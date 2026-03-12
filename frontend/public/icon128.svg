@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 256 256" role="img" aria-label="logo">
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 256 256" role="img" aria-label="logo">
   <defs>
     <linearGradient id="g" x1="0" x2="0" y1="0" y2="1">
       <stop offset="0" stop-color="#ff9a2a"/>
@@ -6,20 +6,11 @@
     </linearGradient>
   </defs>
 
-  <!-- 橙色圆形背景 -->
   <circle cx="128" cy="128" r="120" fill="url(#g)"/>
-
-  <!-- 屏幕（奶白） -->
   <rect x="48" y="84" width="160" height="96" rx="14" ry="14" fill="#fff7f2"/>
-
-  <!-- 屋顶（白）和中央暗色阴影 -->
   <polygon points="40,84 128,44 216,84 128,76" fill="#fff7f2"/>
   <polygon points="84,86 128,64 172,86 128,76" fill="#f7b06b"/>
-
-  <!-- 左右小黄点 -->
   <circle cx="92" cy="128" r="8" fill="#ffd941"/>
   <circle cx="164" cy="128" r="6.5" fill="#ffd941"/>
-
-  <!-- 中央字母 Q -->
   <text x="128" y="142" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="72" fill="#f26f21">Q</text>
 </svg>

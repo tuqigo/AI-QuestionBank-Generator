@@ -1,0 +1,254 @@
+/* ===== Share Page - 温暖教育主题 ===== */
+.share-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #fffdf9 0%, #fff5f0 100%);
+  padding: 40px 24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+.share-header {
+  max-width: 900px;
+  margin: 0 auto 24px;
+  text-align: center;
+}
+
+.share-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #262626;
+  margin: 0 0 12px;
+  letter-spacing: -0.02em;
+}
+
+.share-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #ff6b4a;
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  border: 1px solid rgba(255, 138, 101, 0.3);
+  border-radius: 20px;
+}
+
+.share-meta {
+  max-width: 900px;
+  margin: 0 auto 24px;
+  text-align: center;
+}
+
+.share-meta span {
+  font-size: 0.875rem;
+  color: #737373;
+}
+
+.share-content {
+  max-width: 900px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 14px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  padding: 32px;
+}
+
+.share-content.markdown-body {
+  font-size: 0.9375rem;
+  line-height: 1.9;
+  color: #262626;
+}
+
+.share-content h1,
+.share-content h2 {
+  margin: 24px 0 12px;
+  font-size: 1.15em;
+  font-weight: 700;
+  color: #171717;
+}
+
+.share-content p {
+  margin: 8px 0;
+}
+
+.share-content ol,
+.share-content ul {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+
+.share-content li {
+  margin: 6px 0;
+}
+
+.share-content ol li,
+.share-content ul li {
+  display: list-item !important;
+}
+
+.share-content img {
+  max-width: 100%;
+  height: auto;
+  margin: 12px 0;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+}
+
+.share-footer {
+  max-width: 500px;
+  margin: 40px auto 0;
+  text-align: center;
+  padding: 32px 24px;
+  background: white;
+  border-radius: 20px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+}
+
+.share-footer p {
+  font-size: 1rem;
+  color: #525252;
+  margin: 0 0 20px;
+  font-weight: 500;
+}
+
+.share-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.share-actions .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 32px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #ff6b4a 0%, #ff8a65 100%);
+  border: none;
+  border-radius: 50px;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(255, 107, 74, 0.3);
+  transition: all 0.2s ease;
+}
+
+.share-actions .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 74, 0.4);
+}
+
+.share-actions .btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 32px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #525252;
+  background: white;
+  border: 1px solid #e5e5e5;
+  border-radius: 50px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.share-actions .btn-secondary:hover {
+  background: #fafafa;
+  border-color: #d4d4d4;
+  color: #262626;
+}
+
+/* 加载状态 */
+.share-page .loading {
+  text-align: center;
+  padding: 80px 24px;
+  font-size: 1rem;
+  color: #737373;
+}
+
+/* 错误卡片 */
+.share-page .error-card {
+  max-width: 500px;
+  margin: 80px auto;
+  text-align: center;
+  padding: 48px 32px;
+  background: white;
+  border-radius: 20px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+}
+
+.error-card h2 {
+  font-size: 1.25rem;
+  color: #262626;
+  margin: 0 0 12px;
+}
+
+.error-card p {
+  font-size: 0.9375rem;
+  color: #737373;
+  margin: 0 0 24px;
+}
+
+.auth-hint {
+  padding: 24px;
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  border-radius: 14px;
+  margin-top: 24px;
+}
+
+.auth-hint p {
+  margin: 0 0 16px;
+  font-size: 0.9375rem;
+  color: #c2410c;
+  font-weight: 500;
+}
+
+.auth-hint .btn-primary {
+  display: inline-block;
+  padding: 12px 32px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #ff6b4a 0%, #ff8a65 100%);
+  border: none;
+  border-radius: 50px;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(255, 107, 74, 0.3);
+  transition: all 0.2s ease;
+}
+
+.auth-hint .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 74, 0.4);
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .share-page {
+    padding: 24px 16px;
+  }
+
+  .share-header h1 {
+    font-size: 1.375rem;
+  }
+
+  .share-content {
+    padding: 20px;
+  }
+
+  .share-footer {
+    padding: 24px 20px;
+  }
+
+  .share-actions {
+    flex-direction: column;
+  }
+
+  .share-actions .btn-primary,
+  .share-actions .btn-secondary {
+    width: 100%;
+  }
+}

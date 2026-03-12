@@ -4,6 +4,7 @@ import { getToken } from '@/auth'
 import { renderMarkdown } from '@/utils/markdownProcessor'
 import { getSharedRecord } from '@/api/history'
 import type { QuestionRecord } from '@/types'
+import './SharePage.css'
 
 // 加载 MathJax SVG 脚本
 const loadMathJax = (): Promise<void> => {

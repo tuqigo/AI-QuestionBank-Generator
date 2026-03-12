@@ -1,14 +1,14 @@
 /* ===== 设计令牌 - 温暖教育主题 ===== */
 :root {
-  /* 主色调 - 温暖活泼 */
-  --primary-50: #eff6ff;
-  --primary-100: #dbeafe;
-  --primary-200: #bfdbfe;
-  --primary-300: #93c5fd;
-  --primary-400: #60a5fa;
-  --primary-500: #3b82f6;
-  --primary-600: #2563eb;
-  --primary-700: #1d4ed8;
+  /* 主色调 - 珊瑚橙渐变 (与 LandingPage 统一) */
+  --primary-50: #fff7ed;
+  --primary-100: #ffedd5;
+  --primary-200: #fed7aa;
+  --primary-300: #fdba74;
+  --primary-400: #fb923c;
+  --primary-500: #f97316;
+  --primary-600: #ea580c;
+  --primary-700: #c2410c;
 
   /* 强调色 - 活力橙色 */
   --accent-50: #fff7ed;
@@ -53,7 +53,7 @@
   --gray-900: #111827;
 
   /* 背景 */
-  --bg-primary: #fafbfc;
+  --bg-primary: #fffdf9;
   --bg-secondary: #ffffff;
   --bg-elevated: #ffffff;
 
@@ -114,7 +114,7 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, #fafbfc 0%, #f0f4ff 100%);
+  background: linear-gradient(180deg, #fffdf9 0%, #fff5f0 100%);
 }
 
 /* ===== 顶部导航栏 ===== */
@@ -148,13 +148,13 @@ body {
 .logo-small {
   width: 42px;
   height: 42px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #ff6b4a 0%, #ff8a65 100%);
   border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  box-shadow: 0 4px 14px rgba(102, 126, 234, 0.35);
+  box-shadow: 0 4px 14px rgba(255, 107, 74, 0.35);
   transition: transform var(--transition-base);
 }
 
@@ -170,7 +170,7 @@ body {
 .header h1 {
   font-size: 1.25rem;
   font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #ff6b4a 0%, #ff8a65 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -203,7 +203,7 @@ body {
 .user-avatar {
   width: 32px;
   height: 32px;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: linear-gradient(135deg, #ff6b4a 0%, #ff8a65 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -273,7 +273,7 @@ body {
 .btn-history.active {
   background: var(--primary-50);
   border-color: var(--primary-200);
-  color: var(--primary-600);
+  color: var(--primary-700);
   transform: translateY(-1px);
 }
 
@@ -554,7 +554,7 @@ body {
   outline: none;
   border-color: var(--primary-500);
   background: white;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+  box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.12);
 }
 
 /* 快捷按钮 */
@@ -655,7 +655,7 @@ body {
 .hint-input:focus {
   outline: none;
   border-color: var(--primary-500);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
 }
 
 .btn-extend {
@@ -766,12 +766,12 @@ body {
   font-size: 1rem;
   font-weight: 600;
   color: white;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #ff6b4a 0%, #ff8a65 100%);
   border: none;
   border-radius: var(--radius-xl);
   cursor: pointer;
   transition: all var(--transition-base);
-  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 16px rgba(255, 107, 74, 0.4);
   position: relative;
   overflow: hidden;
 }
@@ -798,7 +798,7 @@ body {
 
 .btn-generate:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.5);
+  box-shadow: 0 8px 24px rgba(255, 107, 74, 0.5);
 }
 
 .btn-generate:active:not(:disabled) {
@@ -879,7 +879,7 @@ body {
   background: white;
   border-color: var(--primary-300);
   color: var(--primary-600);
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.2);
   transform: translateY(-1px);
 }
 
@@ -1448,7 +1448,7 @@ small {
 
 .progress-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(90deg, #ff6b4a 0%, #ff8a65 100%);
   border-radius: var(--radius-full);
   transition: width 0.5s ease-out;
   position: relative;
@@ -1508,9 +1508,9 @@ small {
 }
 
 .progress-step.active .progress-step-icon {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #ff6b4a 0%, #ff8a65 100%);
   color: white;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(255, 107, 74, 0.4);
   animation: pulse 1.5s infinite;
 }
 

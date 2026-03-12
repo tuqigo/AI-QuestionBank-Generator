@@ -1,0 +1,332 @@
+/* ===== History Detail Page - 温暖教育主题 ===== */
+.detail-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #fffdf9 0%, #fff5f0 100%);
+  padding: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+}
+
+.detail-header {
+  max-width: 900px;
+  margin: 0 auto 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.detail-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #262626;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.detail-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #ff6b4a 0%, #ff8a65 100%);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(255, 107, 74, 0.3);
+}
+
+.btn-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 74, 0.4);
+}
+
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #525252;
+  background: white;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.btn-back:hover {
+  background: #fafafa;
+  border-color: #d4d4d4;
+  color: #262626;
+}
+
+.share-link-display {
+  max-width: 900px;
+  margin: 0 auto 24px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 138, 101, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.share-link-display span {
+  font-size: 0.875rem;
+  color: #c2410c;
+  font-weight: 500;
+}
+
+.share-link-display a {
+  flex: 1;
+  min-width: 200px;
+  font-size: 0.875rem;
+  color: #ea580c;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.btn-copy {
+  padding: 8px 16px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #ff6b4a;
+  background: white;
+  border: 1px solid rgba(255, 107, 74, 0.3);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-copy:hover {
+  background: #fff7ed;
+  border-color: #ff6b4a;
+}
+
+.detail-meta {
+  max-width: 900px;
+  margin: 0 auto 20px;
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding: 16px 20px;
+  background: white;
+  border-radius: 14px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.detail-meta span {
+  font-size: 0.875rem;
+  color: #737373;
+}
+
+.detail-prompt {
+  max-width: 900px;
+  margin: 0 auto 24px;
+  padding: 20px;
+  background: white;
+  border-radius: 14px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.detail-prompt strong {
+  display: block;
+  font-size: 0.875rem;
+  color: #525252;
+  margin-bottom: 12px;
+}
+
+.detail-prompt p {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: #262626;
+  line-height: 1.7;
+  padding: 12px 16px;
+  background: #fafafa;
+  border-radius: 10px;
+}
+
+.detail-content {
+  max-width: 900px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 14px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  padding: 32px;
+}
+
+.detail-content.markdown-body {
+  font-size: 0.9375rem;
+  line-height: 1.9;
+  color: #262626;
+}
+
+.detail-content h1,
+.detail-content h2 {
+  margin: 24px 0 12px;
+  font-size: 1.15em;
+  font-weight: 700;
+  color: #171717;
+}
+
+.detail-content p {
+  margin: 8px 0;
+}
+
+.detail-content ol,
+.detail-content ul {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+
+.detail-content li {
+  margin: 6px 0;
+}
+
+/* 答案部分 */
+.detail-content .answer-section {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 2px dashed #e5e5e5;
+}
+
+/* 加载状态 */
+.detail-page .loading {
+  text-align: center;
+  padding: 80px 24px;
+  font-size: 1rem;
+  color: #737373;
+}
+
+/* 错误页面 */
+.detail-page .error-card {
+  max-width: 500px;
+  margin: 80px auto;
+  text-align: center;
+  padding: 48px 32px;
+  background: white;
+  border-radius: 20px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+}
+
+.error-card h2 {
+  font-size: 1.25rem;
+  color: #262626;
+  margin: 0 0 12px;
+}
+
+.error-card p {
+  font-size: 0.9375rem;
+  color: #737373;
+  margin: 0 0 24px;
+}
+
+.auth-hint {
+  padding: 24px;
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  border-radius: 14px;
+  margin-top: 24px;
+}
+
+.auth-hint p {
+  margin: 0 0 16px;
+  font-size: 0.9375rem;
+  color: #c2410c;
+  font-weight: 500;
+}
+
+.auth-hint .btn-primary {
+  display: inline-block;
+  padding: 12px 32px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #ff6b4a 0%, #ff8a65 100%);
+  border: none;
+  border-radius: 50px;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(255, 107, 74, 0.3);
+  transition: all 0.2s ease;
+}
+
+.auth-hint .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 74, 0.4);
+}
+
+/* Markdown 元素样式 */
+.detail-content img {
+  max-width: 100%;
+  height: auto;
+  margin: 12px 0;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+}
+
+.detail-content ol li,
+.detail-content ul li {
+  display: list-item !important;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .detail-page {
+    padding: 16px;
+  }
+
+  .detail-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .detail-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .detail-actions {
+    width: 100%;
+  }
+
+  .btn-action,
+  .btn-back {
+    flex: 1;
+    justify-content: center;
+    padding: 10px 16px;
+    font-size: 0.875rem;
+  }
+
+  .detail-meta,
+  .detail-prompt,
+  .detail-content {
+    padding: 20px;
+  }
+
+  .share-link-display {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .share-link-display a {
+    min-width: auto;
+  }
+}
