@@ -1,3 +1,4 @@
+import traceback
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
@@ -73,7 +74,13 @@ async def generate(
         return GenerateResponse(title=title, markdown=markdown, record_id=record_id, short_id=short_id)
     except ValueError as e:
         api_logger.error(f"题目生成失败 - 配置错误，email: {email}, error: {e}")
+        api_logger.error(f"堆栈跟踪:\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=str(e))
     except RuntimeError as e:
         api_logger.error(f"题目生成失败 - API 错误，email: {email}, error: {e}")
+        api_logger.error(f"堆栈跟踪:\n{traceback.format_exc()}")
         raise HTTPException(status_code=502, detail=str(e))
+    except Exception as e:
+        api_logger.error(f"题目生成失败 - 未知错误，email: {email}, error: {e}")
+        api_logger.error(f"堆栈跟踪:\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=str(e))
