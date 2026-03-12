@@ -3,6 +3,49 @@ import { Link } from 'react-router-dom'
 import { getHistoryList, deleteHistory } from '@/api/history'
 import type { QuestionRecord } from '@/types'
 
+// 内联样式 - 避免 CSS 加载延迟
+const inlineStyles = {
+  loading: {
+    padding: '32px 16px',
+    textAlign: 'center' as const,
+    color: '#737373',
+    fontSize: '0.9375rem',
+    display: 'flex' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    gap: '12px',
+  },
+  spinner: {
+    width: '20px',
+    height: '20px',
+    border: '2px solid #fed7aa',
+    borderTopColor: '#f97316',
+    borderRadius: '50%',
+    animation: 'spin 0.8s linear infinite',
+  },
+  empty: {
+    padding: '40px 16px',
+    textAlign: 'center' as const,
+  },
+  emptyText: {
+    color: '#737373',
+    fontSize: '0.9375rem',
+    marginBottom: '16px',
+  },
+  emptyLink: {
+    color: '#ea580c',
+    textDecoration: 'none',
+    fontWeight: 500,
+    fontSize: '0.9375rem',
+  },
+}
+
+const loadingSpinnerKeyframes = `
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+`
+
 interface HistoryDropdownProps {
   isOpen: boolean
   onClose: () => void
@@ -105,6 +148,8 @@ export default function HistoryDropdown({ isOpen, onClose }: HistoryDropdownProp
 
   return (
     <div className="history-dropdown" ref={dropdownRef}>
+      {/* 内联 keyframes 动画 */}
+      <style>{loadingSpinnerKeyframes}</style>
       <div className="history-dropdown-header">
         <h3>历史记录</h3>
         <button
@@ -122,11 +167,14 @@ export default function HistoryDropdown({ isOpen, onClose }: HistoryDropdownProp
       </div>
 
       {loading && records.length === 0 ? (
-        <div className="history-dropdown-loading">加载中...</div>
+        <div style={inlineStyles.loading}>
+          <span style={inlineStyles.spinner}></span>
+          加载中...
+        </div>
       ) : records.length === 0 ? (
-        <div className="history-dropdown-empty">
-          <p>暂无历史记录</p>
-          <Link to="/" onClick={onClose}>去生成题目</Link>
+        <div style={inlineStyles.empty}>
+          <p style={inlineStyles.emptyText}>暂无历史记录</p>
+          <Link to="/" onClick={onClose} style={inlineStyles.emptyLink}>去生成题目</Link>
         </div>
       ) : (
         <>
@@ -166,7 +214,13 @@ export default function HistoryDropdown({ isOpen, onClose }: HistoryDropdownProp
           </div>
 
           {loading && (
-            <div className="history-dropdown-loading-more">加载中...</div>
+            <div style={{
+              padding: '12px 16px',
+              textAlign: 'center',
+              color: '#737373',
+              fontSize: '0.8125rem',
+              background: '#f9fafb',
+            }}>加载中...</div>
           )}
         </>
       )}

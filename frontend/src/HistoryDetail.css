@@ -330,3 +330,48 @@
     min-width: auto;
   }
 }
+
+/* 复制成功 Toast 提示 */
+.copy-toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 50px;
+  box-shadow: 0 8px 32px rgba(34, 197, 94, 0.35);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  z-index: 9999;
+  animation: toast-slide-down 0.3s ease-out;
+}
+
+.copy-toast svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+@keyframes toast-slide-down {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@media (max-width: 768px) {
+  .copy-toast {
+    top: 16px;
+    padding: 10px 20px;
+    font-size: 0.875rem;
+  }
+}

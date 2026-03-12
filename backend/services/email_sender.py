@@ -39,7 +39,7 @@ def send_email(to_email: str, subject: str, html_content: str) -> bool:
 
 def send_otp_email(to_email: str, code: str, expire_minutes: int = 5, subject_prefix: str = "验证码") -> bool:
     """发送验证码邮件"""
-    subject = f"【好学生 AI 题库】{subject_prefix}"
+    subject = f"【题小宝】{subject_prefix}"
     html_content = f"""
     <!DOCTYPE html>
     <html>

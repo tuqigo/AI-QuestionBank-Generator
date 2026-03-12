@@ -54,16 +54,9 @@ export const handlePrint = async (markdown: string, titleText?: string) => {
   printContainer.className = 'print-paper'
 
   const titleHtml = `<h1 class="print-title">${defaultTitleText}</h1>`
-  const infoFields = `
-    <div class="print-info-fields">
-      <span>姓名：__________________</span>
-      <span>班级：__________________</span>
-      <span>得分：__________________</span>
-    </div>
-  `
   const contentHtml = answers
-    ? `${titleHtml}${infoFields}<div class="print-questions">${questionsHtml}</div><div class="print-page-break"></div><h2 class="print-answers-title">${defaultTitleText}-答案</h2><div class="print-answers">${answersHtml}</div>`
-    : `${titleHtml}${infoFields}<div class="print-questions">${questionsHtml}</div>`
+    ? `${titleHtml}<div class="print-spacer"></div><div class="print-questions">${questionsHtml}</div><div class="print-page-break"></div><h2 class="print-answers-title">${defaultTitleText}-答案</h2><div class="print-answers">${answersHtml}</div>`
+    : `${titleHtml}<div class="print-spacer"></div><div class="print-questions">${questionsHtml}</div>`
 
   printContainer.innerHTML = contentHtml
   document.body.appendChild(printContainer)

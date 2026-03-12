@@ -39,7 +39,7 @@ export default function AdminLoginPage() {
       <div className="admin-login-card">
         <div className="admin-login-header">
           <div className="admin-login-logo">📚</div>
-          <h1>好学生 AI 题库</h1>
+          <h1>题小宝</h1>
           <p>管理后台</p>
         </div>
 

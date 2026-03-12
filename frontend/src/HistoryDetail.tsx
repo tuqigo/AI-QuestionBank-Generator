@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { renderMarkdown } from '@/utils/markdownProcessor'
 import { getHistoryDetail, createShareUrl } from '@/api/history'
 import { handlePrint as printUtilsHandlePrint, splitQuestionsAndAnswers } from '@/utils/printUtils'
+import { getToken } from '@/auth'
 import type { QuestionRecord } from '@/types'
 import './HistoryDetail.css'
 
@@ -51,6 +52,7 @@ export default function HistoryDetail() {
   const [record, setRecord] = useState<QuestionRecord | null>(null)
   const [loading, setLoading] = useState(true)
   const [shareUrl, setShareUrl] = useState<string | null>(null)
+  const [showCopyToast, setShowCopyToast] = useState(false)
   const questionsRef = useRef<HTMLDivElement>(null)
   const answersRef = useRef<HTMLDivElement>(null)
 
@@ -123,12 +125,21 @@ export default function HistoryDetail() {
   const handleShare = async () => {
     if (!id) return
     try {
+      const token = getToken()
+      if (!token) {
+        alert('请先登录')
+        navigate('/')
+        return
+      }
       const url = await createShareUrl(id)
       setShareUrl(url)
       // 复制到剪贴板
       const fullUrl = window.location.origin + url
       await navigator.clipboard.writeText(fullUrl)
+      setShowCopyToast(true)
+      setTimeout(() => setShowCopyToast(false), 2000)
     } catch (err) {
+      console.error('分享失败:', err)
       alert('生成分享链接失败')
     }
   }
@@ -156,6 +167,16 @@ export default function HistoryDetail() {
 
   return (
     <div className="detail-page">
+      {/* 顶部复制成功提示 */}
+      {showCopyToast && (
+        <div className="copy-toast">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+            <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          <span>已复制</span>
+        </div>
+      )}
+
       <div className="detail-header">
         <h2>{record.title}</h2>
         <div className="detail-actions">
@@ -171,8 +192,21 @@ export default function HistoryDetail() {
           <a href={shareUrl} target="_blank" rel="noopener noreferrer">{window.location.origin}{shareUrl}</a>
           <button
             onClick={async () => {
-              await navigator.clipboard.writeText(window.location.origin + shareUrl)
-              alert('链接已复制到剪贴板')
+              try {
+                await navigator.clipboard.writeText(window.location.origin + shareUrl)
+                setShowCopyToast(true)
+                setTimeout(() => setShowCopyToast(false), 2000)
+              } catch (err) {
+                // 降级方案：使用传统方式复制
+                const input = document.createElement('input')
+                input.value = window.location.origin + shareUrl
+                document.body.appendChild(input)
+                input.select()
+                document.execCommand('copy')
+                document.body.removeChild(input)
+                setShowCopyToast(true)
+                setTimeout(() => setShowCopyToast(false), 2000)
+              }
             }}
             className="btn-copy"
           >
