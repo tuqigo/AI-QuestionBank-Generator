@@ -4,6 +4,7 @@ import { renderMarkdown } from './utils/markdownProcessor'
 import { handlePrint as printUtilsHandlePrint, countQuestions, splitQuestionsAndAnswers } from './utils/printUtils'
 import type { GenerateResponse } from './types'
 import { fetchWithAuth, clearToken } from './auth'
+import { validatePrompt } from './utils/promptValidator'
 import HistoryDropdown from './HistoryList'
 import ProgressModal from './components/ProgressModal'
 import './App.css'
@@ -78,10 +79,14 @@ export default function MainContent({ email, onLogout }: Props) {
 
   const generate = async () => {
     const p = prompt.trim()
-    if (!p) {
-      setError('请输入提示词')
+
+    // 使用统一的校验函数
+    const result = validatePrompt(p)
+    if (!result.valid) {
+      setError(result.error || '请输入题目要求')
       return
     }
+
     setError('')
     setLoading(true)
     setShowProgress(true)
@@ -163,6 +168,16 @@ export default function MainContent({ email, onLogout }: Props) {
       setError('请先选择一张题目图片')
       return
     }
+
+    // 校验 imageHint（如果提供了）
+    if (imageHint && imageHint.trim()) {
+      const result = validatePrompt(imageHint.trim())
+      if (!result.valid) {
+        setError(result.error || '请输入题目要求')
+        return
+      }
+    }
+
     setError('')
     setExtendLoading(true)
     setShowProgress(true)

@@ -10,6 +10,7 @@ from services.qwen_vision import extend_questions_from_image
 from services.user_store import get_user
 from services.question_record_store import create_record, QuestionRecordCreate
 from utils.logger import api_logger
+from utils.validators import validate_prompt
 
 router = APIRouter(prefix="/api/questions", tags=["questions"])
 
@@ -55,9 +56,16 @@ async def extend_from_image(
     user_id = user.id if user else None
 
     try:
+        # 校验 hint 提示词（如果提供了）
+        hint_stripped = hint.strip()
+        if hint_stripped:
+            error_msg = validate_prompt(hint_stripped)
+            if error_msg:
+                raise HTTPException(status_code=400, detail=error_msg)
+
         image_base64 = base64.b64encode(content).decode("utf-8")
         media_type = get_media_type(file.content_type or "")
-        title, markdown = extend_questions_from_image(image_base64, media_type, hint.strip(), user_id=user_id)
+        title, markdown = extend_questions_from_image(image_base64, media_type, hint_stripped, user_id=user_id)
 
         # 保存历史记录（题目记录）
         if user:

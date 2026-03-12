@@ -7,6 +7,7 @@ from services.question_record_store import create_record, QuestionRecordCreate, 
 from routers.auth import get_current_user_email
 from services.user_store import get_user as get_user_by_email
 from utils.logger import api_logger, qwen_logger
+from utils.validators import validate_prompt
 
 router = APIRouter(prefix="/api/questions", tags=["questions"])
 
@@ -34,9 +35,12 @@ async def generate(
     if not prompt:
         api_logger.warning(f"题目生成失败 - 提示词为空，email: {email}")
         raise HTTPException(status_code=400, detail="提示词不能为空")
-    if len(prompt) > 2000:
-        api_logger.warning(f"题目生成失败 - 提示词过长，email: {email}")
-        raise HTTPException(status_code=400, detail="提示词过长")
+
+    # 使用统一的校验函数
+    error_msg = validate_prompt(prompt)
+    if error_msg:
+        api_logger.warning(f"题目生成失败 - 提示词校验失败：{error_msg}, email: {email}")
+        raise HTTPException(status_code=400, detail=error_msg)
 
     try:
         api_logger.info(f"开始调用题目生成服务，email: {email}")
