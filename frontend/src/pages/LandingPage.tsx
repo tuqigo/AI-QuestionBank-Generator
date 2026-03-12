@@ -266,7 +266,7 @@ export default function LandingPage() {
       <section className="landing-hero">
         <div className="landing-hero-content">
           <h1 className="landing-hero-title">
-            AI 智能生成中小学题库，30 秒搞定一张练习卷
+            智能题库随心造，学习更高效
           </h1>
           <p className="landing-hero-subtitle">
             支持数学、语文、英语多学科，按年级精准定制，一键导出 PDF 打印
