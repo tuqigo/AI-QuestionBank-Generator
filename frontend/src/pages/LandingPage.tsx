@@ -22,7 +22,7 @@ export default function LandingPage() {
 
   // SEO: 动态设置 meta 标签
   useEffect(() => {
-    document.title = 'AI 题库生成器 - 小学生数学语文英语练习题在线生成'
+    document.title = '题小宝'
 
     let metaDesc = document.querySelector('meta[name="description"]')
     if (!metaDesc) {
@@ -72,7 +72,7 @@ export default function LandingPage() {
       structuredData.textContent = JSON.stringify({
         '@context': 'https://schema.org',
         '@type': 'SoftwareApplication',
-        name: '好学生 AI 题库生成器',
+        name: '题小宝',
         description: 'AI 智能生成中小学题库，支持数学、语文、英语多学科',
         applicationCategory: 'EducationalApplication',
         operatingSystem: 'Web',
@@ -249,7 +249,7 @@ export default function LandingPage() {
               <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            <span>好学生 AI 题库</span>
+            <span>题小宝</span>
           </div>
           <div className="landing-nav-actions">
             <button className="btn-nav-login" onClick={handleLoginClick}>
@@ -294,79 +294,71 @@ export default function LandingPage() {
             🚀 免费试用 - 立即开始
           </button>
 
-          <div className="hero-trust-badges">
-            <div className="trust-badge">
-              <span>✅</span>
-              <span>已生成 10,000+ 份试卷</span>
-            </div>
-            <div className="trust-badge">
-              <span>✅</span>
-              <span>100% 贴合教材大纲</span>
-            </div>
-            <div className="trust-badge">
-              <span>✅</span>
-              <span>无需下载，在线使用</span>
-            </div>
-          </div>
         </div>
       </section>
 
       {/* 3. 功能特性 */}
       <section className="landing-features">
         <h2 className="section-title">核心功能</h2>
-        <div className="features-grid">
-          {features.map((feature, index) => (
-            <div key={index} className="feature-card">
-              <div className="feature-icon">{feature.icon}</div>
-              <h3 className="feature-title">{feature.title}</h3>
-              <p className="feature-description">{feature.description}</p>
-            </div>
-          ))}
+        <div className="features-scroll-wrapper">
+          <div className="features-grid">
+            {features.map((feature, index) => (
+              <div key={index} className="feature-card">
+                <div className="feature-icon">{feature.icon}</div>
+                <h3 className="feature-title">{feature.title}</h3>
+                <p className="feature-description">{feature.description}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* 4. 使用场景 */}
       <section className="landing-use-cases">
         <h2 className="section-title">适用人群</h2>
-        <div className="use-cases-grid">
-          {useCases.map((useCase, index) => (
-            <div key={index} className="use-case-card">
-              <div className="use-case-icon">{useCase.icon}</div>
-              <h3 className="use-case-title">{useCase.title}</h3>
-              <div className="use-case-scenarios">
-                {useCase.scenarios.map((scenario, i) => (
-                  <span key={i} className="scenario-tag">
-                    {scenario}
-                  </span>
-                ))}
+        <div className="use-cases-scroll-wrapper">
+          <div className="use-cases-grid">
+            {useCases.map((useCase, index) => (
+              <div key={index} className="use-case-card">
+                <div className="use-case-icon">{useCase.icon}</div>
+                <h3 className="use-case-title">{useCase.title}</h3>
+                <div className="use-case-scenarios">
+                  {useCase.scenarios.map((scenario, i) => (
+                    <span key={i} className="scenario-tag">
+                      {scenario}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
       {/* 5. 示例展示 */}
       <section className="landing-demos">
         <h2 className="section-title">试卷示例</h2>
-        <div className="demos-grid">
-          {demos.map((demo, index) => (
-            <div key={index} className="demo-card" onClick={handleRegisterClick}>
-              <div className={`demo-preview ${demo.color}`}>
-                <span className="demo-subject">{demo.subject}</span>
-                <span className="demo-grade">{demo.grade}</span>
+        <div className="demos-scroll-wrapper">
+          <div className="demos-grid">
+            {demos.map((demo, index) => (
+              <div key={index} className="demo-card" onClick={handleRegisterClick}>
+                <div className={`demo-preview ${demo.color}`}>
+                  <span className="demo-subject">{demo.subject}</span>
+                  <span className="demo-grade">{demo.grade}</span>
+                </div>
+                <div className="demo-info">
+                  <h3 className="demo-topic">{demo.topic}</h3>
+                  <span className="demo-action">点击查看 →</span>
+                </div>
               </div>
-              <div className="demo-info">
-                <h3 className="demo-topic">{demo.topic}</h3>
-                <span className="demo-action">点击查看 →</span>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
       {/* 6. 用户评价 - 横向滚动 */}
       <section className="landing-testimonials">
-        <h2 className="section-title">用户说</h2>
+        <h2 className="section-title">用户使用反馈</h2>
         <div className="testimonials-scroll-wrapper">
           <div className="testimonials-scroll">
             {/* 第一份 */}
@@ -399,30 +391,18 @@ export default function LandingPage() {
       <section className="landing-cta">
         <h2 className="cta-title">立即开始，让孩子爱上学习</h2>
         <button className="btn-cta-primary" onClick={handleRegisterClick}>
-          🎁 免费注册 - 送 7 天 VIP
+          🎁 免费注册zhu 
         </button>
       </section>
 
       {/* 8. 页脚 */}
       <footer className="landing-footer">
-        <div className="footer-links">
-          <a href="#about">关于我们</a>
-          <a href="#help">使用帮助</a>
-          <a href="#contact">联系我们</a>
-          <a href="#privacy">隐私政策</a>
-          <a href="#terms">服务条款</a>
-        </div>
         <p className="footer-copyright">
-          © 2026 AI 题库生成器 - 好学生 AI 题库生成器
+          © 2026 题小宝
         </p>
-        <div className="footer-tags">
-          <span>热门标签：</span>
-          <a href="#tag1">一年级数学</a>
-          <a href="#tag2">二年级语文</a>
-          <a href="#tag3">小学英语</a>
-          <a href="#tag4">口算题</a>
-          <a href="#tag5">应用题</a>
-        </div>
+         <p className="footer-copyright">
+          沪1CP备12022346号-6沪公网安备33037108502004号
+        </p>
       </footer>
 
       {/* 登录注册弹框 */}

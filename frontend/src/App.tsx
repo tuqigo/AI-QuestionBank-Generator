@@ -56,7 +56,7 @@ function AppContent() {
               <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <p>好学生AI题库</p>
+          <p>题小宝</p>
           <div className="loading-spinner"></div>
         </div>
       </div>

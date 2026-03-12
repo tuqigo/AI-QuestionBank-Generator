@@ -214,7 +214,7 @@ export default function LoginPage({ onSuccess }: Props) {
               <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <h1>好学生AI题库</h1>
+          <h1>题小宝</h1>
           <p className="subtitle">为学生、家长、老师生成各学科练习题</p>
         </div>
 

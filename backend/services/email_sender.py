@@ -58,12 +58,12 @@ def send_otp_email(to_email: str, code: str, expire_minutes: int = 5, subject_pr
     <body>
         <div class="container">
             <div class="header">
-                <h1>📚 好学生AI题库</h1>
+                <h1>📚 题小宝</h1>
                 <p>验证码邮件</p>
             </div>
             <div class="content">
                 <p>您好！</p>
-                <p>您正在登录好学生AI题库，请使用以下验证码完成登录：</p>
+                <p>您正在登录题小宝，请使用以下验证码完成登录：</p>
                 <div class="code">{code}</div>
                 <p>验证码有效期为 <strong>{expire_minutes} 分钟</strong>，请尽快使用。</p>
                 <div class="warning">
@@ -76,7 +76,7 @@ def send_otp_email(to_email: str, code: str, expire_minutes: int = 5, subject_pr
                 </div>
                 <div class="footer">
                     <p>此邮件由系统自动发送，请勿回复</p>
-                    <p>&copy; 2026 好学生AI题库</p>
+                    <p>&copy; 2026 题小宝</p>
                 </div>
             </div>
         </div>

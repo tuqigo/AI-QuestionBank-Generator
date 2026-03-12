@@ -76,7 +76,7 @@ export default function AdminLoginPage() {
         </form>
 
         <div className="admin-login-footer">
-          <p> Powered by 好学生AI题库</p>
+          <p> Powered by 题小宝</p>
         </div>
       </div>
     </div>

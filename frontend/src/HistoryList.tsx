@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, forwardRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { getHistoryList, deleteHistory } from '@/api/history'
 import type { QuestionRecord } from '@/types'
@@ -8,16 +8,18 @@ interface HistoryDropdownProps {
   onClose: () => void
 }
 
-// 使用 forwardRef 暴露 dropdownRef
-const HistoryDropdown = forwardRef<HTMLDivElement, HistoryDropdownProps>(function HistoryDropdown({ isOpen, onClose }, ref) {
+export default function HistoryDropdown({ isOpen, onClose }: HistoryDropdownProps) {
   const [records, setRecords] = useState<QuestionRecord[]>([])
   const [nextCursor, setNextCursor] = useState<number | null>(null)
   const [hasMore, setHasMore] = useState(false)
   const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState<number | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
 
   const loadHistory = async (cursor?: number) => {
+    if (loading) return
+    setLoading(true)
     try {
       const res = await getHistoryList(cursor, 20)
       setRecords(cursor ? [...records, ...res.data] : res.data)
@@ -36,6 +38,42 @@ const HistoryDropdown = forwardRef<HTMLDivElement, HistoryDropdownProps>(functio
       loadHistory()
     }
   }, [isOpen])
+
+  // 点击外部关闭下拉菜单
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isOpen && dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        onClose()
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isOpen, onClose])
+
+  // 无限滚动加载
+  useEffect(() => {
+    const listElement = listRef.current
+    if (!listElement || !hasMore) return
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = listElement
+      // 当滚动到距离底部 50px 时加载更多内容
+      if (scrollHeight - scrollTop - clientHeight < 50 && !loading) {
+        loadHistory(nextCursor || undefined)
+      }
+    }
+
+    listElement.addEventListener('scroll', handleScroll)
+    return () => {
+      listElement.removeEventListener('scroll', handleScroll)
+    }
+  }, [hasMore, loading, nextCursor])
 
   const handleDelete = async (shortId: string) => {
     if (!confirm('确定要删除这条记录吗？')) return
@@ -66,7 +104,7 @@ const HistoryDropdown = forwardRef<HTMLDivElement, HistoryDropdownProps>(functio
   if (!isOpen) return null
 
   return (
-    <div className="history-dropdown history-dropdown-content" ref={dropdownRef}>
+    <div className="history-dropdown" ref={dropdownRef}>
       <div className="history-dropdown-header">
         <h3>历史记录</h3>
         <button
@@ -74,6 +112,7 @@ const HistoryDropdown = forwardRef<HTMLDivElement, HistoryDropdownProps>(functio
           className="btn-history-close"
           onClick={onClose}
           title="关闭"
+          aria-label="关闭历史记录"
         >
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -82,7 +121,7 @@ const HistoryDropdown = forwardRef<HTMLDivElement, HistoryDropdownProps>(functio
         </button>
       </div>
 
-      {loading ? (
+      {loading && records.length === 0 ? (
         <div className="history-dropdown-loading">加载中...</div>
       ) : records.length === 0 ? (
         <div className="history-dropdown-empty">
@@ -91,7 +130,7 @@ const HistoryDropdown = forwardRef<HTMLDivElement, HistoryDropdownProps>(functio
         </div>
       ) : (
         <>
-          <div className="history-dropdown-list">
+          <div className="history-dropdown-list" ref={listRef}>
             {records.map(record => (
               <div key={record.short_id} className="history-dropdown-item">
                 <a
@@ -118,6 +157,7 @@ const HistoryDropdown = forwardRef<HTMLDivElement, HistoryDropdownProps>(functio
                   disabled={deleting === (record.short_id as unknown as number)}
                   className="btn-delete-item"
                   title="删除"
+                  aria-label={`删除 ${record.title}`}
                 >
                   {deleting === (record.short_id as unknown as number) ? '...' : '×'}
                 </button>
@@ -125,17 +165,11 @@ const HistoryDropdown = forwardRef<HTMLDivElement, HistoryDropdownProps>(functio
             ))}
           </div>
 
-          {hasMore && (
-            <div className="history-dropdown-more">
-              <button onClick={() => loadHistory(nextCursor || undefined)}>
-                加载更多
-              </button>
-            </div>
+          {loading && (
+            <div className="history-dropdown-loading-more">加载中...</div>
           )}
         </>
       )}
     </div>
   )
-})
-
-export default HistoryDropdown
+}

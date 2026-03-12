@@ -29,7 +29,8 @@
       "Bash(find . -name \"*.db\" -o -name \"*.sqlite\" -o -name \"*.sqlite3\" 2>/dev/null | head -20)",
       "Read(//etc/**)",
       "Bash(timedatectl)",
-      "WebFetch(domain:kuaichuti.net)"
+      "WebFetch(domain:kuaichuti.net)",
+      "Bash(find . -name \"*.md\" -o -name \"*frontend-design*\" 2>/dev/null | head -20)"
     ]
   }
 }
