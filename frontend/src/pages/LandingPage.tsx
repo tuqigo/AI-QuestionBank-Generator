@@ -391,7 +391,7 @@ export default function LandingPage() {
       <section className="landing-cta">
         <h2 className="cta-title">立即开始，让孩子爱上学习</h2>
         <button className="btn-cta-primary" onClick={handleRegisterClick}>
-          🎁 免费注册zhu 
+          🎁 免费注册
         </button>
       </section>
 
