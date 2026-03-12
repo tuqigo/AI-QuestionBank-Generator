@@ -286,7 +286,7 @@ export default function LandingPage() {
               />
             </div>
             <div className="hero-input-hint">
-              💡 支持：混合运算 | 应用题 | 选择题 | 填空题 | 比较大小
+              💡 支持：混合运算 | 应用题 | 选择题 | 填空题 | 比较大小 | 证明题 |
             </div>
           </div>
 
