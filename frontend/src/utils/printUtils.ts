@@ -40,7 +40,7 @@ export const handlePrint = async (markdown: string, titleText?: string) => {
 
   // 提取 AI 生成的标题
   const titleMatch = questions.match(/^#\s+(.+)$/m)
-  const defaultTitleText = titleText || titleMatch ? (titleMatch?.[1] || '练习题') : '练习题'
+  const defaultTitleText = titleText || titleMatch?.[1] || '练习题'
 
   // 移除题目中的# 标题，避免重复显示
   const questionsWithoutTitle = questions.replace(/^#\s+(.+)$/gm, '').trim()
@@ -48,10 +48,33 @@ export const handlePrint = async (markdown: string, titleText?: string) => {
   // 清理文本后再调用 renderMarkdown
   const answersHtml = answers ? renderMarkdown(cleanAnswerText(answers)) : '';
 
+  // 创建打印遮罩层（隐藏原页面）
+  const overlay = document.createElement('div')
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    z-index: 999998;
+  `
+  document.body.appendChild(overlay)
+
   // 创建打印专用容器
   const printContainer = document.createElement('div')
   printContainer.id = 'print-container'
   printContainer.className = 'print-paper'
+  printContainer.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background: white;
+    z-index: 999999;
+  `
 
   const titleHtml = `<h1 class="print-title">${defaultTitleText}</h1>`
   const contentHtml = answers
@@ -69,8 +92,9 @@ export const handlePrint = async (markdown: string, titleText?: string) => {
   // 调用浏览器打印
   window.print()
 
-  // 打印完成后移除容器
+  // 打印完成后移除容器和遮罩层
   setTimeout(() => {
     document.body.removeChild(printContainer)
-  }, 500)
+    document.body.removeChild(overlay)
+  }, 100)
 }

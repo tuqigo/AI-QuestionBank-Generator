@@ -32,7 +32,7 @@ export default function HistoryDetail() {
   const navigate = useNavigate()
   const [record, setRecord] = useState<QuestionRecord | null>(null)
   const [loading, setLoading] = useState(true)
-  const [shareUrl, setShareUrl] = useState<string | null>(null)
+  const shareUrlRef = useRef<string | null>(null) // 使用 ref 存储分享链接，避免触发重新渲染
   const [showCopyToast, setShowCopyToast] = useState(false)
   const [structuredData, setStructuredData] = useState<{
     questions: StructuredQuestion[]
@@ -66,7 +66,7 @@ export default function HistoryDetail() {
         return
       }
       const url = await createShareUrl(id)
-      setShareUrl(url)
+      shareUrlRef.current = url
       // 复制到剪贴板
       const fullUrl = window.location.origin + url
       await navigator.clipboard.writeText(fullUrl)
@@ -84,8 +84,18 @@ export default function HistoryDetail() {
   const handlePrint = async () => {
     if (!structuredData?.questions || structuredData.questions.length === 0) return
 
-    console.log('Print clicked')
-    console.log('Questions count:', structuredData.questions.length)
+    // 创建打印遮罩层（隐藏原页面）
+    const overlay = document.createElement('div')
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: white;
+      z-index: 999998;
+    `
+    document.body.appendChild(overlay)
 
     // 创建打印专用容器
     const printContainer = document.createElement('div')
@@ -93,17 +103,12 @@ export default function HistoryDetail() {
     printContainer.className = 'print-paper'
     printContainer.style.cssText = `
       position: fixed;
-      left: 0;
       top: 0;
-      width: 210mm;
-      min-height: 297mm;
-      padding: 30mm 25mm;
-      margin: 10mm auto;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
       background: white;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
-      font-family: "Microsoft YaHei", "SimSun", sans-serif;
-      font-size: 14pt;
-      line-height: 1.8;
       z-index: 999999;
     `
 
@@ -149,13 +154,13 @@ export default function HistoryDetail() {
     // 添加延迟确保 DOM 完全渲染
     await new Promise(resolve => setTimeout(resolve, 200))
 
-    console.log('Triggering print')
     window.print()
 
-    // 打印完成后移除容器
+    // 打印完成后移除容器和遮罩层
     setTimeout(() => {
       document.body.removeChild(printContainer)
-    }, 300)
+      document.body.removeChild(overlay)
+    }, 100)
   }
 
   if (loading) {
@@ -172,6 +177,7 @@ export default function HistoryDetail() {
   }
 
   const hasStructuredData = structuredData?.questions && structuredData.questions.length > 0
+  const hasShareUrl = shareUrlRef.current
 
   return (
     <div className="detail-page">
@@ -194,20 +200,20 @@ export default function HistoryDetail() {
         </div>
       </div>
 
-      {shareUrl && (
+      {hasShareUrl && (
         <div className="share-link-display">
           <span>分享链接：</span>
-          <a href={shareUrl} target="_blank" rel="noopener noreferrer">{window.location.origin}{shareUrl}</a>
+          <a href={shareUrlRef.current} target="_blank" rel="noopener noreferrer">{window.location.origin}{shareUrlRef.current}</a>
           <button
             onClick={async () => {
               try {
-                await navigator.clipboard.writeText(window.location.origin + shareUrl)
+                await navigator.clipboard.writeText(window.location.origin + shareUrlRef.current)
                 setShowCopyToast(true)
                 setTimeout(() => setShowCopyToast(false), 2000)
               } catch (err) {
                 // 降级方案：使用传统方式复制
                 const input = document.createElement('input')
-                input.value = window.location.origin + shareUrl
+                input.value = window.location.origin + shareUrlRef.current
                 document.body.appendChild(input)
                 input.select()
                 document.execCommand('copy')

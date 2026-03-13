@@ -5,29 +5,21 @@
  * 注意：MathJax 渲染由 StructuredPreviewShared 统一控制
  * 本组件不触发 MathJax 渲染
  */
-import { lazy, Suspense } from 'react'
+import { useMemo } from 'react'
 import type { Question } from '@/types/structured'
 
-// 懒加载各题型组件
-const SingleChoice = lazy(() => import('./questions/SingleChoice'))
-const MultipleChoice = lazy(() => import('./questions/MultipleChoice'))
-const TrueFalse = lazy(() => import('./questions/TrueFalse'))
-const FillBlank = lazy(() => import('./questions/FillBlank'))
-const Calculation = lazy(() => import('./questions/Calculation'))
-const WordProblem = lazy(() => import('./questions/WordProblem'))
-const Geometry = lazy(() => import('./questions/Geometry'))
-const ReadComp = lazy(() => import('./questions/ReadComp'))
-const PoetryApp = lazy(() => import('./questions/PoetryApp'))
-const Cloze = lazy(() => import('./questions/Cloze'))
-const Essay = lazy(() => import('./questions/Essay'))
-
-// 加载中组件
-const LoadingFallback = () => (
-  <div className="question-loading">
-    <span className="loading-spinner"></span>
-    <span>加载中...</span>
-  </div>
-)
+// 题型组件映射
+import SingleChoice from './questions/SingleChoice'
+import MultipleChoice from './questions/MultipleChoice'
+import TrueFalse from './questions/TrueFalse'
+import FillBlank from './questions/FillBlank'
+import Calculation from './questions/Calculation'
+import WordProblem from './questions/WordProblem'
+import Geometry from './questions/Geometry'
+import ReadComp from './questions/ReadComp'
+import PoetryApp from './questions/PoetryApp'
+import Cloze from './questions/Cloze'
+import Essay from './questions/Essay'
 
 interface QuestionRendererProps {
   question: Question
@@ -48,7 +40,8 @@ export default function QuestionRenderer({ question, index = 1 }: QuestionRender
     )
   }
 
-  const renderQuestion = () => {
+  // 使用 useMemo 缓存渲染结果，避免不必要的重新渲染
+  const renderedQuestion = useMemo(() => {
     switch (question.type) {
       case 'SINGLE_CHOICE':
         return <SingleChoice question={question} index={index} />
@@ -90,11 +83,7 @@ export default function QuestionRenderer({ question, index = 1 }: QuestionRender
           </div>
         )
     }
-  }
+  }, [question, index])
 
-  return (
-    <Suspense fallback={<LoadingFallback />}>
-      {renderQuestion()}
-    </Suspense>
-  )
+  return renderedQuestion
 }

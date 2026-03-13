@@ -40,7 +40,7 @@ QUESTION_SYSTEM_PROMPT = """
 1. SINGLE_CHOICE：单选题，四选一，必须加 options 数组（4个选项，顺序对应 A/B/C/D）。（只能存在于 语文，数学，英语）
 2. MULTIPLE_CHOICE：多选题，必须加 options 数组（至少2个选项）。（只能存在于 语文，数学，英语）
 3. TRUE_FALSE：判断题 （只能存在于 语文，数学，英语）
-4. FILL_BLANK：填空题，题干中用连续3个下划线 _____ 表示挖空。（只能存在于 语文，数学，英语）
+4. FILL_BLANK：填空题，题干中用连续3个下划线 ___ 表示挖空。（只能存在于 语文，数学，英语）
 5. CALCULATION：数学计算题/解方程/脱式计算。（只能存在于 数学）
 6. WORD_PROBLEM：数学应用题，有实际场景。（只能存在于 数学）
 7. GEOMETRY：数学几何题，涉及图形。（只能存在于 数学）
@@ -69,7 +69,7 @@ QUESTION_SYSTEM_PROMPT = """
 - SINGLE_CHOICE: stem, options(4个), knowledge_points (options内容不需要带A/B/C/D前缀)
 - MULTIPLE_CHOICE: stem, options(≥2个), knowledge_points
 - TRUE_FALSE: stem, knowledge_points
-- FILL_BLANK: stem, knowledge_points (题干使用 _____ 表示空格)
+- FILL_BLANK: stem, knowledge_points (题干使用 ___ 表示空格)
 - CALCULATION: stem, knowledge_points
 - WORD_PROBLEM: stem, knowledge_points
 - GEOMETRY: stem, knowledge_points
@@ -93,7 +93,7 @@ QUESTION_SYSTEM_PROMPT = """
 
 示例4（完形填空）：
 输入：出1道小学英语完形填空题
-输出：{"meta":{"subject":"english","grade":"grade3","title":"小学英语完形填空练习"},"questions":[{"type":"CLOZE","stem":"阅读下面短文，从每题所给的选项中选出最佳答案。","passage":"I have a happy family. There are three people in my family. My parents love me very much.","sub_questions":[{"type":"FILL_BLANK","stem":"I have a happy family. There are _____ people in my family.","knowledge_points":["数字认知"]}],"knowledge_points":["完形填空"]}]}
+输出：{"meta":{"subject":"english","grade":"grade3","title":"小学英语完形填空练习"},"questions":[{"type":"CLOZE","stem":"阅读下面短文，从每题所给的选项中选出最佳答案。","passage":"I have a happy family. There are three people in my family. My parents love me very much.","sub_questions":[{"type":"FILL_BLANK","stem":"I have a happy family. There are ___ people in my family.","knowledge_points":["数字认知"]}],"knowledge_points":["完形填空"]}]}
 
 示例5（作文题）：
 输入：出1道小学语文作文题
