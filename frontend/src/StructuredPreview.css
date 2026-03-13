@@ -157,27 +157,36 @@
 @media print {
   .preview-page {
     background: white;
-    padding: 0;
+    padding: 20px;
   }
 
   .preview-header {
     display: none;
   }
 
+  .prompt-input-container {
+    display: none;
+  }
+
+  .preview-content {
+    padding: 0;
+  }
+
   .questions-container {
-    gap: 16px;
+    gap: 24px;
   }
 
   .question-wrapper {
     page-break-inside: avoid;
+    border: none;
+    padding: 0;
   }
 
   .question-item {
     page-break-inside: avoid;
     box-shadow: none;
-    border: 1px solid #ddd;
-    padding: 16px;
-    background: white;
+    border: none;
+    padding: 0;
   }
 
   .option-item,
@@ -197,6 +206,13 @@
   .answer-placeholder {
     color: #000;
     text-decoration: underline;
+  }
+
+  /* 隐藏所有按钮 */
+  .btn-print,
+  .btn-back,
+  .btn-generate {
+    display: none !important;
   }
 }
 

@@ -32,7 +32,9 @@
       "WebFetch(domain:kuaichuti.net)",
       "Bash(find . -name \"*.md\" -o -name \"*frontend-design*\" 2>/dev/null | head -20)",
       "Bash(tasklist | findstr python)",
-      "Bash(cd D:/project/AI-QuestionBank-Generator && gh pr list --limit 5)"
+      "Bash(cd D:/project/AI-QuestionBank-Generator && gh pr list --limit 5)",
+      "Bash(cd D:/project/AI-QuestionBank-Generator/frontend && node test_mathjax.js)",
+      "Bash(cd D:/project/AI-QuestionBank-Generator/frontend && node test_underscore.js)"
     ]
   }
 }

@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import { getToken } from '@/auth'
 import QuestionRenderer from '@/components/QuestionRenderer'
 import { generateStructuredQuestions } from '@/api/history'
+import { renderInlineMarkdown } from '@/utils/markdownProcessor'
 import './StructuredPreview.css'
 import type { StructuredGenerateResponse, Question } from '@/types/structured'
 
@@ -96,10 +97,14 @@ export default function StructuredPreview() {
     navigate('/workbench')
   }
 
-  const handlePrint = () => {
-    setTimeout(() => {
-      window.print()
-    }, 100)
+  const handlePrint = async () => {
+    // 等待 MathJax 渲染完成后再打印
+    if (window.MathJax?.typesetPromise) {
+      await window.MathJax.typesetPromise()
+    } else if (window.MathJax?.typeset) {
+      await Promise.resolve().then(() => window.MathJax?.typeset())
+    }
+    window.print()
   }
 
   if (loading) {

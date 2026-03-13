@@ -34,9 +34,12 @@ function protectMath(content: string): { content: string; placeholders: Map<stri
   // 匹配 $...$ 内容，允许内部包含转义字符（如 \\% \\frac 等）
   // 使用 [^$] 匹配任何非$字符（包括反斜杠）
   content = content.replace(/(?<!\$)\$((?:[^$]|\$(?!\$))+?)\$(?!\$)/g, (match, math) => {
-    // 使用特殊占位符格式，避免被 markdown 处理
+    // 保护数学内容中的下划线，避免 MathJax 将其解析为下标
+    // 只替换不合法的下划线（单独的 _），保留 LaTeX 命令如 \triangle
+    // 使用负向 lookbehind 确保 _ 前面不是 \
+    const protectedMath = math.replace(/(?<!\\)_/g, '\\_');
     const placeholder = `\u0002MATH_INLINE_${idx++}\u0003`;
-    placeholders.set(placeholder, `$${math}$`);
+    placeholders.set(placeholder, `$${protectedMath}$`);
     return placeholder;
   });
 

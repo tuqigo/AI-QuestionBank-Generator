@@ -1,0 +1,95 @@
+2026-03-13 13:30:25 | INFO     | qwen | [生成结果] 输出内容预览：{
+  "meta": {
+    "subject": "math",
+    "grade": "grade9",
+    "title": "初三数学综合练习"
+  },
+  "questions": [
+    {
+      "type": "SINGLE_CHOICE",
+      "stem": "下列哪个数是方程 $x^2 - 4 = 0$ 的解？",
+      "options": ["2", "-2", "0", "4"],
+      "knowledge_points": ["一元二次方程"]
+    },
+    {
+      "type": "FILL_BLANK",
+      "stem": "一次函数 $y = 2x + 3$ 的斜率是___。",
+      "knowledge_points": ["一次函数"]
+    },
+    {
+      "type": "TRUE_FALSE",
+      "stem": "三角形的内角和一定是180度。",
+      "knowledge_points": ["三角形性质"]
+    },
+    {
+      "type": "CALCULATION",
+      "stem": "计算：$ (5 + 3) \times 2 - 6 $。",
+      "knowledge_points": ["四则运算"]
+    },
+    {
+      "type": "GEOMETRY",
+      "stem": "已知直角三角形的两条直角边分别为3 cm 和 4 cm，斜边长为___ cm。",
+      "knowledge_points": ["勾股定理"]
+    },
+    {
+      "type": "WORD_PROBLEM",
+      "stem": "小明买了3本书，每本价格相同，共花了45元。每本书的价格是多少元？",
+      "knowledge_points": ["应用题"]
+    },
+    {
+      "type": "MULTIPLE_CHOICE",
+      "stem": "下列哪些是不等式 $2x > 6$ 的解？",
+      "options": ["x=2", "x=3", "x=4", "x=5"],
+      "knowledge_points": ["一元一次不等式"]
+    },
+    {
+      "type": "FILL_BLANK",
+      "stem": "若 $a = 5$，$b = 3$，则 $a^2 - b^2 = ___$。",
+      "knowledge_points": ["平方差公式"]
+    },
+    {
+      "type": "SINGLE_CHOICE",
+      "stem": "抛物线 $y = x^2 - 4$ 的顶点坐标是？",
+      "options": ["(0, -4)", "(0, 4)", "(2, 0)", "(-2, 0)"],
+      "knowledge_points": ["二次函数图像"]
+    },
+    {
+      "type": "CALCULATION",
+      "stem": "解方程：$3x + 7 = 16$。",
+      "knowledge_points": ["一元一次方程"]
+    },
+    {
+      "type": "GEOMETRY",
+      "stem": "一个圆的半径为5 cm，则其面积为___ cm²（取 $\pi = 3.14$）。",
+      "knowledge_points": ["圆的面积"]
+    },
+    {
+      "type": "FILL_BLANK",
+      "stem": "若 $\\frac{a}{b} = \\frac{3}{4}$，且 $a = 9$，则 $b = ___$。",
+      "knowledge_points": ["比例关系"]
+    },
+    {
+      "type": "WORD_PROBLEM",
+      "stem": "一辆汽车以每小时60 km的速度行驶，3小时后行驶了多少千米？",
+      "knowledge_points": ["速度与路程"]
+    },
+    {
+      "type": "SINGLE_CHOICE",
+      "stem": "下列哪个图形是轴对称图形？",
+      "options": ["平行四边形", "梯形", "等腰三角形", "任意三角形"],
+      "knowledge_points": ["轴对称图形"]
+    },
+    {
+      "type": "FILL_BLANK",
+      "stem": "在等差数列中，首项为2，公差为3，则第5项是___。",
+      "knowledge_points": ["等差数列"]
+    }
+  ]
+}
+2026-03-13 13:30:25 | INFO     | qwen | [解析结果] 标题：AI 题目生成
+2026-03-13 13:30:25 | INFO     | qwen | ============================================================
+2026-03-13 13:30:25 | INFO     | qwen | 【AI 调用结束】
+2026-03-13 13:30:25 | INFO     | qwen | ============================================================
+2026-03-13 13:30:25 | WARNING  | qwen | [JSON 校验] JSON 解析失败，尝试修复 LaTeX 转义: Invalid \escape: line 63 column 44 (char 1561)
+2026-03-13 13:30:25 | INFO     | qwen | [JSON 校验] 已修复 LaTeX 转义
+2026-03-13 13:30:25 | ERROR    | api | JSON 校验失败，email: tuqigo@gmail.com, errors: ['JSON 解析失败 (修复后仍失败): Invalid \\escape: line 63 column 44 (char 1562)']

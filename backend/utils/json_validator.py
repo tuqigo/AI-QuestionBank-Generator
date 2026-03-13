@@ -52,7 +52,11 @@ def _fix_latex_escapes(json_str: str) -> str:
         'Rightarrow', 'Leftarrow', 'Leftrightarrow', 'infty',
         'sqrt', 'sin', 'cos', 'tan', 'log', 'ln',
         'sum', 'int', 'partial', 'nabla', 'bullet', 'cdot',
-        'circ', 'degree', 'prime', 'text', 'math', 'begin', 'end'
+        'circ', 'degree', 'prime', 'text', 'math', 'begin', 'end',
+        'pi', 'theta', 'alpha', 'beta', 'gamma', 'delta', 'epsilon',
+        'angle', 'triangle', 'perp', 'parallel', 'cup', 'cap',
+        'subset', 'supset', 'subseteq', 'supseteq', 'in', 'notin',
+        'forall', 'exists', 'to', 'mapsto', 'iff', 'hbar', 'omega'
     ]
 
     def fix_formula_content(content):
