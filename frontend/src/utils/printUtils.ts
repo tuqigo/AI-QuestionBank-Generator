@@ -23,15 +23,13 @@ export function countQuestions(questions: string): number {
 // 定义一个辅助函数来清理答案文本
 function cleanAnswerText(text: string) {
   if (!text) return '';
-  // 使用正则表达式全局替换 "## 答案"（包括可能的前后空格）
-  // 正则中的 \\s* 匹配0个或多个空白字符（空格、制表符等）
   return text.replace(/\s*## 答案\s*/g, '');
 }
 
 /**
- * 打印试卷
+ * 打印试卷 - 使用 CSS @media print 实现，无需额外容器
  * @param markdown - 完整的 markdown 内容
- * @param titleText - 试卷标题（可选，默认为从 markdown 提取或'练习题'）
+ * @param titleText - 试卷标题（可选）
  */
 export const handlePrint = async (markdown: string, titleText?: string) => {
   if (!markdown) return
@@ -45,41 +43,28 @@ export const handlePrint = async (markdown: string, titleText?: string) => {
   // 移除题目中的# 标题，避免重复显示
   const questionsWithoutTitle = questions.replace(/^#\s+(.+)$/gm, '').trim()
   const questionsHtml = renderMarkdown(questionsWithoutTitle)
-  // 清理文本后再调用 renderMarkdown
   const answersHtml = answers ? renderMarkdown(cleanAnswerText(answers)) : '';
 
-  // 创建打印遮罩层（隐藏原页面）
-  const overlay = document.createElement('div')
-  overlay.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: white;
-    z-index: 999998;
-  `
-  document.body.appendChild(overlay)
-
-  // 创建打印专用容器
+  // 创建打印专用容器（隐藏在原页面中）
   const printContainer = document.createElement('div')
   printContainer.id = 'print-container'
-  printContainer.className = 'print-paper'
   printContainer.style.cssText = `
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    overflow: auto;
     background: white;
-    z-index: 999999;
+    z-index: 10000;
+    padding: 20mm;
+    box-sizing: border-box;
+    overflow: visible;
   `
 
-  const titleHtml = `<h1 class="print-title">${defaultTitleText}</h1>`
+  const titleHtml = `<h1 style="text-align: center; margin-bottom: 30px; font-size: 18pt; font-weight: bold;">${defaultTitleText}</h1>`
   const contentHtml = answers
-    ? `${titleHtml}<div class="print-spacer"></div><div class="print-questions">${questionsHtml}</div><div class="print-page-break"></div><h2 class="print-answers-title">${defaultTitleText}-答案</h2><div class="print-answers">${answersHtml}</div>`
-    : `${titleHtml}<div class="print-spacer"></div><div class="print-questions">${questionsHtml}</div>`
+    ? `${titleHtml}<div style="height: 20px;"></div><div>${questionsHtml}</div><div style="page-break-after: always;"></div><h2 style="font-size: 14pt; font-weight: bold; margin-top: 30px;">${defaultTitleText}-答案</h2><div>${answersHtml}</div>`
+    : `${titleHtml}<div style="height: 20px;"></div><div>${questionsHtml}</div>`
 
   printContainer.innerHTML = contentHtml
   document.body.appendChild(printContainer)
@@ -89,12 +74,11 @@ export const handlePrint = async (markdown: string, titleText?: string) => {
     await window.MathJax.typesetPromise([printContainer])
   }
 
-  // 调用浏览器打印
+  // 立即调用打印，不显示遮罩层
   window.print()
 
-  // 打印完成后移除容器和遮罩层
+  // 打印完成后移除容器
   setTimeout(() => {
     document.body.removeChild(printContainer)
-    document.body.removeChild(overlay)
   }, 100)
 }

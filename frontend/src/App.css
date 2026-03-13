@@ -1597,23 +1597,20 @@ small {
 /* 打印样式补充 */
 @media print {
   /* 隐藏所有非打印容器的内容 */
-  body > *:not(#print-container, #print-overlay) {
+  body > *:not(#print-container) {
     display: none !important;
   }
 
   /* 打印容器样式 */
   #print-container {
     position: static !important;
-    width: auto !important;
+    width: 100% !important;
+    height: auto !important;
     margin: 0 !important;
-    box-shadow: none !important;
     padding: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
     font-size: 12pt !important;
-  }
-
-  /* 遮罩层在打印时隐藏 */
-  #print-overlay {
-    display: none !important;
   }
 
   /* 题目样式优化 */

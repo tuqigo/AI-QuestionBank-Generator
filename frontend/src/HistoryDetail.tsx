@@ -84,32 +84,20 @@ export default function HistoryDetail() {
   const handlePrint = async () => {
     if (!structuredData?.questions || structuredData.questions.length === 0) return
 
-    // 创建打印遮罩层（隐藏原页面）
-    const overlay = document.createElement('div')
-    overlay.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: white;
-      z-index: 999998;
-    `
-    document.body.appendChild(overlay)
-
     // 创建打印专用容器
     const printContainer = document.createElement('div')
     printContainer.id = 'print-container'
-    printContainer.className = 'print-paper'
     printContainer.style.cssText = `
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      overflow: auto;
       background: white;
-      z-index: 999999;
+      z-index: 10000;
+      padding: 20mm;
+      box-sizing: border-box;
+      overflow: visible;
     `
 
     // 构建打印内容
@@ -118,7 +106,7 @@ export default function HistoryDetail() {
 
     // 渲染每道题目
     structuredData.questions.forEach((question, index) => {
-      contentHtml += `<div class="question-wrapper" style="margin-bottom: 24px; page-break-inside: avoid;">`
+      contentHtml += `<div style="margin-bottom: 24px; page-break-inside: avoid;">`
       contentHtml += `<div style="font-weight: bold; margin-bottom: 12px;">${index + 1}. ${question.stem}</div>`
 
       // 选项
@@ -130,19 +118,11 @@ export default function HistoryDetail() {
         })
       }
 
-      // 阅读材料
-      if (question.passage) {
-        contentHtml += `<div style="margin-top: 12px; margin-bottom: 12px; padding: 10px; background: #f5f5f5; border-left: 3px solid #ccc;">${question.passage}</div>`
-      }
-
       contentHtml += `</div>`
     })
 
     printContainer.innerHTML = contentHtml
     document.body.appendChild(printContainer)
-
-    // 等待 DOM 更新
-    await new Promise(resolve => setTimeout(resolve, 100))
 
     // 等待 MathJax 渲染
     if (window.MathJax?.typesetPromise) {
@@ -151,15 +131,12 @@ export default function HistoryDetail() {
       window.MathJax.typeset([printContainer])
     }
 
-    // 添加延迟确保 DOM 完全渲染
-    await new Promise(resolve => setTimeout(resolve, 200))
-
+    // 立即打印
     window.print()
 
-    // 打印完成后移除容器和遮罩层
+    // 打印完成后移除容器
     setTimeout(() => {
       document.body.removeChild(printContainer)
-      document.body.removeChild(overlay)
     }, 100)
   }
 
