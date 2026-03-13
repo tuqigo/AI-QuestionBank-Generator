@@ -5,7 +5,7 @@
 import traceback
 import json
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 
@@ -34,17 +34,17 @@ class StructuredQuestionResponse(BaseModel):
     """单个结构化题目响应（含后端填充字段）"""
     type: str
     stem: str
-    knowledge_points: list[str]
-    options: Optional[list[str]]
+    knowledge_points: List[str]
+    options: Optional[List[str]]
     passage: Optional[str]
-    sub_questions: Optional[list["StructuredQuestionResponse"]]
+    sub_questions: Optional[List[StructuredQuestionResponse]]
     rows_to_answer: int
 
 
 class StructuredGenerateResponse(BaseModel):
     """结构化题目生成响应"""
     meta: MetaData
-    questions: list[StructuredQuestionResponse]
+    questions: List[StructuredQuestionResponse]
     record_id: Optional[int] = None
     short_id: Optional[str] = None
     created_at: Optional[datetime] = None
