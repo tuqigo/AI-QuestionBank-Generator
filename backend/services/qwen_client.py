@@ -313,6 +313,74 @@ def _format_for_log(text: str) -> str:
 import json
 import traceback
 
+
+def _fix_latex_escapes_in_json(json_str: str) -> str:
+    """
+    修复 JSON 字符串中的 LaTeX 转义问题（简化版，用于标题解析）
+
+    将 $...$ 公式中的单反斜杠 LaTeX 命令修复为双反斜杠
+    """
+    LATEX_COMMANDS = {
+        'frac', 'times', 'div', 'pm', 'mp', 'ldots', 'cdots',
+        'geq', 'leq', 'neq', 'approx', 'rightarrow', 'leftarrow',
+        'Rightarrow', 'Leftarrow', 'Leftrightarrow', 'infty',
+        'sqrt', 'sin', 'cos', 'tan', 'log', 'ln',
+        'sum', 'int', 'partial', 'nabla', 'bullet', 'cdot',
+        'circ', 'degree', 'prime', 'text', 'math', 'begin', 'end',
+        'pi', 'theta', 'alpha', 'beta', 'gamma', 'delta', 'epsilon',
+        'angle', 'triangle', 'perp', 'parallel', 'cup', 'cap',
+        'subset', 'supset', 'subseteq', 'supseteq', 'in', 'notin',
+        'forall', 'exists', 'to', 'mapsto', 'iff', 'hbar', 'omega'
+    }
+
+    result = []
+    i = 0
+    while i < len(json_str):
+        if json_str[i] == '$':
+            # 找到匹配的结束 $
+            j = i + 1
+            while j < len(json_str) and json_str[j] != '$':
+                j += 1
+
+            if j < len(json_str):
+                # 修复公式内容中的 LaTeX 转义
+                formula_content = json_str[i:j + 1]
+                fixed_content = []
+                k = 0
+                while k < len(formula_content):
+                    if formula_content[k] == '\\' and k + 1 < len(formula_content):
+                        # 检查是否是双反斜杠
+                        if formula_content[k + 1] == '\\':
+                            fixed_content.append('\\\\')
+                            k += 2
+                            continue
+                        # 检查是否是 LaTeX 命令
+                        cmd_start = k + 1
+                        cmd_end = cmd_start
+                        while cmd_end < len(formula_content) and formula_content[cmd_end].isalpha():
+                            cmd_end += 1
+                        cmd = formula_content[cmd_start:cmd_end]
+                        if cmd.lower() in LATEX_COMMANDS:
+                            fixed_content.append('\\\\' + cmd)
+                            k = cmd_end
+                        else:
+                            fixed_content.append(formula_content[k])
+                            k += 1
+                    else:
+                        fixed_content.append(formula_content[k])
+                        k += 1
+                result.append(''.join(fixed_content))
+                i = j + 1
+            else:
+                result.append(json_str[i])
+                i += 1
+        else:
+            result.append(json_str[i])
+            i += 1
+
+    return ''.join(result)
+
+
 def _parse_title_and_content(content: str) -> Tuple[str, str]:
     """解析 AI 返回的内容，提取标题和正文"""
     if not content:
@@ -331,8 +399,18 @@ def _parse_title_and_content(content: str) -> Tuple[str, str]:
                     title = title[:100] + "..."
                 return title, content_stripped
         except (json.JSONDecodeError, KeyError):
-            # 不是有效的结构化 JSON，继续其他解析
-            pass
+            # JSON 解析失败，可能是 LaTeX 转义问题，尝试修复后重试
+            try:
+                fixed_content = _fix_latex_escapes_in_json(content_stripped)
+                data = json.loads(fixed_content)
+                if data.get('meta') and data['meta'].get('title'):
+                    title = data['meta']['title']
+                    if len(title) > 100:
+                        title = title[:100] + "..."
+                    return title, fixed_content
+            except (json.JSONDecodeError, KeyError):
+                # 修复后仍失败，继续其他解析
+                pass
 
     # 检查是否有 TITLE: 前缀
     lines = content.split('\n', 1)

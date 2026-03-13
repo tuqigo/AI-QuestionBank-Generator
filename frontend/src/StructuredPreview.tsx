@@ -112,19 +112,16 @@ export default function StructuredPreview() {
   }
 
   const handlePrint = async () => {
-    console.log('Print clicked')
-    console.log('Questions count:', questions.length)
-
     if (questions.length === 0) {
       alert('没有可打印的内容')
       return
     }
 
-    // 创建打印专用容器
+    // 创建打印专用容器（平时隐藏，打印时显示）
     const printContainer = document.createElement('div')
     printContainer.id = 'print-container'
-    printContainer.className = 'print-paper'
     printContainer.style.cssText = `
+      display: none;
       position: fixed;
       left: 0;
       top: 0;
@@ -133,11 +130,10 @@ export default function StructuredPreview() {
       padding: 30mm 25mm;
       margin: 10mm auto;
       background: white;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
       font-family: "Microsoft YaHei", "SimSun", sans-serif;
       font-size: 14pt;
       line-height: 1.8;
-      z-index: 999999;
+      z-index: 10000;
     `
 
     // 构建打印内容
@@ -172,16 +168,12 @@ export default function StructuredPreview() {
       window.MathJax.typeset([printContainer])
     }
 
-    // 添加延迟确保 DOM 完全渲染
-    await new Promise(resolve => setTimeout(resolve, 300))
-
-    console.log('Triggering print')
     window.print()
 
     // 打印完成后移除容器
     setTimeout(() => {
       document.body.removeChild(printContainer)
-    }, 500)
+    }, 100)
   }
 
   if (loading) {

@@ -129,19 +129,16 @@ export default function MainContent({ email, onLogout }: Props) {
   }
 
   /**
-   * 打印功能 - 使用新的结构化数据打印
+   * 打印功能 - 使用 CSS @media print 实现
    */
   const handlePrint = async () => {
     if (!questions.length || !meta) return
 
-    console.log('Print clicked')
-    console.log('Questions count:', questions.length)
-
-    // 创建打印专用容器
+    // 创建打印专用容器（平时隐藏，打印时显示）
     const printContainer = document.createElement('div')
     printContainer.id = 'print-container'
-    printContainer.className = 'print-paper'
     printContainer.style.cssText = `
+      display: none;
       position: fixed;
       left: 0;
       top: 0;
@@ -150,11 +147,10 @@ export default function MainContent({ email, onLogout }: Props) {
       padding: 30mm 25mm;
       margin: 10mm auto;
       background: white;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
       font-family: "Microsoft YaHei", "SimSun", sans-serif;
       font-size: 14pt;
       line-height: 1.8;
-      z-index: 999999;
+      z-index: 10000;
     `
 
     // 构建打印内容
@@ -185,9 +181,6 @@ export default function MainContent({ email, onLogout }: Props) {
     printContainer.innerHTML = contentHtml
     document.body.appendChild(printContainer)
 
-    // 等待 DOM 更新
-    await new Promise(resolve => setTimeout(resolve, 100))
-
     // 等待 MathJax 渲染
     if (window.MathJax?.typesetPromise) {
       await window.MathJax.typesetPromise([printContainer])
@@ -196,15 +189,14 @@ export default function MainContent({ email, onLogout }: Props) {
     }
 
     // 添加延迟确保 DOM 完全渲染
-    await new Promise(resolve => setTimeout(resolve, 200))
+    await new Promise(resolve => setTimeout(resolve, 100))
 
-    console.log('Triggering print')
     window.print()
 
     // 打印完成后移除容器
     setTimeout(() => {
       document.body.removeChild(printContainer)
-    }, 300)
+    }, 100)
   }
 
   return (

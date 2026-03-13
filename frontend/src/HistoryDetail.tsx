@@ -84,10 +84,11 @@ export default function HistoryDetail() {
   const handlePrint = async () => {
     if (!structuredData?.questions || structuredData.questions.length === 0) return
 
-    // 创建打印专用容器
+    // 创建打印专用容器（平时隐藏，打印时显示）
     const printContainer = document.createElement('div')
     printContainer.id = 'print-container'
     printContainer.style.cssText = `
+      display: none;
       position: fixed;
       top: 0;
       left: 0;
@@ -180,7 +181,7 @@ export default function HistoryDetail() {
       {hasShareUrl && (
         <div className="share-link-display">
           <span>分享链接：</span>
-          <a href={shareUrlRef.current} target="_blank" rel="noopener noreferrer">{window.location.origin}{shareUrlRef.current}</a>
+          <a href={shareUrlRef.current!} target="_blank" rel="noopener noreferrer">{window.location.origin}{shareUrlRef.current}</a>
           <button
             onClick={async () => {
               try {

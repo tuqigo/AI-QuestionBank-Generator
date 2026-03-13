@@ -1596,13 +1596,25 @@ small {
 
 /* 打印样式补充 */
 @media print {
-  /* 隐藏所有非打印容器的内容 */
-  body > *:not(#print-container) {
+  /* 隐藏页面主体内容 */
+  .app,
+  .sidebar,
+  .header,
+  .preview,
+  .preview-header,
+  .btn-icon-action,
+  .preview-header-actions,
+  .question-count,
+  .history-dropdown-wrapper,
+  .user-info,
+  .btn-logout,
+  .progress-modal {
     display: none !important;
   }
 
-  /* 打印容器样式 */
+  /* 打印容器样式 - 打印时显示 */
   #print-container {
+    display: block !important;
     position: static !important;
     width: 100% !important;
     height: auto !important;
