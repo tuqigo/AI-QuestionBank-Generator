@@ -54,7 +54,7 @@ export function validatePrompt(prompt: string): ValidationResult {
   const hasSubject = SUBJECT_KEYWORDS.some(keyword => p.includes(keyword))
 
   if (!hasGrade && !hasSubject) {
-    return { valid: false, error: '请说明年级和学科（如：三年级数学）' }
+    return { valid: false, error: '请说明年级和学科（如：三年级数学，初三英语）' }
   }
 
   return { valid: true }

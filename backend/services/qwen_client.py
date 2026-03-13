@@ -5,6 +5,7 @@ import time
 import re
 import threading
 import traceback
+import json
 from collections import deque
 from typing import Tuple, Optional, List, Dict, Any
 from concurrent.futures import Future, ThreadPoolExecutor
@@ -309,21 +310,33 @@ def _format_for_log(text: str) -> str:
     return text
 
 
+import json
+import traceback
+
 def _parse_title_and_content(content: str) -> Tuple[str, str]:
     """解析 AI 返回的内容，提取标题和正文"""
     if not content:
         return "AI 题目生成", ""
 
-    # 检查是否是纯 JSON（没有 TITLE: 前缀）
     content_stripped = content.strip()
-    if content_stripped.startswith('{'):
-        # 纯 JSON，没有标题前缀
-        return "AI 题目生成", content_stripped
 
-    lines = content.split('\n', 1)
-    title_line = lines[0].strip()
+    # 检查是否是结构化 JSON（包含 meta.title）
+    if content_stripped.startswith('{'):
+        try:
+            data = json.loads(content_stripped)
+            # 尝试从 meta.title 提取
+            if data.get('meta') and data['meta'].get('title'):
+                title = data['meta']['title']
+                if len(title) > 100:
+                    title = title[:100] + "..."
+                return title, content_stripped
+        except (json.JSONDecodeError, KeyError):
+            # 不是有效的结构化 JSON，继续其他解析
+            pass
 
     # 检查是否有 TITLE: 前缀
+    lines = content.split('\n', 1)
+    title_line = lines[0].strip()
     match = re.match(r'^TITLE:\s*(.+)$', title_line, re.IGNORECASE)
     if match:
         title = match.group(1).strip()
@@ -338,7 +351,7 @@ def _parse_title_and_content(content: str) -> Tuple[str, str]:
         return first_line_match.group(1).strip(), content
 
     # 默认标题
-    return "AI 题目生成", content
+    return "AI 题目生成", content_stripped
 
 
 # ===================== 6. 题目生成接口 =====================

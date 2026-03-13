@@ -1,48 +1,13 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { renderMarkdown } from './utils/markdownProcessor'
-import { handlePrint as printUtilsHandlePrint, countQuestions, splitQuestionsAndAnswers } from './utils/printUtils'
-import type { GenerateResponse } from './types'
 import { fetchWithAuth, clearToken } from './auth'
 import { validatePrompt } from './utils/promptValidator'
 import HistoryDropdown from './HistoryList'
 import ProgressModal from './components/ProgressModal'
+import StructuredPreviewShared from './components/StructuredPreviewShared'
+import { generateStructuredQuestions } from './api/history'
+import type { StructuredQuestion } from './types/structured'
 import './App.css'
-
-// 加载 MathJax SVG 脚本（用于打印质量最高的公式渲染）
-const loadMathJax = (): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    if (window.MathJax) {
-      resolve()
-      return
-    }
-    // 先设置配置
-    window.MathJax = {
-      tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']],
-        displayMath: [['$$', '$$'], ['\\[', '\\]']],
-        processEscapes: false,
-        processEnvironments: true,
-        packages: ['base', 'ams', 'require']
-      },
-      options: {
-        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
-        ignoreHtmlClass: 'tex2jax_ignore'
-      },
-      svg: {
-        fontCache: 'global'
-      }
-    }
-    const script = document.createElement('script')
-    script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js'
-    script.async = true
-    script.onload = () => resolve()
-    script.onerror = () => reject(new Error('Failed to load MathJax SVG'))
-    document.head.appendChild(script)
-  })
-}
-
-const API_BASE = '/api'
 
 const SHORTCUTS = [
   { label: '口算题', prompt: '小学一年级数学 数的组成，比大小、多少、长短、高矮、轻重、简单分类、统计', icon: '🔢' },
@@ -61,14 +26,12 @@ interface Props {
 
 export default function MainContent({ email, onLogout }: Props) {
   const [prompt, setPrompt] = useState('小学六年级 数学综合练习（分数运算、百分数、圆、比例、统计）')
-  const [markdown, setMarkdown] = useState('')
+  // 结构化数据
+  const [questions, setQuestions] = useState<StructuredQuestion[]>([])
+  const [meta, setMeta] = useState<{ subject: string; grade: string; title: string } | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [imageHint, setImageHint] = useState('')
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [extendLoading, setExtendLoading] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   // 进度条状态
   const [progressStage, setProgressStage] = useState<'preparing' | 'connecting' | 'generating' | 'processing' | 'complete'>('preparing')
@@ -91,6 +54,8 @@ export default function MainContent({ email, onLogout }: Props) {
     setLoading(true)
     setShowProgress(true)
     setProgressStage('preparing')
+    setQuestions([])
+    setMeta(null)
 
     // 模拟阶段推进（因为无法获取后端真实进度）
     const stageTimers: ReturnType<typeof setTimeout>[] = []
@@ -113,20 +78,20 @@ export default function MainContent({ email, onLogout }: Props) {
     }, 8000))
 
     try {
-      const res = await fetchWithAuth(`${API_BASE}/questions/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: p }),
-      })
-      const data = await res.json()
-      if (res.status === 401) {
-        clearToken()
-        onLogout()
-        return
+      // 调用新结构化接口
+      const data = await generateStructuredQuestions(p)
+
+      if (data.meta) {
+        setMeta({
+          subject: data.meta.subject,
+          grade: data.meta.grade,
+          title: data.meta.title
+        })
       }
-      if (!res.ok) throw new Error((data as { detail?: string }).detail || '生成失败')
-      const genRes = data as GenerateResponse
-      setMarkdown(genRes.markdown)
+
+      if (data.questions) {
+        setQuestions(data.questions)
+      }
 
       // 完成后显示完成状态
       setProgressStage('complete')
@@ -151,7 +116,7 @@ export default function MainContent({ email, onLogout }: Props) {
         } else if (e.message.includes('网络')) {
           errorMessage = '网络连接失败，请检查网络后重试'
         } else {
-          errorMessage = '系统内部错误，稍后再试！'
+          errorMessage = e.message || '系统内部错误，稍后再试！'
         }
       }
       setError(errorMessage)
@@ -163,180 +128,84 @@ export default function MainContent({ email, onLogout }: Props) {
     }
   }
 
-  const handleExtendFromImage = async () => {
-    if (!imageFile) {
-      setError('请先选择一张题目图片')
-      return
-    }
-
-    // 校验 imageHint（如果提供了）
-    if (imageHint && imageHint.trim()) {
-      const result = validatePrompt(imageHint.trim())
-      if (!result.valid) {
-        setError(result.error || '请输入题目要求')
-        return
-      }
-    }
-
-    setError('')
-    setExtendLoading(true)
-    setShowProgress(true)
-    setProgressStage('preparing')
-
-    // 模拟阶段推进
-    const stageTimers: ReturnType<typeof setTimeout>[] = []
-
-    stageTimers.push(setTimeout(() => {
-      setProgressStage('connecting')
-    }, 200))
-
-    stageTimers.push(setTimeout(() => {
-      setProgressStage('generating')
-    }, 800))
-
-    stageTimers.push(setTimeout(() => {
-      if (progressStage === 'generating') {
-        setProgressStage('processing')
-      }
-    }, 8000))
-
-    try {
-      const formData = new FormData()
-      formData.append('file', imageFile)
-      formData.append('hint', imageHint)
-      const res = await fetchWithAuth(`${API_BASE}/questions/extend-from-image`, {
-        method: 'POST',
-        body: formData,
-      })
-      const data = await res.json()
-      if (res.status === 401) {
-        clearToken()
-        onLogout()
-        return
-      }
-      if (!res.ok) throw new Error((data as { detail?: string }).detail || '生成失败')
-      setMarkdown((data as { markdown: string }).markdown)
-
-      setProgressStage('complete')
-
-      // 500ms 后关闭进度条并滚动到预览区
-      setTimeout(() => {
-        setShowProgress(false)
-        if (previewRef.current) {
-          previewRef.current.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-          })
-        }
-      }, 500)
-      setImageFile(null)
-    } catch (e) {
-      // 友好的错误提示
-      let errorMessage = '生成失败，请稍后重试'
-      if (e instanceof Error) {
-        if (e.message.includes('超时')) {
-          errorMessage = '题目生成时间过长，请减少题目数量或简化要求后重试'
-        } else if (e.message.includes('网络')) {
-          errorMessage = '网络连接失败，请检查网络后重试'
-        } else {
-          errorMessage = e.message
-        }
-      }
-      setError(errorMessage)
-      setShowProgress(false)
-    } finally {
-      setExtendLoading(false)
-      stageTimers.forEach(clearTimeout)
-    }
-  }
-
   /**
-   * 打印功能 - 使用统一打印工具
+   * 打印功能 - 使用新的结构化数据打印
    */
   const handlePrint = async () => {
-    if (!markdown) return
-    await printUtilsHandlePrint(markdown)
-  }
+    if (!questions.length || !meta) return
 
-  // 使用 useMemo 缓存分割结果，避免每次渲染都重新计算导致引用变化
-  const { questions, answers } = useMemo(() =>
-    markdown ? splitQuestionsAndAnswers(markdown) : { questions: '', answers: null },
-    [markdown]
-  )
+    console.log('Print clicked')
+    console.log('Questions count:', questions.length)
 
-  // 使用 useMemo 缓存 HTML 内容，避免不必要的重新渲染导致 MathJax 渲染丢失
-  const questionsHtml = useMemo(() =>
-    markdown ? renderMarkdown(String(questions || '')) : '',
-    [markdown]
-  )
-  const answersHtml = useMemo(() =>
-    answers ? renderMarkdown(String(answers)) : '',
-    [answers]
-  )
+    // 创建打印专用容器
+    const printContainer = document.createElement('div')
+    printContainer.id = 'print-container'
+    printContainer.className = 'print-paper'
+    printContainer.style.cssText = `
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 210mm;
+      min-height: 297mm;
+      padding: 30mm 25mm;
+      margin: 10mm auto;
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      font-family: "Microsoft YaHei", "SimSun", sans-serif;
+      font-size: 14pt;
+      line-height: 1.8;
+      z-index: 999999;
+    `
 
-  // 缓存 dangerouslySetInnerHTML 对象，避免每次渲染创建新对象导致 React 重新设置 innerHTML
-  const questionsProps = useMemo(() => ({ __html: questionsHtml }), [questionsHtml])
-  const answersProps = useMemo(() => ({ __html: answersHtml }), [answersHtml])
+    // 构建打印内容
+    let contentHtml = `<h1 style="text-align: center; margin-bottom: 30px; font-size: 18pt; font-weight: bold;">${meta.title || '题目练习'}</h1>`
 
-  // 引用预览容器，用于 MathJax 渲染
-  const questionsRef = useRef<HTMLDivElement>(null)
-  const answersRef = useRef<HTMLDivElement>(null)
+    // 渲染每道题目
+    questions.forEach((question, index) => {
+      contentHtml += `<div class="question-wrapper" style="margin-bottom: 24px; page-break-inside: avoid;">`
+      contentHtml += `<div style="font-weight: bold; margin-bottom: 12px;">${index + 1}. ${question.stem}</div>`
 
-  // 使用 refs 来跟踪上次渲染的 HTML，避免 React 重新渲染时覆盖 MathJax 的成果
-  const prevQuestionsHtmlRef = useRef<string>('')
-  const prevAnswersHtmlRef = useRef<string>('')
-
-  // 添加一个触发器，用于在需要时强制重新渲染 MathJax
-  const [mathJaxTrigger, setMathJaxTrigger] = useState(0)
-
-  // 跟踪上一次 historyOpen 的状态
-  const prevHistoryOpenRef = useRef<boolean>(false)
-
-  // 当 historyOpen 变化时，触发 MathJax 重新渲染（因为 DOM 可能被重新创建）
-  useEffect(() => {
-    if (markdown && prevHistoryOpenRef.current !== historyOpen) {
-      // historyOpen 状态变化，触发 MathJax 重新渲染
-      setMathJaxTrigger(prev => prev + 1)
-    }
-    prevHistoryOpenRef.current = historyOpen
-  }, [historyOpen, markdown])
-
-  // 加载 MathJax 并在 markdown 变化时渲染公式
-  useEffect(() => {
-    let mounted = true
-
-    const initAndRenderMathJax = async () => {
-      if (!markdown) return
-
-      try {
-        await loadMathJax()
-
-        if (!mounted) return
-
-        // 等待 DOM 更新
-        await new Promise(resolve => setTimeout(resolve, 100))
-
-        // 收集需要渲染的元素（排除 null）
-        const elements = [questionsRef.current, answersRef.current].filter(Boolean) as HTMLElement[]
-
-        if (elements.length > 0 && window.MathJax) {
-          if (window.MathJax.typesetPromise) {
-            await window.MathJax.typesetPromise(elements)
-          } else if (window.MathJax.typeset) {
-            window.MathJax.typeset(elements)
-          }
-        }
-      } catch (error) {
-        console.error('Failed to process MathJax:', error)
+      // 选项
+      if (question.options && question.options.length > 0) {
+        question.options.forEach((opt, optIndex) => {
+          const optionLabel = ['A', 'B', 'C', 'D'][optIndex]
+          const optionText = opt.replace(/^[A-D]\.\s*/, '')
+          contentHtml += `<div style="margin-left: 32px; margin-bottom: 8px;">${optionLabel}. ${optionText}</div>`
+        })
       }
+
+      // 阅读材料
+      if (question.passage) {
+        contentHtml += `<div style="margin-top: 12px; margin-bottom: 12px; padding: 10px; background: #f5f5f5; border-left: 3px solid #ccc;">${question.passage}</div>`
+      }
+
+      contentHtml += `</div>`
+    })
+
+    printContainer.innerHTML = contentHtml
+    document.body.appendChild(printContainer)
+
+    // 等待 DOM 更新
+    await new Promise(resolve => setTimeout(resolve, 100))
+
+    // 等待 MathJax 渲染
+    if (window.MathJax?.typesetPromise) {
+      await window.MathJax.typesetPromise([printContainer])
+    } else if (window.MathJax?.typeset) {
+      window.MathJax.typeset([printContainer])
     }
 
-    initAndRenderMathJax()
+    // 添加延迟确保 DOM 完全渲染
+    await new Promise(resolve => setTimeout(resolve, 200))
 
-    return () => {
-      mounted = false
-    }
-  }, [markdown, mathJaxTrigger])
+    console.log('Triggering print')
+    window.print()
+
+    // 打印完成后移除容器
+    setTimeout(() => {
+      document.body.removeChild(printContainer)
+    }, 300)
+  }
 
   return (
     <div className="app">
@@ -474,77 +343,16 @@ export default function MainContent({ email, onLogout }: Props) {
                 )}
               </button>
             </div>
-
-            {/* 图片上传 todo 先不做,后期在做 */}
-            {/*    <section className="panel-section">
-              <div className="section-header">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" strokeWidth="2"/>
-                  <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
-                  <path d="M21 15L16 10L5 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <label>图片生成扩展题</label>
-              </div>
-              <div className="image-upload-section">
-                <div className="file-input-wrapper">
-                  <input
-                    type="file"
-                    id="image-upload"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                    onChange={(e) => setImageFile(e.target.files?.[0] ?? null)}
-                    className="file-input"
-                  />
-                  <label htmlFor="image-upload" className="file-label">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <polyline points="17,8 12,3 7,8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <line x1="12" y1="3" x2="12" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <span>{imageFile ? imageFile.name : '选择图片'}</span>
-                  </label>
-                </div>
-                <input
-                  type="text"
-                  placeholder="可选：补充说明"
-                  value={imageHint}
-                  onChange={(e) => setImageHint(e.target.value)}
-                  className="hint-input"
-                />
-                <button
-                  type="button"
-                  className="btn-extend"
-                  onClick={handleExtendFromImage}
-                  disabled={extendLoading || !imageFile}
-                >
-                  {extendLoading ? (
-                    <>
-                      <span className="spinner-small"></span>
-                      生成中...
-                    </>
-                  ) : (
-                    <>
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                      识别生成
-                    </>
-                  )}
-                </button>
-              </div>
-            </section>
- */}
           </div>
         </aside>
 
         {/* 右侧预览区 */}
         <section className="preview" ref={previewRef}>
           <div className="preview-header">
-            {markdown && (
+            {questions.length > 0 && (
               <>
                 <span className="question-count">
-                  {countQuestions(questions)} 道题
+                  {questions.length} 道题
                 </span>
                 <div className="preview-header-actions">
                   <button
@@ -579,12 +387,12 @@ export default function MainContent({ email, onLogout }: Props) {
             )}
           </div>
           <div className="preview-card">
-            {markdown ? (
-              <div className="preview-body markdown-body">
-                <div ref={questionsRef} dangerouslySetInnerHTML={questionsProps} />
-                {answersHtml && (
-                  <div ref={answersRef} className="answer-section" dangerouslySetInnerHTML={answersProps} />
-                )}
+            {questions.length > 0 ? (
+              <div className="preview-body">
+                <StructuredPreviewShared
+                  questions={questions}
+                  meta={meta}
+                />
               </div>
             ) : (
               <div className="placeholder">

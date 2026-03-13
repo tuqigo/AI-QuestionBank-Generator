@@ -1,42 +1,30 @@
 import { useState, useEffect } from 'react'
 import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { getToken } from '@/auth'
-import { renderMarkdown } from '@/utils/markdownProcessor'
 import { getSharedRecord } from '@/api/history'
 import type { QuestionRecord } from '@/types'
+import type { StructuredQuestion } from '@/types/structured'
+import StructuredPreviewShared from '@/components/StructuredPreviewShared'
 import './SharePage.css'
 
-// 加载 MathJax SVG 脚本
-const loadMathJax = (): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    if (window.MathJax) {
-      resolve()
-      return
+// 解析结构化数据
+function parseStructuredData(aiResponse: string): {
+  questions: StructuredQuestion[]
+  meta: any | null
+} {
+  try {
+    const data = JSON.parse(aiResponse)
+    return {
+      questions: data.questions || [],
+      meta: data.meta || null
     }
-    // 先设置配置
-    window.MathJax = {
-      tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']],
-        displayMath: [['$$', '$$'], ['\\[', '\\]']],
-        processEscapes: false,
-        processEnvironments: true,
-        packages: ['base', 'ams', 'require']
-      },
-      options: {
-        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
-        ignoreHtmlClass: 'tex2jax_ignore'
-      },
-      svg: {
-        fontCache: 'global'
-      }
+  } catch (e) {
+    console.error('解析结构化数据失败:', e)
+    return {
+      questions: [],
+      meta: null
     }
-    const script = document.createElement('script')
-    script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js'
-    script.async = true
-    script.onload = () => resolve()
-    script.onerror = () => reject(new Error('Failed to load MathJax SVG'))
-    document.head.appendChild(script)
-  })
+  }
 }
 
 export default function SharePage() {
@@ -48,6 +36,10 @@ export default function SharePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [structuredData, setStructuredData] = useState<{
+    questions: StructuredQuestion[]
+    meta: any | null
+  } | null>(null)
 
   // 检查登录状态
   useEffect(() => {
@@ -62,41 +54,18 @@ export default function SharePage() {
     }
 
     getSharedRecord(id, token)
-      .then((data: QuestionRecord) => setRecord(data))
+      .then((data: QuestionRecord) => {
+        setRecord(data)
+        // 解析结构化数据
+        const parsed = parseStructuredData(data.ai_response)
+        setStructuredData(parsed)
+      })
       .catch((err: unknown) => {
         console.error('加载失败:', err)
         setError('分享记录不存在或链接已失效')
       })
       .finally(() => setLoading(false))
   }, [id, token])
-
-  // 加载 MathJax 并渲染公式
-  useEffect(() => {
-    let mounted = true
-
-    const initAndRenderMathJax = async () => {
-      if (!record) return
-
-      try {
-        await loadMathJax()
-        if (mounted && window.MathJax) {
-          await new Promise(resolve => setTimeout(resolve, 100))
-          const content = document.querySelector('.share-content')
-          if (content && window.MathJax.typeset) {
-            window.MathJax.typeset([content as HTMLElement])
-          }
-        }
-      } catch (error) {
-        console.error('Failed to process MathJax:', error)
-      }
-    }
-
-    initAndRenderMathJax()
-
-    return () => {
-      mounted = false
-    }
-  }, [record])
 
   if (loading) {
     return (
@@ -121,7 +90,7 @@ export default function SharePage() {
     )
   }
 
-  const questionsHtml = renderMarkdown(record.ai_response)
+  const hasStructuredData = structuredData?.questions && structuredData.questions.length > 0
 
   return (
     <div className="share-page">
@@ -137,21 +106,28 @@ export default function SharePage() {
         })()}</span>
       </div>
 
-      <div className="share-content markdown-body">
-        <div dangerouslySetInnerHTML={{ __html: questionsHtml as string }} />
+      <div className="share-content">
+        {hasStructuredData ? (
+          <StructuredPreviewShared
+            questions={structuredData.questions}
+            meta={structuredData.meta}
+            recordTitle={record.title}
+          />
+        ) : (
+          <div className="error-message">
+            <p>该记录使用旧数据格式，不支持查看</p>
+          </div>
+        )}
       </div>
+
       {!isLoggedIn && (
         <>
           <div className="share-footer">
-
-
             <p>想生成属于自己的题目吗？</p>
             <div className="share-actions">
               <a href="/?action=register" className="btn-primary">登录 / 注册</a>
               <Link to="/" className="btn-secondary">返回首页</Link>
             </div>
-
-
           </div>
         </>
       )}

@@ -6,8 +6,7 @@ from typing import Optional
 GRADE_KEYWORDS = [
     "一年级", "二年级", "三年级", "四年级", "五年级", "六年级",
     "七年级", "八年级", "九年级",
-    "初一", "初二", "初三",
-    "高一", "高二", "高三"
+    "初一", "初二", "初三"
 ]
 
 # 学科关键词列表
@@ -50,7 +49,7 @@ def validate_prompt(prompt: str) -> Optional[str]:
     has_subject = any(keyword in p for keyword in SUBJECT_KEYWORDS)
 
     if not has_grade and not has_subject:
-        return "请说明年级和学科（如：三年级数学）"
+        return "请说明年级和学科（如：三年级数学，初三英语）"
 
     return None
 

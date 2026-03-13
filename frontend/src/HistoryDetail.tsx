@@ -1,49 +1,30 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { renderMarkdown } from '@/utils/markdownProcessor'
-import { getHistoryDetail, createShareUrl } from '@/api/history'
-import { handlePrint as printUtilsHandlePrint, splitQuestionsAndAnswers } from '@/utils/printUtils'
 import { getToken } from '@/auth'
+import { getHistoryDetail, createShareUrl } from '@/api/history'
 import type { QuestionRecord } from '@/types'
+import type { StructuredQuestion } from '@/types/structured'
+import StructuredPreviewShared from '@/components/StructuredPreviewShared'
 import './HistoryDetail.css'
 
-// 加载 MathJax SVG 脚本
-const loadMathJax = (): Promise<void> => {
-  return new Promise((resolve, reject) => {
-    if (window.MathJax) {
-      resolve()
-      return
+// 解析结构化数据
+function parseStructuredData(aiResponse: string): {
+  questions: StructuredQuestion[]
+  meta: any | null
+} {
+  try {
+    const data = JSON.parse(aiResponse)
+    return {
+      questions: data.questions || [],
+      meta: data.meta || null
     }
-    // 先设置配置
-    window.MathJax = {
-      tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']],
-        displayMath: [['$$', '$$'], ['\\[', '\\]']],
-        processEscapes: false,
-        processEnvironments: true,
-        packages: ['base', 'ams', 'require']
-      },
-      options: {
-        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
-        ignoreHtmlClass: 'tex2jax_ignore'
-      },
-      svg: {
-        fontCache: 'global'
-      }
+  } catch (e) {
+    console.error('解析结构化数据失败:', e)
+    return {
+      questions: [],
+      meta: null
     }
-    const script = document.createElement('script')
-    script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js'
-    script.async = true
-    script.onload = () => resolve()
-    script.onerror = () => reject(new Error('Failed to load MathJax SVG'))
-    document.head.appendChild(script)
-  })
-}
-
-// 清理答案标题文本
-function cleanAnswerText(text: string) {
-  if (!text) return ''
-  return text.replace(/\s*## 答案\s*/g, '')
+  }
 }
 
 export default function HistoryDetail() {
@@ -53,34 +34,20 @@ export default function HistoryDetail() {
   const [loading, setLoading] = useState(true)
   const [shareUrl, setShareUrl] = useState<string | null>(null)
   const [showCopyToast, setShowCopyToast] = useState(false)
-  const questionsRef = useRef<HTMLDivElement>(null)
-  const answersRef = useRef<HTMLDivElement>(null)
-
-  // 分割题目和答案，分别渲染
-  const { questions, answers } = useMemo(() =>
-    record ? splitQuestionsAndAnswers(record.ai_response) : { questions: '', answers: null },
-    [record]
-  )
-
-  // 分别渲染题目和答案的 HTML
-  const questionsHtml = useMemo(() =>
-    record ? renderMarkdown(questions) : '',
-    [record, questions]
-  )
-
-  const answersHtml = useMemo(() =>
-    answers ? renderMarkdown(cleanAnswerText(answers)) : '',
-    [answers]
-  )
-
-  // 缓存 dangerouslySetInnerHTML 对象
-  const questionsProps = useMemo(() => ({ __html: questionsHtml }), [questionsHtml])
-  const answersProps = useMemo(() => ({ __html: answersHtml }), [answersHtml])
+  const [structuredData, setStructuredData] = useState<{
+    questions: StructuredQuestion[]
+    meta: any | null
+  } | null>(null)
 
   useEffect(() => {
     if (!id) return
     getHistoryDetail(id)
-      .then((data: QuestionRecord) => setRecord(data))
+      .then((data: QuestionRecord) => {
+        setRecord(data)
+        // 解析结构化数据
+        const parsed = parseStructuredData(data.ai_response)
+        setStructuredData(parsed)
+      })
       .catch((err: unknown) => {
         console.error('加载失败:', err)
         alert('加载失败')
@@ -88,39 +55,6 @@ export default function HistoryDetail() {
       })
       .finally(() => setLoading(false))
   }, [id, navigate])
-
-  // 加载 MathJax 并渲染公式
-  useEffect(() => {
-    let mounted = true
-
-    const initAndRenderMathJax = async () => {
-      if (!record) return
-
-      try {
-        await loadMathJax()
-        if (mounted && window.MathJax) {
-          // 等待 DOM 更新
-          await new Promise(resolve => setTimeout(resolve, 100))
-
-          // 收集需要渲染的元素（排除 null）
-          const elements = [questionsRef.current, answersRef.current].filter(Boolean) as HTMLElement[]
-
-          if (elements.length > 0 && window.MathJax.typesetPromise) {
-            await window.MathJax.typesetPromise(elements)
-            console.log('HistoryDetail MathJax rendered', { elementsCount: elements.length })
-          }
-        }
-      } catch (error) {
-        console.error('Failed to process MathJax in HistoryDetail:', error)
-      }
-    }
-
-    initAndRenderMathJax()
-
-    return () => {
-      mounted = false
-    }
-  }, [record])
 
   const handleShare = async () => {
     if (!id) return
@@ -145,11 +79,83 @@ export default function HistoryDetail() {
   }
 
   /**
-   * 打印功能 - 使用统一打印工具
+   * 打印功能
    */
   const handlePrint = async () => {
-    if (!record) return
-    await printUtilsHandlePrint(record.ai_response)
+    if (!structuredData?.questions || structuredData.questions.length === 0) return
+
+    console.log('Print clicked')
+    console.log('Questions count:', structuredData.questions.length)
+
+    // 创建打印专用容器
+    const printContainer = document.createElement('div')
+    printContainer.id = 'print-container'
+    printContainer.className = 'print-paper'
+    printContainer.style.cssText = `
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 210mm;
+      min-height: 297mm;
+      padding: 30mm 25mm;
+      margin: 10mm auto;
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      font-family: "Microsoft YaHei", "SimSun", sans-serif;
+      font-size: 14pt;
+      line-height: 1.8;
+      z-index: 999999;
+    `
+
+    // 构建打印内容
+    const title = record?.title || structuredData.meta?.title || '题目练习'
+    let contentHtml = `<h1 style="text-align: center; margin-bottom: 30px; font-size: 18pt; font-weight: bold;">${title}</h1>`
+
+    // 渲染每道题目
+    structuredData.questions.forEach((question, index) => {
+      contentHtml += `<div class="question-wrapper" style="margin-bottom: 24px; page-break-inside: avoid;">`
+      contentHtml += `<div style="font-weight: bold; margin-bottom: 12px;">${index + 1}. ${question.stem}</div>`
+
+      // 选项
+      if (question.options && question.options.length > 0) {
+        question.options.forEach((opt, optIndex) => {
+          const optionLabel = ['A', 'B', 'C', 'D'][optIndex]
+          const optionText = opt.replace(/^[A-D]\.\s*/, '')
+          contentHtml += `<div style="margin-left: 32px; margin-bottom: 8px;">${optionLabel}. ${optionText}</div>`
+        })
+      }
+
+      // 阅读材料
+      if (question.passage) {
+        contentHtml += `<div style="margin-top: 12px; margin-bottom: 12px; padding: 10px; background: #f5f5f5; border-left: 3px solid #ccc;">${question.passage}</div>`
+      }
+
+      contentHtml += `</div>`
+    })
+
+    printContainer.innerHTML = contentHtml
+    document.body.appendChild(printContainer)
+
+    // 等待 DOM 更新
+    await new Promise(resolve => setTimeout(resolve, 100))
+
+    // 等待 MathJax 渲染
+    if (window.MathJax?.typesetPromise) {
+      await window.MathJax.typesetPromise([printContainer])
+    } else if (window.MathJax?.typeset) {
+      window.MathJax.typeset([printContainer])
+    }
+
+    // 添加延迟确保 DOM 完全渲染
+    await new Promise(resolve => setTimeout(resolve, 200))
+
+    console.log('Triggering print')
+    window.print()
+
+    // 打印完成后移除容器
+    setTimeout(() => {
+      document.body.removeChild(printContainer)
+    }, 300)
   }
 
   if (loading) {
@@ -164,6 +170,8 @@ export default function HistoryDetail() {
       </div>
     )
   }
+
+  const hasStructuredData = structuredData?.questions && structuredData.questions.length > 0
 
   return (
     <div className="detail-page">
@@ -228,10 +236,17 @@ export default function HistoryDetail() {
         <p>{record.prompt_content}</p>
       </div>
 
-      <div className="detail-content markdown-body">
-        <div ref={questionsRef} dangerouslySetInnerHTML={questionsProps} />
-        {answersHtml && (
-          <div ref={answersRef} className="answer-section" dangerouslySetInnerHTML={answersProps} />
+      <div className="detail-content">
+        {hasStructuredData ? (
+          <StructuredPreviewShared
+            questions={structuredData.questions}
+            meta={structuredData.meta}
+            recordTitle={record.title}
+          />
+        ) : (
+          <div className="error-message">
+            <p>该记录使用旧数据格式，不支持查看</p>
+          </div>
         )}
       </div>
     </div>

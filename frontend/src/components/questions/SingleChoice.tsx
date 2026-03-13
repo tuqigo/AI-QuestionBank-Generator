@@ -1,7 +1,7 @@
 /**
  * 单选题组件
  */
-import { useMemo, useEffect } from 'react'
+import { useMemo } from 'react'
 import type { QuestionRendererProps } from '@/types/structured'
 import { renderInlineMarkdown } from '@/utils/markdownProcessor'
 
@@ -16,13 +16,6 @@ export default function SingleChoice({ question, index }: QuestionRendererProps)
       return { text }
     })
   }, [options])
-
-  // 渲染后触发 MathJax 重新渲染
-  useEffect(() => {
-    if (window.MathJax) {
-      window.MathJax.typesetPromise()
-    }
-  }, [question])
 
   return (
     <div className="question-item question-single-choice">

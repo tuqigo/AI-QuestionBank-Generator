@@ -119,7 +119,6 @@ async def generate_structured(
 
         if not is_valid:
             api_logger.error(f"JSON 校验失败，email: {email}, errors: {errors}")
-            api_logger.error(f"AI 原始返回: {content[:500]}...")
             # 尝试解析 JSON 并输出更详细的错误信息
             try:
                 parsed = json.loads(content)
@@ -145,6 +144,10 @@ async def generate_structured(
 
         api_logger.info(f"题目生成成功，email: {email}, 题目数量: {len(question_bank.questions)}")
 
+        # 从解析后的数据中重新提取标题（确保使用正确的 title）
+        actual_title = question_bank.meta.title if question_bank.meta.title else title
+        api_logger.info(f"[标题提取] 从 meta.title 提取: {actual_title}")
+
         # 转换为响应格式（填充 rows_to_answer 等字段）
         structured_questions = [
             convert_to_structured_response(q)
@@ -154,14 +157,14 @@ async def generate_structured(
         # 保存历史记录（原始 JSON 字符串）
         try:
             record = QuestionRecordCreate(
-                title=title,
+                title=actual_title,  # 使用正确的标题
                 prompt_type="text",
                 prompt_content=prompt,
                 ai_response=content,  # 保存原始 JSON
                 image_path=None,
             )
             record_id, short_id = create_record(user.id, record)
-            api_logger.info(f"历史记录保存成功：id={record_id}, short_id={short_id}")
+            api_logger.info(f"历史记录保存成功：id={record_id}, short_id={short_id}, title={actual_title}")
         except Exception as e:
             api_logger.error(f"历史记录保存失败：{e}")
             record_id = None

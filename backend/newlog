@@ -1,0 +1,12 @@
+react-dom-client.development.js:28004 Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+CzXmxRvFaEf2:1  <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+StructuredPreviewShared.tsx:42 MathJax: 题目数据变化 {questionsCount: 15, firstStem: '计算：$\\frac{3}{4} + \\frac{2}{5} - \\frac{1}{2}$。', hasWindowMathJax: false, hasContainer: true}
+StructuredPreviewShared.tsx:55 MathJax: 首次初始化
+StructuredPreviewShared.tsx:42 MathJax: 题目数据变化 {questionsCount: 15, firstStem: '计算：$\\frac{3}{4} + \\frac{2}{5} - \\frac{1}{2}$。', hasWindowMathJax: true, hasContainer: true}
+StructuredPreviewShared.tsx:94 MathJax: 已加载，跳过加载
+StructuredPreviewShared.tsx:71 MathJax startup ready callback
+StructuredPreviewShared.tsx:84 MathJax: 脚本加载成功，window.MathJax = {version: '3.2.2', _: {…}, config: {…}, loader: {…}, startup: {…}, …}
+StructuredPreviewShared.tsx:102 MathJax: 开始渲染容器 <div class=​"structured-preview-shared">​…​</div>​
+StructuredPreviewShared.tsx:106 MathJax: typesetPromise 渲染完成
+StructuredPreviewShared.tsx:102 MathJax: 开始渲染容器 <div class=​"structured-preview-shared">​…​</div>​
+StructuredPreviewShared.tsx:106 MathJax: typesetPromise 渲染完成

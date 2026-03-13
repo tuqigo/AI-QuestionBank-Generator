@@ -1566,3 +1566,64 @@ small {
     font-size: 0.625rem;
   }
 }
+
+/* ===== Structured Preview 样式 ===== */
+.structured-preview {
+  font-size: 0.9375rem;
+  line-height: 1.9;
+  color: var(--gray-800);
+}
+
+.structured-preview .question-wrapper {
+  page-break-inside: avoid;
+  margin-bottom: var(--space-6);
+}
+
+/* 统一各题型组件的外部样式由父容器控制 */
+.question-content {
+  margin-bottom: var(--space-2);
+}
+
+.option-item {
+  margin-bottom: var(--space-1);
+}
+
+.sub-question {
+  margin-top: var(--space-3);
+  padding-left: var(--space-4);
+  border-left: 2px solid var(--gray-200);
+}
+
+/* 打印样式补充 */
+@media print {
+  /* 隐藏所有非打印容器的内容 */
+  body > *:not(#print-container, #print-overlay) {
+    display: none !important;
+  }
+
+  /* 打印容器样式 */
+  #print-container {
+    position: static !important;
+    width: auto !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    font-size: 12pt !important;
+  }
+
+  /* 遮罩层在打印时隐藏 */
+  #print-overlay {
+    display: none !important;
+  }
+
+  /* 题目样式优化 */
+  .question-wrapper {
+    margin-bottom: 15px !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* 题号加粗 */
+  .question-number {
+    font-weight: bold !important;
+  }
+}
