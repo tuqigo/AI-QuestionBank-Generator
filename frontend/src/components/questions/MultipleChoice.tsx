@@ -1,0 +1,36 @@
+/**
+ * 多选题组件
+ */
+import { useMemo } from 'react'
+import { QuestionRendererProps } from '@/types/structured'
+import { renderMarkdown } from '@/utils/markdownProcessor'
+
+export default function MultipleChoice({ question, index }: QuestionRendererProps) {
+  const options = question.options || []
+
+  // 多选题选项标签（A, B, C...）
+  const optionLabels = useMemo(() => {
+    const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
+    return options.map((opt, idx) => ({
+      letter: letters[idx] || String.fromCharCode(65 + idx),
+      text: opt
+    }))
+  }, [options])
+
+  return (
+    <div className="question-item question-multiple-choice">
+      <div className="question-header">
+        <span className="question-number">{index}. </span>
+        <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderMarkdown(question.stem) }} />
+      </div>
+      <div className="question-options">
+        {optionLabels.map((opt, idx) => (
+          <div key={idx} className="option-item">
+            <span className="option-label">{opt.letter}. </span>
+            <span className="option-text" dangerouslySetInnerHTML={{ __html: renderMarkdown(opt.text) }} />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}

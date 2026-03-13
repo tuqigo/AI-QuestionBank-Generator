@@ -5,6 +5,8 @@ import type {
   ShareUrlResponse,
 } from '../types'
 
+import type { StructuredGenerateResponse } from '@/types/structured'
+
 const API_BASE = '/api'
 
 /** 获取历史记录列表（游标分页） */
@@ -74,6 +76,24 @@ export async function getSharedRecord(shortId: string, token: string): Promise<Q
   if (!res.ok) {
     const error = await res.text()
     throw new Error(error || '分享记录不存在或链接无效')
+  }
+
+  return res.json()
+}
+
+/** 生成结构化题目（新接口） */
+export async function generateStructuredQuestions(prompt: string): Promise<StructuredGenerateResponse> {
+  const res = await fetchWithAuth(`${API_BASE}/questions/structured`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ prompt }),
+  })
+
+  if (!res.ok) {
+    const error = await res.text()
+    throw new Error(error || '生成题目失败')
   }
 
   return res.json()

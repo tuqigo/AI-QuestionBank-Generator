@@ -1,0 +1,222 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/question.schema.json",
+  "title": "AI Question Bank Schema",
+  "description": "小学生AI题库生成器 - 结构化题目数据_schema",
+  "type": "object",
+  "required": ["meta", "questions"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "description": "元数据",
+      "required": ["subject", "grade", "title"],
+      "properties": {
+        "subject": {
+          "type": "string",
+          "description": "学科：math, chinese, english",
+          "enum": ["math", "chinese", "english"]
+        },
+        "grade": {
+          "type": "string",
+          "description": "年级：grade1 ~ grade9",
+          "pattern": "^grade[1-9]$"
+        },
+        "title": {
+          "type": "string",
+          "description": "试卷标题，简洁规范"
+        }
+      },
+      "additionalProperties": false
+    },
+    "questions": {
+      "type": "array",
+      "description": "题目列表",
+      "items": {
+        "$ref": "#/definitions/Question"
+      },
+      "minItems": 1
+    }
+  },
+  "additionalProperties": false,
+
+  "definitions": {
+    "BaseQuestion": {
+      "type": "object",
+      "required": ["type", "stem", "knowledge_points"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "题型",
+          "enum": [
+            "SINGLE_CHOICE",
+            "MULTIPLE_CHOICE",
+            "TRUE_FALSE",
+            "FILL_BLANK",
+            "CALCULATION",
+            "WORD_PROBLEM",
+            "GEOMETRY",
+            "READ_COMP",
+            "POETRY_APP",
+            "CLOZE",
+            "ESSAY"
+          ]
+        },
+        "stem": {
+          "type": "string",
+          "description": "题干内容（支持LaTeX公式）"
+        },
+        "knowledge_points": {
+          "type": "array",
+          "description": "知识点列表",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    },
+
+    "QuestionWithOptions": {
+      "allOf": [
+        {"$ref": "#/definitions/BaseQuestion"},
+        {
+          "required": ["options"],
+          "properties": {
+            "options": {
+              "type": "array",
+              "description": "选项（SINGLE_CHOICE必须4个，MULTIPLE_CHOICE至少2个）",
+              "minItems": 2,
+              "items": {"type": "string"}
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+
+    "QuestionWithPassage": {
+      "allOf": [
+        {"$ref": "#/definitions/BaseQuestion"},
+        {
+          "required": ["passage"],
+          "properties": {
+            "passage": {
+              "type": "string",
+              "description": "阅读材料或完形原文"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+
+    "QuestionWithSubQuestions": {
+      "allOf": [
+        {"$ref": "#/definitions/BaseQuestion"},
+        {
+          "required": ["sub_questions"],
+          "properties": {
+            "sub_questions": {
+              "type": "array",
+              "description": "子题目列表",
+              "items": {"$ref": "#/definitions/Question"},
+              "minItems": 1
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+
+    "Question": {
+      "anyOf": [
+        {
+          "allOf": [
+            {"$ref": "#/definitions/QuestionWithOptions"},
+            {
+              "properties": {"type": {"const": "SINGLE_CHOICE"}},
+              "required": ["options"]
+            }
+          ],
+          "description": "单选题：必须有4个选项"
+        },
+        {
+          "allOf": [
+            {"$ref": "#/definitions/QuestionWithOptions"},
+            {
+              "properties": {"type": {"const": "MULTIPLE_CHOICE"}},
+              "required": ["options"]
+            }
+          ],
+          "description": "多选题：至少2个选项"
+        },
+        {
+          "allOf": [
+            {"$ref": "#/definitions/BaseQuestion"},
+            {"properties": {"type": {"const": "TRUE_FALSE"}}}
+          ],
+          "description": "判断题：只有题干和知识点"
+        },
+        {
+          "allOf": [
+            {"$ref": "#/definitions/BaseQuestion"},
+            {"properties": {"type": {"const": "FILL_BLANK"}}}
+          ],
+          "description": "填空题：题干使用______或[  ]表示空格"
+        },
+        {
+          "allOf": [
+            {"$ref": "#/definitions/BaseQuestion"},
+            {"properties": {"type": {"const": "CALCULATION"}}}
+          ],
+          "description": "计算题：数学计算/解方程/脱式计算"
+        },
+        {
+          "allOf": [
+            {"$ref": "#/definitions/BaseQuestion"},
+            {"properties": {"type": {"const": "WORD_PROBLEM"}}}
+          ],
+          "description": "应用题：有实际场景"
+        },
+        {
+          "allOf": [
+            {"$ref": "#/definitions/BaseQuestion"},
+            {"properties": {"type": {"const": "GEOMETRY"}}}
+          ],
+          "description": "几何题：涉及图形"
+        },
+        {
+          "allOf": [
+            {"$ref": "#/definitions/QuestionWithPassage"},
+            {"$ref": "#/definitions/QuestionWithSubQuestions"},
+            {"properties": {"type": {"const": "READ_COMP"}}}
+          ],
+          "description": "阅读理解：有阅读材料和子题"
+        },
+        {
+          "allOf": [
+            {"$ref": "#/definitions/BaseQuestion"},
+            {"properties": {"type": {"const": "POETRY_APP"}}}
+          ],
+          "description": "古诗文鉴赏/默写"
+        },
+        {
+          "allOf": [
+            {"$ref": "#/definitions/QuestionWithPassage"},
+            {"$ref": "#/definitions/QuestionWithSubQuestions"},
+            {"properties": {"type": {"const": "CLOZE"}}}
+          ],
+          "description": "完形填空：有原文和子题"
+        },
+        {
+          "allOf": [
+            {"$ref": "#/definitions/BaseQuestion"},
+            {"properties": {"type": {"const": "ESSAY"}}}
+          ],
+          "description": "作文题：语文作文/英语书面表达"
+        }
+      ]
+    }
+  }
+}

@@ -188,7 +188,8 @@ class QwenBatchManager:
         start_time = time.time()
         request_count = len(batch_requests)
         qwen_logger.info(f"[Batch 调用] 开始调用{model_name}，请求数={request_count}")
-        qwen_logger.info(f"[Batch 调用] 请求详情：{[req.user_prompt[:30] for req in batch_requests]}")
+        for req in batch_requests:
+            qwen_logger.info(f"[Batch 调用] 请求完整 prompt:\n{req.user_prompt}")
 
         try:
             success_count = 0
@@ -196,7 +197,7 @@ class QwenBatchManager:
 
             def call_api(request: _BatchRequest) -> Tuple[Optional[str], Optional[Exception]]:
                 """单个请求的 API 调用"""
-                qwen_logger.info(f"[API 调用] 开始调用，prompt={request.user_prompt[:30]}...")
+                qwen_logger.info(f"[API 调用] 输入完整 prompt:\n{request.user_prompt}")
                 try:
                     messages = [
                         {"role": "system", "content": QUESTION_SYSTEM_PROMPT},
@@ -214,7 +215,7 @@ class QwenBatchManager:
 
                     if response.status_code == 200 and response.output and response.output.choices:
                         content = response.output.choices[0].message.content
-                        qwen_logger.info(f"[API 调用] 成功，content 长度={len(content) if content else 0}")
+                        qwen_logger.info(f"[API 调用] 输出完整 content:\n{content}")
                         return content, None
                     else:
                         error = RuntimeError(f"API 调用失败：code={response.code}, message={response.message}")
@@ -301,13 +302,11 @@ batch_manager = QwenBatchManager(batch_size=10, max_wait_seconds=3)
 
 # ===================== 5. 工具函数 =====================
 
-def _truncate_for_log(text: str, max_length: int = 500) -> str:
-    """截断文本用于日志显示"""
+def _format_for_log(text: str) -> str:
+    """格式化文本用于日志显示，完整输出不截断"""
     if not text:
         return "<empty>"
-    if len(text) <= max_length:
-        return text
-    return text[:max_length] + f"... [共 {len(text)} 字符]"
+    return text
 
 
 def _parse_title_and_content(content: str) -> Tuple[str, str]:
@@ -391,7 +390,7 @@ async def generate_questions_async(user_prompt: str, user_id: Optional[int] = No
 
         qwen_logger.info(f"[生成结果] 内容长度：{len(content) if content else 0} 字符")
         qwen_logger.info(f"[生成结果] 总耗时：{total_elapsed:.2f} 秒")
-        qwen_logger.info(f"[生成结果] 输出预览：{_truncate_for_log(content, 500) if content else '<empty>'}")
+        qwen_logger.info(f"[生成结果] 输出内容：{content if content else '<empty>'}")
 
         title, questions_content = _parse_title_and_content(content or "")
         qwen_logger.info(f"[解析结果] 标题：{title}")

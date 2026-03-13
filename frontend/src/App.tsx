@@ -4,6 +4,7 @@ import { getToken, clearToken } from './auth'
 import MainContent from './MainContent'
 import HistoryDetail from './HistoryDetail'
 import SharePage from './SharePage'
+import StructuredPreview from './StructuredPreview'
 import AdminApp from './admin/App'
 import LandingPage from './pages/LandingPage'
 
@@ -79,6 +80,9 @@ function AppContent() {
 
       {/* 历史详情页 */}
       <Route path="/history/:id" element={user ? <HistoryDetail /> : <Navigate to="/" />} />
+
+      {/* 【测试】结构化题目预览页 */}
+      <Route path="/structured" element={user ? <StructuredPreview /> : <Navigate to="/" />} />
     </Routes>
   )
 }

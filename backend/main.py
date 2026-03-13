@@ -19,6 +19,11 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(questions.router)
+
+# 注册结构化题目路由（独立导入以避免循环依赖）
+from routers.questions_structured import router as structured_router
+app.include_router(structured_router)
+
 app.include_router(extend.router)
 app.include_router(history.router)
 app.include_router(admin.router)
