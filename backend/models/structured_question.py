@@ -2,8 +2,9 @@
 结构化题目数据模型
 用于 AI 生成题目的结构化数据解析和校验
 """
+from __future__ import annotations
 from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union
 from datetime import datetime
 
 
@@ -150,7 +151,7 @@ StructuredQuestionResponse.update_forward_refs()
 
 # ===================== 辅助函数 =====================
 
-def calculate_rows_to_answer(question: dict | Question) -> int:
+def calculate_rows_to_answer(question: Union[dict, Question]) -> int:
     """
     计算题目预留作答行数
 
