@@ -65,6 +65,71 @@
   margin: 0 auto;
 }
 
+/* 提示词输入区域 */
+.prompt-input-container {
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  border: 1px solid #f0f0f0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.prompt-input-container .prompt-label {
+  font-size: 0.875rem;
+  color: #525252;
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.prompt-input {
+  width: 100%;
+  padding: 14px 16px;
+  font-size: 0.9375rem;
+  color: #262626;
+  background: #fafafa;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  resize: vertical;
+  min-height: 120px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.prompt-input:focus {
+  outline: none;
+  border-color: #ff6b4a;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(255, 107, 74, 0.1);
+}
+
+.prompt-input::placeholder {
+  color: #a1a1aa;
+}
+
+.btn-generate {
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px 24px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #ff6b4a 0%, #ff8a65 100%);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(255, 107, 74, 0.3);
+}
+
+.btn-generate:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 74, 0.4);
+}
+
+.btn-generate:active {
+  transform: translateY(0);
+}
+
 .questions-container {
   display: flex;
   flex-direction: column;
@@ -95,14 +160,45 @@
     padding: 0;
   }
 
-  .preview-header,
-  .question-wrapper {
-    page-break-inside: avoid;
+  .preview-header {
+    display: none;
   }
 
   .questions-container {
     gap: 16px;
   }
+
+  .question-wrapper {
+    page-break-inside: avoid;
+  }
+
+  .question-item {
+    page-break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ddd;
+    padding: 16px;
+    background: white;
+  }
+
+  .option-item,
+  .passage-section,
+  .answer-area {
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+  }
+
+  .option-label,
+  .question-number {
+    font-weight: bold;
+    color: #000;
+  }
+
+  .answer-placeholder {
+    color: #000;
+    text-decoration: underline;
+  }
+}
 
 /* 响应式 */
 @media (max-width: 768px) {

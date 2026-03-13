@@ -105,7 +105,7 @@ export function processMarkdown(mdContent: string): string {
  * 完整的 Markdown 渲染函数，包含特殊格式处理和保护数学内容
  */
 export function renderMarkdown(content: string): string {
-  return processMarkdown(content);
+  return processMarkdown(content)
 }
 
 /**
@@ -120,4 +120,47 @@ export function renderMarkdownForPrinting(content: string): string {
  */
 export function renderMarkdownForPdf(content: string): string {
   return renderMarkdown(content);
+}
+
+/**
+ * 渲染行内 Markdown 内容（不添加 <p> 标签）
+ * 用于题目、选项等需要在同一行显示的场景
+ */
+export function renderInlineMarkdown(content: string): string {
+  if (!content || typeof content !== 'string') return ''
+
+  // 直接返回空字符串
+  if (!content.trim()) return ''
+
+  // 保护数学内容
+  const { content: protectedContent, placeholders } = protectMath(content)
+
+  // 处理特殊格式（填空、括号等）
+  let processed = protectedContent
+  processed = processed.replace(/\[ {2,}\]/g, '<span class="blank-box"></span>')
+  processed = processed.replace(/（ {2,}）/g, (match) => {
+    const spaces = match.slice(1, -1)
+    const nbsp = '\u00a0'.repeat(spaces.length)
+    return `（${nbsp}）`
+  })
+  processed = processed.replace(/\( {2,}\)/g, (match) => {
+    const spaces = match.slice(1, -1)
+    const nbsp = '\u00a0'.repeat(spaces.length)
+    return `(${nbsp})`
+  })
+  processed = processed.replace(/（）/g, '<span class="blank-parentheses"></span>')
+  processed = processed.replace(/\(\)/g, '<span class="blank-parentheses"></span>')
+
+  // 使用 renderInline 避免添加 <p> 标签，但需要配置 md 实例
+  // 禁用常规的包装
+  processed = md.renderInline(processed)
+
+  // 恢复数学内容
+  processed = restoreMath(processed, placeholders)
+
+  // 强制移除外层 <p> 标签（如果 renderInline 仍然添加了）
+  // 使用正则移除开头的 <p> 和结尾的 </p>
+  processed = processed.replace(/^<p>(.+?)<\/p>$/s, '$1')
+
+  return processed
 }

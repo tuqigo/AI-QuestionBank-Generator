@@ -1,45 +1,40 @@
 /**
  * 单选题组件
  */
-import { useMemo } from 'react'
+import { useMemo, useEffect } from 'react'
 import type { QuestionRendererProps } from '@/types/structured'
-import { renderMarkdown } from '@/utils/markdownProcessor'
-
-// 检查选项是否已包含 A. B. C. D. 前缀
-function hasOptionPrefix(text: string): boolean {
-  return /^[A-D]\.\s/.test(text.trim())
-}
-
-// 移除选项前缀
-function removeOptionPrefix(text: string): string {
-  return text.replace(/^[A-D]\.\s*/, '')
-}
+import { renderInlineMarkdown } from '@/utils/markdownProcessor'
 
 export default function SingleChoice({ question, index }: QuestionRendererProps) {
   const options = question.options || []
 
-  // 处理选项：检测是否有前缀，如果没有则添加
+  // 处理选项：移除可能存在的 A. B. C. D. 前缀（如果 AI 返回了前缀）
   const normalizedOptions = useMemo(() => {
     return options.map((opt) => {
-      const hasPrefix = hasOptionPrefix(opt)
-      return {
-        text: hasPrefix ? removeOptionPrefix(opt) : opt,
-        hasPrefix
-      }
+      // 移除任何已存在的 A-D 前缀
+      const text = opt.replace(/^[A-D]\.\s*/, '')
+      return { text }
     })
   }, [options])
+
+  // 渲染后触发 MathJax 重新渲染
+  useEffect(() => {
+    if (window.MathJax) {
+      window.MathJax.typesetPromise()
+    }
+  }, [question])
 
   return (
     <div className="question-item question-single-choice">
       <div className="question-header">
         <span className="question-number">{index}.</span>
-        <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderMarkdown(question.stem) }} />
+        <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(question.stem) }} />
       </div>
       <div className="question-options">
         {normalizedOptions.map((opt, idx) => (
           <div key={idx} className="option-item">
-            <span className="option-label">{opt.hasPrefix ? '' : ['A', 'B', 'C', 'D'][idx]}. </span>
-            <span className="option-text" dangerouslySetInnerHTML={{ __html: renderMarkdown(opt.text) }} />
+            <span className="option-label">{['A', 'B', 'C', 'D'][idx]}. </span>
+            <span className="option-text" dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(opt.text) }} />
           </div>
         ))}
       </div>
