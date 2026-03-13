@@ -73,8 +73,7 @@
           },
           "minItems": 1
         }
-      },
-      "additionalProperties": false
+      }
     },
 
     "QuestionWithOptions": {
@@ -89,8 +88,7 @@
               "minItems": 2,
               "items": {"type": "string"}
             }
-          },
-          "additionalProperties": false
+          }
         }
       ]
     },
@@ -105,8 +103,7 @@
               "type": "string",
               "description": "阅读材料或完形原文"
             }
-          },
-          "additionalProperties": false
+          }
         }
       ]
     },
@@ -120,11 +117,9 @@
             "sub_questions": {
               "type": "array",
               "description": "子题目列表",
-              "items": {"$ref": "#/definitions/Question"},
-              "minItems": 1
+              "items": {"$ref": "#/definitions/Question"}
             }
-          },
-          "additionalProperties": false
+          }
         }
       ]
     },
@@ -139,7 +134,7 @@
               "required": ["options"]
             }
           ],
-          "description": "单选题：必须有4个选项"
+          "description": "单选题：必须有4个选项（AI 会按提示生成）"
         },
         {
           "allOf": [

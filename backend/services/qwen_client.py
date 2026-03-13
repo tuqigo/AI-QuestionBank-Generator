@@ -209,13 +209,13 @@ class QwenBatchManager:
                         model=model_name,
                         messages=messages,
                         result_format="message",
-                        max_tokens=800
+                        max_tokens=1500
                     )
                     qwen_logger.info(f"[API 调用] 响应返回，status={response.status_code}")
 
                     if response.status_code == 200 and response.output and response.output.choices:
                         content = response.output.choices[0].message.content
-                        qwen_logger.info(f"[API 调用] 输出完整 content:\n{content}")
+                        qwen_logger.info(f"[API 调用] 请求成功，内容长度={len(content) if content else 0}")
                         return content, None
                     else:
                         error = RuntimeError(f"API 调用失败：code={response.code}, message={response.message}")
@@ -390,7 +390,7 @@ async def generate_questions_async(user_prompt: str, user_id: Optional[int] = No
 
         qwen_logger.info(f"[生成结果] 内容长度：{len(content) if content else 0} 字符")
         qwen_logger.info(f"[生成结果] 总耗时：{total_elapsed:.2f} 秒")
-        qwen_logger.info(f"[生成结果] 输出内容：{content if content else '<empty>'}")
+        qwen_logger.info(f"[生成结果] 输出内容预览：{content if content else '<empty>'}")
 
         title, questions_content = _parse_title_and_content(content or "")
         qwen_logger.info(f"[解析结果] 标题：{title}")

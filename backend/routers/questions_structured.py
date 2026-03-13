@@ -120,6 +120,17 @@ async def generate_structured(
         if not is_valid:
             api_logger.error(f"JSON 校验失败，email: {email}, errors: {errors}")
             api_logger.error(f"AI 原始返回: {content[:500]}...")
+            # 尝试解析 JSON 并输出更详细的错误信息
+            try:
+                parsed = json.loads(content)
+                questions = parsed.get("questions", [])
+                for idx, q in enumerate(questions):
+                    if q.get("type") == "SINGLE_CHOICE" and q.get("options"):
+                        for opt_idx, opt in enumerate(q.get("options", [])[:3]):  # 只检查前3个选项
+                            if "\\\\" in opt:  # 检测双反斜杠
+                                api_logger.error(f"选项第 {idx} 题第 {opt_idx} 选项存在双反斜杠: {opt[:100]}")
+            except:
+                pass
             raise HTTPException(
                 status_code=502,
                 detail=f"JSON 校验失败: {'；'.join(errors)}"
