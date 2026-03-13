@@ -314,6 +314,12 @@ def _parse_title_and_content(content: str) -> Tuple[str, str]:
     if not content:
         return "AI 题目生成", ""
 
+    # 检查是否是纯 JSON（没有 TITLE: 前缀）
+    content_stripped = content.strip()
+    if content_stripped.startswith('{'):
+        # 纯 JSON，没有标题前缀
+        return "AI 题目生成", content_stripped
+
     lines = content.split('\n', 1)
     title_line = lines[0].strip()
 

@@ -98,13 +98,76 @@ export default function StructuredPreview() {
   }
 
   const handlePrint = async () => {
-    // 等待 MathJax 渲染完成后再打印
-    if (window.MathJax?.typesetPromise) {
-      await window.MathJax.typesetPromise()
-    } else if (window.MathJax?.typeset) {
-      await Promise.resolve().then(() => window.MathJax?.typeset())
+    console.log('Print clicked')
+    console.log('Questions count:', questions.length)
+
+    if (questions.length === 0) {
+      alert('没有可打印的内容')
+      return
     }
+
+    // 创建打印专用容器
+    const printContainer = document.createElement('div')
+    printContainer.id = 'print-container'
+    printContainer.className = 'print-paper'
+    printContainer.style.cssText = `
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 210mm;
+      min-height: 297mm;
+      padding: 30mm 25mm;
+      margin: 10mm auto;
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      font-family: "Microsoft YaHei", "SimSun", sans-serif;
+      font-size: 14pt;
+      line-height: 1.8;
+      z-index: 999999;
+    `
+
+    // 构建打印内容
+    let contentHtml = `<h1 style="text-align: center; margin-bottom: 30px; font-size: 18pt; font-weight: bold;">${title || '结构化题目'}</h1>`
+
+    // 渲染每道题目
+    questions.forEach((question, index) => {
+      contentHtml += `<div class="question-wrapper" style="margin-bottom: 24px; page-break-inside: avoid;">`
+
+      // 题干
+      contentHtml += `<div style="font-weight: bold; margin-bottom: 12px;">${index + 1}. ${renderInlineMarkdown(question.stem)}</div>`
+
+      // 选项
+      if (question.options && question.options.length > 0) {
+        question.options.forEach((opt, optIndex) => {
+          const optionLabel = ['A', 'B', 'C', 'D'][optIndex]
+          const optionText = opt.replace(/^[A-D]\.\s*/, '')
+          contentHtml += `<div style="margin-left: 32px; margin-bottom: 8px;">${optionLabel}. ${renderInlineMarkdown(optionText)}</div>`
+        })
+      }
+
+      contentHtml += `</div>`
+    })
+
+    printContainer.innerHTML = contentHtml
+    document.body.appendChild(printContainer)
+
+    // 等待 MathJax 渲染
+    if (window.MathJax?.typesetPromise) {
+      await window.MathJax.typesetPromise([printContainer])
+    } else if (window.MathJax?.typeset) {
+      window.MathJax.typeset([printContainer])
+    }
+
+    // 添加延迟确保 DOM 完全渲染
+    await new Promise(resolve => setTimeout(resolve, 300))
+
+    console.log('Triggering print')
     window.print()
+
+    // 打印完成后移除容器
+    setTimeout(() => {
+      document.body.removeChild(printContainer)
+    }, 500)
   }
 
   if (loading) {
@@ -155,9 +218,14 @@ export default function StructuredPreview() {
         </div>
       </div>
 
+      {/* 打印测试内容 - 仅用于调试 */}
+      <div className="print-test" style={{ display: 'none' }}>
+        PRINT TEST: 题目数量 {questions.length}
+      </div>
+
       {/* 题目列表 */}
       {questions.length > 0 && (
-        <div className="preview-content">
+        <div className="preview-content" id="printable-content">
           <div className="questions-container">
             {questions.map((question, index) => (
               <div key={index} className="question-wrapper">
