@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useLayoutEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { StructuredQuestion, MetaData } from '@/types/structured'
 import QuestionRenderer from '@/components/QuestionRenderer'
 import './StructuredPreviewShared.css'
@@ -17,6 +17,7 @@ export default function StructuredPreviewShared({
   const containerRef = useRef<HTMLDivElement>(null)
   const initializedRef = useRef(false)
   const [componentsReady, setComponentsReady] = useState(false)
+  const [mathJaxLoaded, setMathJaxLoaded] = useState(false)
   const mathJaxRenderedRef = useRef(false)
   const prevQuestionsRef = useRef<string>('')
 
@@ -40,73 +41,37 @@ export default function StructuredPreviewShared({
 
     initializedRef.current = true
 
-    if (!window.MathJax) {
-      const mathJaxConfig: any = {
-        tex: {
-          inlineMath: [['$', '$'], ['\\(', '\\)']],
-          displayMath: [['$$', '$$'], ['\\[', '\\]']],
-          processEscapes: true,
-          processEnvironments: true,
-          packages: ['base', 'ams', 'require']
-        },
-        options: {
-          skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
-          ignoreHtmlClass: 'tex2jax_ignore'
-        },
-        startup: {
-          typeset: true,
-          ready: () => {
-            // @ts-ignore
-            window.MathJax?.startup?.defaultReady?.()
-          }
-        }
+    // 检查 MathJax 是否已经完全加载
+    const checkMathJaxReady = () => {
+      if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
+        setMathJaxLoaded(true)
+      } else {
+        // 等待 MathJax 加载完成
+        setTimeout(checkMathJaxReady, 50)
       }
-      window.MathJax = mathJaxConfig
-
-      const script = document.createElement('script')
-      script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js'
-      script.async = true
-      document.head.appendChild(script)
     }
+
+    checkMathJaxReady()
   }, [])
 
-  // 等待组件渲染完成（检测 loading 元素是否消失）
+  // 等待组件渲染完成（题目内容渲染到 DOM）
   useEffect(() => {
     if (questionsLength === 0) {
       setComponentsReady(false)
       return
     }
 
-    // 使用轮询检测 loading 元素是否消失
-    const checkReady = () => {
-      const loadingElements = containerRef.current?.querySelectorAll('.question-loading')
-      const hasLoading = loadingElements && loadingElements.length > 0
-
-      if (!hasLoading) {
-        setComponentsReady(true)
-      }
-    }
-
-    // 立即检查一次
-    checkReady()
-
-    // 轮询检查
-    const interval = setInterval(checkReady, 50)
-
-    // 超时处理（5 秒后强制认为 ready）
+    // 等待一小段时间确保 DOM 已经渲染完成
     const timeout = setTimeout(() => {
       setComponentsReady(true)
-    }, 5000)
+    }, 150)
 
-    return () => {
-      clearInterval(interval)
-      clearTimeout(timeout)
-    }
+    return () => clearTimeout(timeout)
   }, [questionsLength])
 
-  // 使用 useLayoutEffect 确保在浏览器绘制前渲染 MathJax
-  useLayoutEffect(() => {
-    if (questionsLength === 0 || !containerRef.current || !componentsReady) {
+  // MathJax 渲染
+  useEffect(() => {
+    if (questionsLength === 0 || !containerRef.current || !componentsReady || !mathJaxLoaded) {
       return
     }
 
@@ -115,22 +80,26 @@ export default function StructuredPreviewShared({
       return
     }
 
-    // 立即同步渲染
-    if (window.MathJax && containerRef.current) {
-      try {
-        if (window.MathJax.typesetPromise) {
-          window.MathJax.typesetPromise([containerRef.current]).then(() => {
+    // 延迟一小段时间，确保 DOM 已经完全稳定
+    const timer = setTimeout(() => {
+      if (window.MathJax && containerRef.current) {
+        try {
+          if (window.MathJax.typesetPromise) {
+            window.MathJax.typesetPromise([containerRef.current]).then(() => {
+              mathJaxRenderedRef.current = true
+            })
+          } else if (window.MathJax.typeset) {
+            window.MathJax.typeset([containerRef.current])
             mathJaxRenderedRef.current = true
-          })
-        } else if (window.MathJax.typeset) {
-          window.MathJax.typeset([containerRef.current])
-          mathJaxRenderedRef.current = true
+          }
+        } catch (err) {
+          console.error('[MathJax] 渲染失败:', err)
         }
-      } catch (err) {
-        console.error('[MathJax] 渲染失败:', err)
       }
-    }
-  }, [questionsLength, componentsReady])
+    }, 100)
+
+    return () => clearTimeout(timer)
+  }, [questionsLength, componentsReady, mathJaxLoaded])
 
   if (questions.length === 0) {
     return null

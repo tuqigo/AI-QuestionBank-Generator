@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { getToken } from '@/auth'
 import { getHistoryDetail, createShareUrl } from '@/api/history'
+import { renderMarkdown } from '@/utils/markdownProcessor'
 import type { QuestionRecord } from '@/types'
 import type { StructuredQuestion } from '@/types/structured'
 import StructuredPreviewShared from '@/components/StructuredPreviewShared'
@@ -84,6 +85,12 @@ export default function HistoryDetail() {
   const handlePrint = async () => {
     if (!structuredData?.questions || structuredData.questions.length === 0) return
 
+    // 等待 MathJax 加载完成
+    if (!window.MathJax || !window.MathJax.typesetPromise) {
+      alert('MathJax 加载中，请稍后再试')
+      return
+    }
+
     // 创建打印专用容器（平时隐藏，打印时显示）
     const printContainer = document.createElement('div')
     printContainer.id = 'print-container'
@@ -108,14 +115,17 @@ export default function HistoryDetail() {
     // 渲染每道题目
     structuredData.questions.forEach((question, index) => {
       contentHtml += `<div style="margin-bottom: 24px; page-break-inside: avoid;">`
-      contentHtml += `<div style="font-weight: bold; margin-bottom: 12px;">${index + 1}. ${question.stem}</div>`
+      // 序号单独放在外面，只渲染 stem 内容
+      const stemHtml = renderMarkdown(question.stem)
+      contentHtml += `<div style="font-weight: bold; margin-bottom: 12px;"><span>${index + 1}. </span>${stemHtml}</div>`
 
       // 选项
       if (question.options && question.options.length > 0) {
         question.options.forEach((opt, optIndex) => {
           const optionLabel = ['A', 'B', 'C', 'D'][optIndex]
           const optionText = opt.replace(/^[A-D]\.\s*/, '')
-          contentHtml += `<div style="margin-left: 32px; margin-bottom: 8px;">${optionLabel}. ${optionText}</div>`
+          const optHtml = renderMarkdown(optionText)
+          contentHtml += `<div style="margin-left: 32px; margin-bottom: 8px;">${optionLabel}. ${optHtml}</div>`
         })
       }
 
@@ -126,11 +136,7 @@ export default function HistoryDetail() {
     document.body.appendChild(printContainer)
 
     // 等待 MathJax 渲染
-    if (window.MathJax?.typesetPromise) {
-      await window.MathJax.typesetPromise([printContainer])
-    } else if (window.MathJax?.typeset) {
-      window.MathJax.typeset([printContainer])
-    }
+    await window.MathJax.typesetPromise([printContainer])
 
     // 立即打印
     window.print()

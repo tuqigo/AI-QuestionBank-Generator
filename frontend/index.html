@@ -10,6 +10,26 @@
     <meta name="format-detection" content="telephone=no" />
     <meta name="description" content="为中小学生家长老师生成数学、语文等学科练习题的 Web 应用" />
     <title>题小宝</title>
+    <script>
+      // 预配置 MathJax，确保在页面加载时就准备好
+      window.MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']],
+          processEscapes: true,
+          processEnvironments: true,
+          packages: ['base', 'ams', 'require']
+        },
+        options: {
+          skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+          ignoreHtmlClass: 'tex2jax_ignore'
+        },
+        startup: {
+          typeset: true
+        }
+      };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
   </head>
   <body>
     <div id="root"></div>
