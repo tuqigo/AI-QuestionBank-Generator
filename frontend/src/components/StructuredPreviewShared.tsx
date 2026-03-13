@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { StructuredQuestion, MetaData } from '@/types/structured'
 import QuestionRenderer from '@/components/QuestionRenderer'
 import './StructuredPreviewShared.css'
@@ -15,116 +15,119 @@ export default function StructuredPreviewShared({
   recordTitle
 }: StructuredPreviewSharedProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const renderingRef = useRef(false)
+  const initializedRef = useRef(false)
+  const [componentsReady, setComponentsReady] = useState(false)
 
-  // 加载 MathJax 并渲染公式
+  // 使用 key 来强制重新初始化（当题目数量从 0 变为非 0 时）
+  const questionsLength = questions.length
+
+  // 加载 MathJax
   useEffect(() => {
-    let mounted = true
+    if (initializedRef.current) {
+      return
+    }
 
-    const initAndRenderMathJax = async () => {
-      if (questions.length === 0 || !mounted) {
-        console.log('MathJax: 跳过渲染，无题目或未挂载')
-        return
-      }
+    initializedRef.current = true
+    console.log('MathJax: 初始化配置')
 
-      // 防止重复渲染
-      if (renderingRef.current) {
-        console.log('MathJax: 渲染中，跳过')
-        return
-      }
-
-      console.log('MathJax: 开始渲染', {
-        questionsCount: questions.length,
-        hasWindowMathJax: !!window.MathJax,
-        hasContainer: !!containerRef.current
-      })
-
-      try {
-        renderingRef.current = true
-
-        // 检查 MathJax 是否已经加载到 window
-        const mathJaxLoaded = !!window.MathJax
-
-        if (!mathJaxLoaded) {
-          console.log('MathJax: 首次初始化')
-          window.MathJax = {
-            tex: {
-              inlineMath: [['$', '$'], ['\\(', '\\)']],
-              displayMath: [['$$', '$$'], ['\\[', '\\]']],
-              processEscapes: false,
-              processEnvironments: true,
-              packages: ['base', 'ams', 'require']
-            },
-            options: {
-              skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
-              ignoreHtmlClass: 'tex2jax_ignore'
-            },
-            startup: {
-              typeset: true,
-              ready: () => {
-                console.log('MathJax startup ready callback')
-                // @ts-ignore
-                window.MathJax.startup.defaultReady()
-              }
-            }
+    if (!window.MathJax) {
+      const mathJaxConfig: any = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']],
+          processEscapes: true,
+          processEnvironments: true,
+          packages: ['base', 'ams', 'require']
+        },
+        options: {
+          skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+          ignoreHtmlClass: 'tex2jax_ignore'
+        },
+        startup: {
+          typeset: true,
+          ready: () => {
+            console.log('MathJax startup ready')
+            // @ts-ignore
+            window.MathJax?.startup?.defaultReady?.()
           }
-
-          const script = document.createElement('script')
-          script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js'
-          script.async = true
-
-          await new Promise<void>((resolve) => {
-            script.onload = () => {
-              console.log('MathJax: 脚本加载成功，window.MathJax =', window.MathJax)
-              resolve()
-            }
-            script.onerror = () => {
-              console.error('Failed to load MathJax')
-              resolve()
-            }
-            document.head.appendChild(script)
-          })
-        } else {
-          console.log('MathJax: 已加载')
         }
+      }
+      window.MathJax = mathJaxConfig
 
-        // 等待 DOM 完全渲染
-        await new Promise(resolve => setTimeout(resolve, 150))
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js'
+      script.async = true
+      document.head.appendChild(script)
+    }
+  }, [])
 
-        // 触发 MathJax 渲染
-        if (window.MathJax && containerRef.current) {
-          console.log('MathJax: 开始渲染容器')
-          try {
-            if (window.MathJax.typesetPromise) {
-              await window.MathJax.typesetPromise([containerRef.current])
-              console.log('MathJax: typesetPromise 渲染完成')
-            } else if (window.MathJax.typeset) {
-              window.MathJax.typeset([containerRef.current])
-              console.log('MathJax: typeset 渲染完成')
-            }
-          } catch (err) {
-            console.error('MathJax render error:', err)
-          }
-        } else {
-          console.warn('MathJax: 缺少必要条件', {
-            hasMathJax: !!window.MathJax,
-            hasContainer: !!containerRef.current
-          })
-        }
-      } catch (error) {
-        console.error('Failed to process MathJax:', error)
-      } finally {
-        renderingRef.current = false
+  // 等待组件渲染完成（检测 loading 元素是否消失）
+  useEffect(() => {
+    if (questionsLength === 0) {
+      setComponentsReady(false)
+      return
+    }
+
+    // 重置状态
+    setComponentsReady(false)
+
+    // 使用轮询检测 loading 元素是否消失
+    const checkReady = () => {
+      const loadingElements = containerRef.current?.querySelectorAll('.question-loading')
+      const hasLoading = loadingElements && loadingElements.length > 0
+
+      if (!hasLoading) {
+        setComponentsReady(true)
       }
     }
 
-    initAndRenderMathJax()
+    // 立即检查一次
+    checkReady()
+
+    // 轮询检查
+    const interval = setInterval(checkReady, 50)
+
+    // 超时处理（5 秒后强制认为 ready）
+    const timeout = setTimeout(() => {
+      setComponentsReady(true)
+    }, 5000)
 
     return () => {
-      mounted = false
+      clearInterval(interval)
+      clearTimeout(timeout)
     }
-    // 只在 questions.length 变化时触发
-  }, [questions.length])
+  }, [questionsLength])
+
+  // 渲染公式
+  useEffect(() => {
+    if (questionsLength === 0 || !containerRef.current || !componentsReady) {
+      return
+    }
+
+    console.log('MathJax: 组件已就绪，准备渲染公式，题目数量:', questionsLength)
+
+    // 渲染公式
+    const renderMath = async () => {
+      // 使用 requestAnimationFrame 确保 DOM 已经完全更新
+      await new Promise(resolve => requestAnimationFrame(resolve))
+      await new Promise(resolve => setTimeout(resolve, 50))
+
+      if (window.MathJax && containerRef.current) {
+        try {
+          if (window.MathJax.typesetPromise) {
+            await window.MathJax.typesetPromise([containerRef.current])
+          } else if (window.MathJax.typeset) {
+            window.MathJax.typeset([containerRef.current])
+          }
+          console.log('MathJax: 渲染完成')
+        } catch (err) {
+          console.error('MathJax 渲染失败:', err)
+        }
+      }
+    }
+
+    renderMath()
+  }, [questionsLength, componentsReady])
 
   if (questions.length === 0) {
     return null
@@ -140,7 +143,7 @@ export default function StructuredPreviewShared({
 
       <div className="questions-container">
         {questions.map((question, index) => (
-          <div key={question.id || index} className="question-wrapper">
+          <div key={index} className="question-wrapper">
             <QuestionRenderer question={question} index={index + 1} />
           </div>
         ))}

@@ -25,41 +25,23 @@ function protectMath(content: string): { content: string; placeholders: Map<stri
   // 保护 $$...$$ (display math) - 先处理 display math，避免被 inline 匹配
   content = content.replace(/\$\$((?:[^$]|\\\$)+?)\$\$/g, (match, math) => {
     // 使用特殊占位符格式，避免被 markdown 处理
-    const placeholder = `\u0002MATH_DISPLAY_${idx++}\u0003`;
-    placeholders.set(placeholder, match);
-    return placeholder;
+    const placeholder = `MATH_DISPLAY_${idx++}`;
+    placeholders.set(placeholder, `$$${math}$$`);
+    return `@@${placeholder}@@`;
   });
 
   // 保护 $...$ (inline math)
-  // 匹配 $...$ 内容，允许内部包含转义字符（如 \\% \\frac 等）
-  // 使用 [^$] 匹配任何非$字符（包括反斜杠）
-  // 修复：使用更宽松的模式，允许包含反斜杠和各种字符
-  content = content.replace(/(?:^|[^\\])\$([^$\n]+)\$|^\$([^$\n]+)\$/g, (match, math1, math2) => {
-    // math1 或 math2 其中一个不为 undefined
-    const math = math1 !== undefined ? math1 : math2
-    // 保护数学内容中的下划线，避免 MathJax 将其解析为下标
-    // 只替换不合法的下划线（单独的 _），保留 LaTeX 命令如 \triangle
-    // 使用负向 lookbehind 确保 _ 前面不是 \
-    const protectedMath = math.replace(/(?<!\\)_/g, '\\_')
-    const placeholder = `\u0002MATH_INLINE_${idx++}\u0003`
-    placeholders.set(placeholder, `$${protectedMath}$`)
-    return placeholder
-  })
+  // 使用负向先行断言确保 $ 前面没有反斜杠
+  // 匹配 $...$ 内容，允许内部包含反斜杠和各种字符
+  content = content.replace(/(?<!\\)\$([^$\n]+?)\$/g, (match, math) => {
+    // 移除可能存在的前导/后导空格
+    const trimmedMath = math.trim();
+    const placeholder = `MATH_INLINE_${idx++}`;
+    placeholders.set(placeholder, `$${trimmedMath}$`);
+    return `@@${placeholder}@@`;
+  });
 
   return { content, placeholders };
-}
-
-/**
- * 恢复被保护的数学内容
- */
-function restoreMath(content: string, placeholders: Map<string, string>): string {
-  for (const [placeholder, original] of placeholders) {
-    // 转义占位符中的特殊字符，确保正则表达式正确匹配
-    const escapedPlaceholder = placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(escapedPlaceholder, 'g');
-    content = content.replace(regex, original);
-  }
-  return content;
 }
 
 /**
@@ -101,8 +83,12 @@ export function processMarkdown(mdContent: string): string {
   // 渲染 markdown
   processed = md.render(processed);
 
-  // 恢复数学内容
-  processed = restoreMath(processed, placeholders);
+  // 恢复数学内容（使用 @@placeholder@@ 格式）
+  for (const [placeholder, original] of placeholders) {
+    const escapedPlaceholder = `@@${placeholder}@@`.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escapedPlaceholder, 'g');
+    processed = processed.replace(regex, original);
+  }
 
   return processed;
 }
@@ -157,16 +143,16 @@ export function renderInlineMarkdown(content: string): string {
   processed = processed.replace(/（）/g, '<span class="blank-parentheses"></span>')
   processed = processed.replace(/\(\)/g, '<span class="blank-parentheses"></span>')
 
-  // 使用 renderInline 避免添加 <p> 标签，但需要配置 md 实例
-  // 禁用常规的包装
+  // 使用 renderInline 避免添加 <p> 标签
+  // @@placeholder@@ 格式不会被 markdown-it 处理，可以直接使用
   processed = md.renderInline(processed)
 
-  // 恢复数学内容
-  processed = restoreMath(processed, placeholders)
-
-  // 强制移除外层 <p> 标签（如果 renderInline 仍然添加了）
-  // 使用正则移除开头的 <p> 和结尾的 </p>
-  processed = processed.replace(/^<p>(.+?)<\/p>$/s, '$1')
+  // 恢复数学内容（@@placeholder@@ 格式）
+  for (const [placeholder, original] of placeholders) {
+    const escapedPlaceholder = `@@${placeholder}@@`.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const regex = new RegExp(escapedPlaceholder, 'g')
+    processed = processed.replace(regex, original)
+  }
 
   return processed
 }

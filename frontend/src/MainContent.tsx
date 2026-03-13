@@ -6,7 +6,7 @@ import HistoryDropdown from './HistoryList'
 import ProgressModal from './components/ProgressModal'
 import StructuredPreviewShared from './components/StructuredPreviewShared'
 import { generateStructuredQuestions } from './api/history'
-import type { StructuredQuestion } from './types/structured'
+import type { StructuredQuestion, MetaData } from './types/structured'
 import './App.css'
 
 const SHORTCUTS = [
@@ -28,7 +28,7 @@ export default function MainContent({ email, onLogout }: Props) {
   const [prompt, setPrompt] = useState('小学六年级 数学综合练习（分数运算、百分数、圆、比例、统计）')
   // 结构化数据
   const [questions, setQuestions] = useState<StructuredQuestion[]>([])
-  const [meta, setMeta] = useState<{ subject: string; grade: string; title: string } | null>(null)
+  const [meta, setMeta] = useState<MetaData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [historyOpen, setHistoryOpen] = useState(false)

@@ -25,22 +25,36 @@ export default function StructuredPreview() {
     if (window.MathJax) {
       // MathJax 3.x: typesetPromise(), MathJax 4.x: typeset() 返回 undefined
       if (window.MathJax.typesetPromise) {
-        window.MathJax.typesetPromise()
+        window.MathJax.typesetPromise([])
       } else if (window.MathJax.typeset) {
         // 4.x 版本，typeset 是同步的，使用 Promise.resolve 包装
-        Promise.resolve().then(() => window.MathJax?.typeset())
+        Promise.resolve().then(() => window.MathJax?.typeset?.([]))
       }
       return
     }
 
     // 配置 MathJax
-    window.MathJax = {
+    const mathJaxConfig: any = {
       tex: {
         inlineMath: [['$', '$'], ['\\(', '\\)']],
-        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true,
+        processEnvironments: true,
+        packages: ['base', 'ams', 'require']
       },
-      svg: { fontCache: 'global' }
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+        ignoreHtmlClass: 'tex2jax_ignore'
+      },
+      startup: {
+        typeset: true,
+        ready: () => {
+          // @ts-ignore
+          window.MathJax?.startup?.defaultReady?.()
+        }
+      }
     }
+    window.MathJax = mathJaxConfig
 
     const script = document.createElement('script')
     script.type = 'text/javascript'
@@ -50,10 +64,10 @@ export default function StructuredPreview() {
     script.id = 'mathjax-script'
 
     script.onload = () => {
-      if (window.MathJax.typesetPromise) {
-        window.MathJax.typesetPromise()
-      } else if (window.MathJax.typeset) {
-        Promise.resolve().then(() => window.MathJax?.typeset())
+      if (window.MathJax?.typesetPromise) {
+        window.MathJax.typesetPromise([])
+      } else if (window.MathJax?.typeset) {
+        Promise.resolve().then(() => window.MathJax?.typeset?.([]))
       }
     }
 
