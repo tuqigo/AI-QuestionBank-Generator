@@ -37,8 +37,11 @@ class StructuredQuestionResponse(BaseModel):
     knowledge_points: List[str]
     options: Optional[List[str]]
     passage: Optional[str]
-    sub_questions: Optional[List[StructuredQuestionResponse]]
+    sub_questions: Optional[List["StructuredQuestionResponse"]]
     rows_to_answer: int
+
+
+StructuredQuestionResponse.update_forward_refs()
 
 
 class StructuredGenerateResponse(BaseModel):
