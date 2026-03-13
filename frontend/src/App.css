@@ -68,7 +68,7 @@ body {
   transform: scale(1.05);
 }
 
-.logo-small svg {
+.logo-small img {
   width: 24px;
   height: 24px;
 }
@@ -655,6 +655,23 @@ body {
   color: var(--error-700);
   font-size: 0.8125rem;
   animation: slide-in 0.3s ease-out;
+}
+
+/* 输入框下方内联错误提示 - 小红字 */
+.error-message-inline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) 0;
+  color: var(--error-600);
+  font-size: 0.75rem;
+  animation: slide-in 0.3s ease-out;
+}
+
+.error-message-inline svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
 }
 
 @keyframes slide-in {

@@ -60,7 +60,7 @@ interface Props {
 }
 
 export default function MainContent({ email, onLogout }: Props) {
-  const [prompt, setPrompt] = useState('小学一年级数学 10 以内加减法 20 道，带答案')
+  const [prompt, setPrompt] = useState('小学六年级 数学综合练习（分数运算、百分数、圆、比例、统计）')
   const [markdown, setMarkdown] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -348,31 +348,7 @@ export default function MainContent({ email, onLogout }: Props) {
         <div className="header-content">
           <div className="header-left">
             <div className="logo-small">
-              <svg
-                viewBox="0 0 256 256"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"  
-                height="24"
-                role="img"
-                aria-label="logo"
-              >
-                <circle cx="128" cy="128" r="120" fill="currentColor" />
-                <rect x="48" y="84" width="160" height="96" rx="14" ry="14" fill="currentColor" />
-                <polygon points="40,84 128,44 216,84 128,76" fill="currentColor" />
-                <polygon points="84,86 128,64 172,86 128,76" fill="currentColor" />
-                <circle cx="92" cy="128" r="8" fill="currentColor" />
-                <circle cx="164" cy="128" r="6.5" fill="currentColor" />
-                <text
-                  x="128"
-                  y="142"
-                  text-anchor="middle"
-                  font-family="Arial, Helvetica, sans-serif"
-                  font-weight="700"
-                  font-size="72"
-                  fill="currentColor"
-                >Q</text>
-              </svg>
+              <img src="/icon64.svg" alt="logo" width="24" height="24" />
             </div>
             <h1>题小宝</h1>
           </div>
@@ -454,6 +430,17 @@ export default function MainContent({ email, onLogout }: Props) {
                 rows={4}
                 className="prompt-input"
               />
+              {/* 错误提示 - 输入框下方 */}
+              {error && (
+                <div className="error-message-inline" role="alert">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                    <path d="M12 8V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    <circle cx="12" cy="16" r="1" fill="currentColor" />
+                  </svg>
+                  {error}
+                </div>
+              )}
             </section>
 
             {/* 生成按钮 */}
@@ -548,17 +535,6 @@ export default function MainContent({ email, onLogout }: Props) {
               </div>
             </section>
  */}
-            {/* 错误提示 */}
-            {error && (
-              <div className="error-message" role="alert">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-                  <path d="M12 8V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                  <circle cx="12" cy="16" r="1" fill="currentColor" />
-                </svg>
-                {error}
-              </div>
-            )}
           </div>
         </aside>
 
