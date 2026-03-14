@@ -2,7 +2,7 @@
  * StructuredPreview - 结构化题目预览页面
  * 在此页面输入提示词生成题目并渲染
  */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getToken } from '@/core/auth/userAuth'
 import { handlePrint } from '@/utils/printUtils'
@@ -28,18 +28,12 @@ export default function StructuredPreview() {
   }>>([])
   const [showAnswers, setShowAnswers] = useState(false)
   const [answersLoading, setAnswersLoading] = useState(false)
+  const questionsContainerRef = useRef<HTMLDivElement>(null)
 
   // 加载 MathJax
   useEffect(() => {
     // 如果已经加载则跳过
     if (window.MathJax) {
-      // MathJax 3.x: typesetPromise(), MathJax 4.x: typeset() 返回 undefined
-      if (window.MathJax.typesetPromise) {
-        window.MathJax.typesetPromise([])
-      } else if (window.MathJax.typeset) {
-        // 4.x 版本，typeset 是同步的，使用 Promise.resolve 包装
-        Promise.resolve().then(() => window.MathJax?.typeset?.([]))
-      }
       return
     }
 
@@ -74,10 +68,9 @@ export default function StructuredPreview() {
     script.id = 'mathjax-script'
 
     script.onload = () => {
-      if (window.MathJax?.typesetPromise) {
-        window.MathJax.typesetPromise([])
-      } else if (window.MathJax?.typeset) {
-        Promise.resolve().then(() => window.MathJax?.typeset?.([]))
+      // MathJax 加载完成后，如果已经有题目，渲染它们
+      if (questions.length > 0 && questionsContainerRef.current) {
+        window.MathJax?.typesetPromise?.([questionsContainerRef.current!])
       }
     }
 
@@ -87,6 +80,24 @@ export default function StructuredPreview() {
 
     document.head.appendChild(script)
   }, [])
+
+  // 题目变化时，渲染 MathJax
+  useEffect(() => {
+    if (questions.length === 0 || !window.MathJax || !questionsContainerRef.current) {
+      return
+    }
+
+    const timer = setTimeout(() => {
+      if (window.MathJax?.typesetPromise) {
+        window.MathJax.typesetPromise([questionsContainerRef.current!])
+          .catch((err) => {
+            console.error('[MathJax] 渲染失败:', err)
+          })
+      }
+    }, 150)
+
+    return () => clearTimeout(timer)
+  }, [questions])
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -219,7 +230,7 @@ export default function StructuredPreview() {
       {/* 题目列表 */}
       {questions.length > 0 && (
         <div className="preview-content" id="printable-content">
-          <div className="questions-container">
+          <div className="questions-container" ref={questionsContainerRef}>
             {questions.map((question, index) => (
               <div key={index} className="question-wrapper">
                 <QuestionRenderer question={question} index={index + 1} />

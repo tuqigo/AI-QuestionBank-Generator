@@ -152,6 +152,7 @@ export function useMathJaxSimple(
   const initializedRef = useRef(false)
   const mathJaxRenderedRef = useRef(false)
   const [isLoaded, setIsLoaded] = useState(false)
+  const prevDepsRef = useRef<string>('')
 
   // 检测 MathJax 是否加载完成
   useEffect(() => {
@@ -174,11 +175,7 @@ export function useMathJaxSimple(
 
   // 渲染 MathJax
   useEffect(() => {
-    if (dependencies.length === 0 || !isLoaded || !containerRef.current) {
-      return
-    }
-
-    if (mathJaxRenderedRef.current) {
+    if (!isLoaded || !containerRef.current) {
       return
     }
 
@@ -197,7 +194,7 @@ export function useMathJaxSimple(
           mathJaxRenderedRef.current = true
         }
       }
-    }, 100)
+    }, 150)
 
     return () => clearTimeout(timer)
   }, dependencies) // eslint-disable-line react-hooks/exhaustive-deps
