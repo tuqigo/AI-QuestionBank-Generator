@@ -4,13 +4,13 @@
  */
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getToken } from '@/auth'
+import { getToken } from '@/core/auth/userAuth'
 import { handlePrint } from '@/utils/printUtils'
 import QuestionRenderer from '@/components/QuestionRenderer'
-import { generateStructuredQuestions, getHistoryAnswers } from '@/api/history'
+import { generateStructuredQuestions, getHistoryAnswers } from '@/core/api/history'
 import { renderInlineMarkdown } from '@/utils/markdownProcessor'
 import './StructuredPreview.css'
-import type { StructuredGenerateResponse, Question } from '@/types/structured'
+import type { StructuredGenerateResponse, Question, MetaData } from '@/types/question'
 
 export default function StructuredPreview() {
   const navigate = useNavigate()

@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import './LandingPage.css'
-import LoginModal from '../components/LoginModal'
-import { getToken } from '../auth'
+import LoginModal from '@/features/auth/LoginModal'
+import { getToken } from '@/core/auth/userAuth'
 
 export default function LandingPage() {
   const [searchParams] = useSearchParams()

@@ -6,7 +6,7 @@
  * 本组件不触发 MathJax 渲染
  */
 import { useMemo } from 'react'
-import type { Question } from '@/types/structured'
+import type { Question } from '@/types/question'
 
 // 题型组件映射
 import SingleChoice from './questions/SingleChoice'

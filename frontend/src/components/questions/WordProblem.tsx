@@ -1,7 +1,7 @@
 /**
  * 应用题组件
  */
-import { QuestionRendererProps } from '@/types/structured'
+import { QuestionRendererProps } from '@/types/question'
 import { renderInlineMarkdown } from '@/utils/markdownProcessor'
 
 interface WordProblemProps extends QuestionRendererProps {

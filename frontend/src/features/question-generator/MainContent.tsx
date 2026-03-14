@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { fetchWithAuth, clearToken } from './auth'
-import { validatePrompt } from './utils/promptValidator'
-import { handlePrint } from './utils/printUtils'
-import HistoryDropdown from './HistoryList'
-import ProgressModal from './components/ProgressModal'
-import StructuredPreviewShared from './components/StructuredPreviewShared'
-import { generateStructuredQuestions } from './api/history'
-import type { StructuredQuestion, MetaData } from './types/structured'
-import './App.css'
+import { fetchWithAuth, clearToken } from '@/core/auth/userAuth'
+import { validatePrompt } from '@/utils/promptValidator'
+import { handlePrint } from '@/utils/printUtils'
+import HistoryDropdown from '../history/HistoryList'
+import ProgressModal from './ProgressModal'
+import StructuredPreviewShared from '@/components/StructuredPreviewShared'
+import { generateStructuredQuestions } from '@/core/api/history'
+import type { StructuredQuestion, MetaData } from '@/types/question'
+import './MainContent.css'
 
 const SHORTCUTS = [
   { label: '口算题', prompt: '小学一年级数学 数的组成，比大小、多少、长短、高矮、轻重、简单分类、统计', icon: '🔢' },

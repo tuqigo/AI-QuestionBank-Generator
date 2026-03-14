@@ -1,3 +1,9 @@
+/**
+ * 类型定义统一导出
+ */
+
+// ===================== 历史记录相关类型 =====================
+
 export interface GenerateResponse {
   title: string
   markdown: string
@@ -5,7 +11,6 @@ export interface GenerateResponse {
   short_id?: string
 }
 
-// 历史记录相关类型
 export interface QuestionRecord {
   id: number
   short_id: string
@@ -37,7 +42,8 @@ export interface ShareUrlResponse {
   share_url: string
 }
 
-// MathJax 类型定义
+// ===================== MathJax 类型定义 =====================
+
 declare global {
   interface Window {
     MathJax?: {

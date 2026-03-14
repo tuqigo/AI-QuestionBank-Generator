@@ -2,7 +2,7 @@
  * 多选题组件
  */
 import { useMemo } from 'react'
-import { QuestionRendererProps } from '@/types/structured'
+import { QuestionRendererProps, QuestionWithOptions } from '@/types/question'
 import { renderInlineMarkdown } from '@/utils/markdownProcessor'
 
 interface MultipleChoiceProps extends QuestionRendererProps {

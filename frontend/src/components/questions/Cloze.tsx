@@ -2,7 +2,7 @@
  * 完形填空组件
  */
 import { useMemo } from 'react'
-import { QuestionRendererProps } from '@/types/structured'
+import { QuestionRendererProps, QuestionWithPassage, QuestionWithSubQuestions } from '@/types/question'
 import { renderInlineMarkdown, renderMarkdown } from '@/utils/markdownProcessor'
 import FillBlank from './FillBlank'
 

@@ -1,5 +1,5 @@
 import { renderMarkdown } from './markdownProcessor'
-import type { StructuredQuestion } from '@/types/structured'
+import type { StructuredQuestion } from '@/types/question'
 
 /**
  * 分割题目和答案

@@ -3,7 +3,7 @@
  * 支持所有题型的子题目
  */
 import { useMemo } from 'react'
-import { QuestionRendererProps } from '@/types/structured'
+import { QuestionRendererProps, QuestionWithPassage, QuestionWithSubQuestions } from '@/types/question'
 import { renderMarkdown, renderInlineMarkdown } from '@/utils/markdownProcessor'
 import SingleChoice from './SingleChoice'
 import MultipleChoice from './MultipleChoice'

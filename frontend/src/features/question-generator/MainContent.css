@@ -1,5 +1,5 @@
 /* ===== 引入主题配置 ===== */
-@import './theme.css';
+@import '../../theme.css';
 
 /* ===== 全局重置 ===== */
 *, *::before, *::after {

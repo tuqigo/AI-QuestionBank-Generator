@@ -3,7 +3,7 @@
  * 为每种题型提供渲染（屏幕显示）和打印两套配置
  * 支持后续自定义扩展
  */
-import type { QuestionType } from '@/types/structured'
+import type { QuestionType } from '@/types/question'
 
 /** 选项排列方式 */
 export type OptionLayout = 'horizontal' | 'vertical'

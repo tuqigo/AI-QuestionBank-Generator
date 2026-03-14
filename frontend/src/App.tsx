@@ -1,12 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect, useCallback } from 'react'
-import { getToken, clearToken } from './auth'
-import MainContent from './MainContent'
-import HistoryDetail from './HistoryDetail'
-import SharePage from './SharePage'
-import StructuredPreview from './StructuredPreview'
+import { getToken, clearToken } from './core/auth/userAuth'
+import MainContent from './features/question-generator/MainContent'
+import HistoryDetail from './features/history/HistoryDetail'
+import SharePage from './features/history/SharePage'
+import StructuredPreview from './features/question-generator/StructuredPreview'
 import AdminApp from './admin/App'
-import LandingPage from './pages/LandingPage'
+import LandingPage from './features/landing/LandingPage'
 
 const API_BASE = '/api'
 

@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useSearchParams, Link } from 'react-router-dom'
-import { getToken } from '@/auth'
-import { getSharedRecord, getSharedQuestions } from '@/api/history'
+import { getToken } from '@/core/auth/userAuth'
+import { getSharedRecord, getSharedQuestions } from '@/core/api/history'
 import type { QuestionRecord } from '@/types'
-import type { StructuredQuestion } from '@/types/structured'
+import type { StructuredQuestion, RecordMeta } from '@/types/question'
 import StructuredPreviewShared from '@/components/StructuredPreviewShared'
 import './SharePage.css'
 
@@ -19,7 +19,7 @@ export default function SharePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [structuredData, setStructuredData] = useState<{
     questions: StructuredQuestion[]
-    meta: { record_id: number; short_id: string; title: string; created_at: string } | null
+    meta: RecordMeta | null
   } | null>(null)
 
   // 检查登录状态

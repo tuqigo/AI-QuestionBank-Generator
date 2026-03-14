@@ -1,7 +1,7 @@
 /**
  * 填空题组件
  */
-import type { QuestionRendererProps } from '@/types/structured'
+import type { QuestionRendererProps } from '@/types/question'
 import { renderInlineMarkdown } from '@/utils/markdownProcessor'
 
 interface FillBlankProps extends QuestionRendererProps {

@@ -1,11 +1,11 @@
-import { fetchWithAuth } from '../auth'
+import { fetchWithAuth } from '../auth/userAuth'
 import type {
   QuestionRecord,
   QuestionRecordListResponse,
   ShareUrlResponse,
-} from '../types'
+} from '@/types'
 
-import type { StructuredGenerateResponse, StructuredQuestion } from '@/types/structured'
+import type { StructuredGenerateResponse, StructuredQuestion } from '@/types/question'
 
 const API_BASE = '/api'
 

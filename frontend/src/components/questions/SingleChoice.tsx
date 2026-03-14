@@ -2,7 +2,7 @@
  * 单选题组件
  */
 import { useMemo } from 'react'
-import type { QuestionRendererProps } from '@/types/structured'
+import type { QuestionRendererProps, QuestionWithOptions } from '@/types/question'
 import { renderInlineMarkdown } from '@/utils/markdownProcessor'
 
 interface SingleChoiceProps extends QuestionRendererProps {

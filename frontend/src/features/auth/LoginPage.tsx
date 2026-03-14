@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { setToken } from './auth'
+import { setToken } from '@/core/auth/userAuth'
 import './LoginPage.css'
 
 const API_BASE = '/api'

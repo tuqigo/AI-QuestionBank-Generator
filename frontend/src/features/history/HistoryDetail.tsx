@@ -1,18 +1,18 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { getToken } from '@/auth'
-import { getHistoryDetail, createShareUrl, getHistoryQuestions, getHistoryAnswers } from '@/api/history'
+import { getToken } from '@/core/auth/userAuth'
+import { getHistoryDetail, createShareUrl, getHistoryQuestions, getHistoryAnswers } from '@/core/api/history'
 import { handlePrint } from '@/utils/printUtils'
 import { renderMarkdown } from '@/utils/markdownProcessor'
 import type { QuestionRecord } from '@/types'
-import type { StructuredQuestion } from '@/types/structured'
+import type { StructuredQuestion, RecordMeta } from '@/types/question'
 import StructuredPreviewShared from '@/components/StructuredPreviewShared'
 import './HistoryDetail.css'
 
 // 解析结构化数据
 function parseStructuredData(aiResponse: string): {
   questions: StructuredQuestion[]
-  meta: any | null
+  meta: RecordMeta | null
 } {
   try {
     const data = JSON.parse(aiResponse)
@@ -38,7 +38,7 @@ export default function HistoryDetail() {
   const [showCopyToast, setShowCopyToast] = useState(false)
   const [structuredData, setStructuredData] = useState<{
     questions: StructuredQuestion[]
-    meta: any | null
+    meta: RecordMeta | null
   } | null>(null)
   const [answers, setAnswers] = useState<Array<{
     question_id: number
