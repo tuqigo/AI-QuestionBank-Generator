@@ -90,28 +90,31 @@
 ### 2.3 带认证的请求
 
 ```typescript
-// frontend/src/core/auth/userAuth.ts
-export async function fetchWithAuth(
-  url: string,
-  options: RequestInit = {}
-): Promise<Response> {
-  const token = getToken()  // 从 localStorage 获取
-  const headers = new Headers(options.headers)
-  if (token) {
-    headers.set('Authorization', `Bearer ${token}`)
-  }
+// frontend/src/core/auth/authFactory.ts
+// 使用工厂模式创建认证存储和 fetch 包装器
 
-  const response = await fetch(url, { ...options, headers })
+// 1. 创建认证存储
+const { getToken, setToken, clearToken } = createAuthStorage('qbank_token')
 
-  // 处理 401 未授权
-  if (response.status === 401) {
+// 2. 创建带认证的 fetch（120s 超时，自动 401 处理）
+const { fetchWithAuth } = createFetchWithAuth(
+  getToken,
+  120000,  // 超时时间
+  () => {
     clearToken()
     window.location.href = '/'
   }
+)
 
-  return response
-}
+// 3. 使用示例
+const response = await fetchWithAuth('/api/history', { method: 'GET' })
 ```
+
+**工厂模式优势**:
+- 统一错误处理（try-catch）
+- 统一的 401 响应处理逻辑
+- 支持可配置的超时时间
+- 减少代码重复
 
 ### 2.4 Token 过期处理
 
@@ -185,6 +188,8 @@ export async function fetchWithAuth(
 
 ### 3.2 题目渲染
 
+#### 3.2.1 题型分发器
+
 ```typescript
 // frontend/src/components/QuestionRenderer.tsx
 const QuestionRenderer = ({ question, index, mode }) => {
@@ -201,6 +206,32 @@ const QuestionRenderer = ({ question, index, mode }) => {
   }
 }
 ```
+
+#### 3.2.2 MathJax 公式渲染
+
+```typescript
+// frontend/src/hooks/useMathJax.ts
+// 题目渲染后自动调用 MathJax 渲染公式
+
+const containerRef = useRef<HTMLDivElement>(null)
+useMathJaxSimple(containerRef, [questions])
+
+// 或在组件内手动控制
+useEffect(() => {
+  if (questions.length === 0 || !window.MathJax || !containerRef.current) {
+    return
+  }
+  const timer = setTimeout(() => {
+    window.MathJax?.typesetPromise?.([containerRef.current!])
+  }, 150)
+  return () => clearTimeout(timer)
+}, [questions])
+```
+
+**渲染时机**:
+1. 题目数据加载完成后
+2. 题目内容发生变化时
+3. DOM 更新后延迟 150ms 确保内容就绪
 
 ---
 
@@ -481,29 +512,29 @@ const generate = async () => {
 ### 8.1 前端超时
 
 ```typescript
-// frontend/src/core/auth/userAuth.ts
-const REQUEST_TIMEOUT = 120 * 1000  // 120 秒
+// frontend/src/core/auth/authFactory.ts
+// 使用工厂模式创建带超时的 fetch 包装器
 
-export async function fetchWithAuth(...) {
-  const controller = new AbortController()
-  const timeoutId = setTimeout(() => {
-    controller.abort()
-  }, REQUEST_TIMEOUT)
+const { fetchWithAuth } = createFetchWithAuth(
+  getToken,
+  120000,  // 120 秒超时
+  handle401
+)
 
-  try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal
-    })
-    clearTimeout(timeoutId)
-    return response
-  } catch (error) {
-    clearTimeout(timeoutId)
-    if (error.name === 'AbortError') {
-      throw new Error('请求超时，题目生成时间过长，请稍后重试')
-    }
-    throw error
+// 内部实现
+const controller = new AbortController()
+const timeoutId = setTimeout(() => controller.abort(), timeout)
+
+try {
+  const response = await fetch(url, { signal: controller.signal })
+  clearTimeout(timeoutId)
+  return response
+} catch (error) {
+  clearTimeout(timeoutId)
+  if (error.name === 'AbortError') {
+    throw new Error('请求超时，题目生成时间过长，请稍后重试')
   }
+  throw error
 }
 ```
 

@@ -61,6 +61,11 @@ frontend/
 │   │   │   ├── ReadComp.tsx        # 阅读理解
 │   │   │   ├── Cloze.tsx           # 完形填空
 │   │   │   └── Essay.tsx           # 作文题
+│   │   ├── shared/            # 通用 UI 组件
+│   │   │   ├── Button.tsx     # 按钮组件
+│   │   │   ├── LoadingSpinner.tsx # 加载动画
+│   │   │   ├── Modal.tsx      # 模态框
+│   │   │   └── index.ts       # 统一导出
 │   │   ├── QuestionRenderer.tsx    # 题目渲染器（路由分发）
 │   │   └── StructuredPreviewShared.tsx  # 结构化预览共享组件
 │   │
@@ -71,6 +76,7 @@ frontend/
 │   │   ├── api/               # API 客户端
 │   │   │   └── history.ts     # 历史记录 API
 │   │   └── auth/              # 认证模块
+│   │       ├── authFactory.ts # 认证工厂（工厂模式）
 │   │       ├── userAuth.ts    # C 端用户认证
 │   │       └── adminAuth.ts   # 管理员认证
 │   │
@@ -80,6 +86,11 @@ frontend/
 │   │   │   └── LoginModal.tsx # 登录弹窗
 │   │   ├── question-generator/# 题目生成
 │   │   │   ├── MainContent.tsx      # 主界面
+│   │   │   ├── MainContent.css      # 主界面样式（模块化导入）
+│   │   │   ├── header.css           # 头部样式
+│   │   │   │   sidebar.css          # 侧边栏样式
+│   │   │   │   preview.css          # 预览区样式
+│   │   │   │   modals.css           # 弹窗样式
 │   │   │   ├── StructuredPreview.tsx# 结构化预览
 │   │   │   └── ProgressModal.tsx    # 进度弹窗
 │   │   ├── history/           # 历史记录
@@ -89,9 +100,14 @@ frontend/
 │   │   └── landing/           # 落地页
 │   │       └── LandingPage.tsx
 │   │
+│   ├── hooks/                 # 自定义 Hooks
+│   │   ├── useMathJax.ts      # MathJax 渲染 Hook
+│   │   └── index.ts           # 统一导出
+│   │
 │   ├── types/                 # 类型定义
-│   │   ├── index.ts           # 通用类型
+│   │   ├── index.ts           # 通用类型（历史记录等）
 │   │   ├── question.ts        # 题目相关类型
+│   │   ├── mathjax.ts         # MathJax 全局类型
 │   │   └── structured.ts      # 结构化数据类型
 │   │
 │   ├── utils/                 # 工具函数
@@ -101,9 +117,9 @@ frontend/
 │   │
 │   ├── App.tsx                # 应用入口组件
 │   ├── main.tsx               # React 入口文件
-│   └── global.d.ts            # 全局类型声明
+│   └── global.d.ts            # 全局类型声明（引用 types/mathjax）
 │
-├── index.html                 # HTML 入口
+├── index.html                 # HTML 入口（含 MathJax 预配置）
 ├── package.json               # 项目配置
 ├── tsconfig.json              # TypeScript 配置
 ├── vite.config.ts             # Vite 配置
@@ -161,15 +177,38 @@ src/
 
 ### 3.2 核心模块 (core/)
 
+#### core/auth/authFactory.ts
+认证工厂模块 - 使用工厂模式减少代码重复：
+
+| 函数 | 说明 |
+|------|------|
+| `createAuthStorage(key)` | 创建认证存储实例（token 管理） |
+| `createFetchWithAuth(auth, timeout, on401)` | 创建带认证的 fetch 包装器 |
+
+**优势**:
+- 统一错误处理（try-catch）
+- 统一的 401 响应处理逻辑
+- 支持可配置的超时时间
+
 #### core/auth/userAuth.ts
-用户认证工具函数：
+C 端用户认证工具函数（使用工厂模式）：
 
 | 函数 | 说明 |
 |------|------|
 | `getToken()` | 从 localStorage 获取 token |
 | `setToken(token)` | 存储 token |
 | `clearToken()` | 清除 token |
-| `fetchWithAuth(url, options)` | 带认证的 fetch（120s 超时） |
+| `fetchWithAuth(url, options)` | 带认证的 fetch（120s 超时，自动 401 处理） |
+
+#### core/auth/adminAuth.ts
+管理后台认证工具函数（使用工厂模式）：
+
+| 函数 | 说明 |
+|------|------|
+| `getAdminToken()` | 从 localStorage 获取 admin token |
+| `setAdminToken(token)` | 存储 admin token |
+| `clearAdminToken()` | 清除 admin token |
+| `fetchWithAdminAuth(url, options)` | 带认证的 fetch（无超时，401 跳转登录） |
 
 #### core/api/history.ts
 历史记录 API 客户端：
@@ -225,6 +264,20 @@ src/
 | `Cloze.tsx` | 完形填空 | 英语 |
 | `Essay.tsx` | 作文题 | 语文/英语 |
 
+#### components/shared/
+通用 UI 组件库：
+
+| 组件 | 说明 | Props |
+|------|------|-------|
+| `Button` | 按钮组件 | variant, size, loading, leftIcon, rightIcon |
+| `LoadingSpinner` | 加载动画 | size, text |
+| `Modal` | 模态框 | isOpen, onClose, title, size |
+
+**变体类型**:
+- `Button`: primary, secondary, success, danger, ghost
+- `LoadingSpinner`: small, medium, large
+- `Modal`: small, medium, large
+
 #### components/QuestionRenderer.tsx
 题目渲染器 - 根据题型动态选择对应组件：
 
@@ -266,13 +319,36 @@ const QuestionRenderer = ({ question, index }) => {
 #### utils/markdownProcessor.ts
 Markdown 处理：
 - Markdown 转 HTML
-- MathJax 公式渲染
+- 内联 Markdown 渲染（用于填空题等）
 
 #### utils/printUtils.ts
 打印和导出功能：
-- 生成打印用 HTML
+- 生成打印用 HTML（题目 + 答案分页）
 - 调用浏览器打印接口
 - PDF 导出支持
+
+---
+
+## 3.7 Hooks 模块 (hooks/)
+
+### hooks/useMathJax.ts
+MathJax 渲染自定义 Hooks：
+
+| Hook | 说明 | 使用场景 |
+|------|------|---------|
+| `useMathJax(containerRef, options)` | 完整的 MathJax 渲染控制 | 需要手动控制渲染的场景 |
+| `useMathJaxSimple(containerRef, deps)` | 简化的自动渲染 | 简单的题目列表渲染 |
+
+**配置选项**:
+- `autoRender`: 是否自动渲染（默认 true）
+- `renderDelay`: 延迟渲染时间（默认 100ms）
+- `watchDependencies`: 依赖变化时重新渲染（默认 true）
+
+**使用示例**:
+```typescript
+const containerRef = useRef<HTMLDivElement>(null)
+useMathJaxSimple(containerRef, [questions])
+```
 
 ---
 
@@ -288,11 +364,6 @@ interface QuestionRecord
 interface QuestionRecordListItem
 interface QuestionRecordListResponse
 interface ShareUrlResponse
-
-// MathJax 类型扩展
-interface Window {
-  MathJax?: { ... }
-}
 ```
 
 ### 4.2 types/question.ts
@@ -305,8 +376,8 @@ type Grade = 'grade1' | ... | 'grade9'
 type QuestionType = 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE' | ...
 
 // 接口定义
-interface MetaData
-interface RecordMeta
+interface MetaData        // 完整元数据（学科、年级、标题）
+interface RecordMeta      // 精简元数据（历史记录用）
 interface BaseQuestion
 interface QuestionWithOptions
 interface QuestionWithPassage
@@ -320,7 +391,26 @@ interface FillBlankProps
 // ... 其他题型 Props
 ```
 
-### 4.3 types/structured.ts
+### 4.3 types/mathjax.ts
+MathJax 全局类型扩展：
+
+```typescript
+interface MathJaxConfig {
+  tex?: {...}
+  options?: {...}
+  svg?: {...}
+  typeset?: (elements: HTMLElement[]) => void
+  typesetPromise?: (elements: HTMLElement[]) => Promise<void>
+}
+
+declare global {
+  interface Window {
+    MathJax?: MathJaxConfig
+  }
+}
+```
+
+### 4.4 types/structured.ts
 结构化数据类型（可选，用于复杂场景）
 
 ---
