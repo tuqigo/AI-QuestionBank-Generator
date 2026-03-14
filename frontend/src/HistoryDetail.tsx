@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { getToken } from '@/auth'
-import { getHistoryDetail, createShareUrl } from '@/api/history'
+import { getHistoryDetail, createShareUrl, getHistoryQuestions, getHistoryAnswers } from '@/api/history'
 import { handlePrint } from '@/utils/printUtils'
 import { renderMarkdown } from '@/utils/markdownProcessor'
 import type { QuestionRecord } from '@/types'
@@ -31,7 +31,7 @@ function parseStructuredData(aiResponse: string): {
 
 export default function HistoryDetail() {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
+  const hasLoadedRef = useRef(false) // 跟踪是否已加载数据
   const [record, setRecord] = useState<QuestionRecord | null>(null)
   const [loading, setLoading] = useState(true)
   const shareUrlRef = useRef<string | null>(null) // 使用 ref 存储分享链接，避免触发重新渲染
@@ -40,23 +40,38 @@ export default function HistoryDetail() {
     questions: StructuredQuestion[]
     meta: any | null
   } | null>(null)
+  const [answers, setAnswers] = useState<Array<{
+    question_id: number
+    type: string
+    answer_text: string
+    rows_to_answer?: number
+  }>>([])
+  const [showAnswers, setShowAnswers] = useState(false)
+  const [answersLoading, setAnswersLoading] = useState(false)
 
   useEffect(() => {
-    if (!id) return
-    getHistoryDetail(id)
-      .then((data: QuestionRecord) => {
-        setRecord(data)
-        // 解析结构化数据
-        const parsed = parseStructuredData(data.ai_response)
-        setStructuredData(parsed)
+    if (!id || hasLoadedRef.current) return
+    hasLoadedRef.current = true
+
+    Promise.all([
+      getHistoryDetail(id),
+      getHistoryQuestions(id)
+    ])
+      .then(([recordData, questionsData]) => {
+        setRecord(recordData)
+        // 使用新接口返回的结构化数据
+        setStructuredData({
+          questions: questionsData.questions,
+          meta: questionsData.meta
+        })
       })
       .catch((err: unknown) => {
         console.error('加载失败:', err)
         alert('加载失败')
-        navigate('/history')
+        window.location.href = '/history' // 直接使用 window.location 避免依赖 navigate
       })
       .finally(() => setLoading(false))
-  }, [id, navigate])
+  }, [id]) // 移除 navigate 依赖
 
   const handleShare = async () => {
     if (!id) return
@@ -64,7 +79,7 @@ export default function HistoryDetail() {
       const token = getToken()
       if (!token) {
         alert('请先登录')
-        navigate('/')
+        window.location.href = '/'
         return
       }
       const url = await createShareUrl(id)
@@ -80,9 +95,6 @@ export default function HistoryDetail() {
     }
   }
 
-  /**
-   * 打印功能
-   */
   const handlePrintWrapper = async () => {
     if (!structuredData?.questions || structuredData.questions.length === 0) {
       alert('没有可打印的内容')
@@ -98,6 +110,30 @@ export default function HistoryDetail() {
     // 使用 printUtils 中的 handlePrint，传入结构化题目数据
     const title = record?.title || structuredData.meta?.title || '题目练习'
     await handlePrint(undefined, title, structuredData.questions, null)
+  }
+
+  /**
+   * 查看答案功能
+   */
+  const handleToggleAnswers = async () => {
+    if (showAnswers) {
+      setShowAnswers(false)
+      return
+    }
+
+    if (!id) return
+
+    setAnswersLoading(true)
+    try {
+      const data = await getHistoryAnswers(id)
+      setAnswers(data.answers)
+      setShowAnswers(true)
+    } catch (err: any) {
+      console.error('获取答案失败:', err)
+      alert('获取答案失败：' + (err?.message || '未知错误'))
+    } finally {
+      setAnswersLoading(false)
+    }
   }
 
   if (loading) {
@@ -132,6 +168,9 @@ export default function HistoryDetail() {
         <h2>{record.title}</h2>
         <div className="detail-actions">
           <button onClick={handlePrintWrapper} className="btn-action">打印</button>
+          <button onClick={handleToggleAnswers} className="btn-action" disabled={answersLoading}>
+            {showAnswers ? '收起答案' : (answersLoading ? '加载中...' : '查看答案')}
+          </button>
           <button onClick={handleShare} className="btn-action">分享</button>
           <Link to="/" className="btn-back">返回首页</Link>
         </div>
@@ -181,11 +220,34 @@ export default function HistoryDetail() {
 
       <div className="detail-content">
         {hasStructuredData ? (
-          <StructuredPreviewShared
-            questions={structuredData.questions}
-            meta={structuredData.meta}
-            recordTitle={record.title}
-          />
+          <>
+            <StructuredPreviewShared
+              questions={structuredData.questions}
+              meta={structuredData.meta}
+              recordTitle={record.title}
+            />
+
+            {/* 答案区域 */}
+            {showAnswers && answers.length > 0 && (
+              <div className="answers-section">
+                <h3>参考答案</h3>
+                <div className="answers-list">
+                  {answers.map((answer, idx) => (
+                    <div key={answer.question_id} className="answer-item">
+                      <div className="answer-header">
+                        <span className="answer-index">第 {idx + 1} 题</span>
+                        <span className="answer-type">{answer.type}</span>
+                      </div>
+                      <div className="answer-content">
+                        <strong>答案：</strong>
+                        {answer.answer_text || '暂无答案'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         ) : (
           <div className="error-message">
             <p>该记录使用旧数据格式，不支持查看</p>

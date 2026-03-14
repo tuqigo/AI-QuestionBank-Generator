@@ -5,7 +5,7 @@ import type {
   ShareUrlResponse,
 } from '../types'
 
-import type { StructuredGenerateResponse } from '@/types/structured'
+import type { StructuredGenerateResponse, StructuredQuestion } from '@/types/structured'
 
 const API_BASE = '/api'
 
@@ -94,6 +94,80 @@ export async function generateStructuredQuestions(prompt: string): Promise<Struc
   if (!res.ok) {
     const error = await res.text()
     throw new Error(error || '生成题目失败')
+  }
+
+  return res.json()
+}
+
+/** 获取试卷题目详情（含 rows_to_answer 等字段） */
+export async function getHistoryQuestions(shortId: string): Promise<{
+  meta: { record_id: number; short_id: string; title: string; created_at: string }
+  questions: StructuredQuestion[]
+}> {
+  const res = await fetchWithAuth(`${API_BASE}/history/${shortId}/questions`)
+
+  if (!res.ok) {
+    const error = await res.text()
+    throw new Error(error || '获取题目详情失败')
+  }
+
+  return res.json()
+}
+
+/** 获取整卷答案 */
+export async function getHistoryAnswers(shortId: string): Promise<{
+  record_id: number
+  answers: Array<{
+    question_id: number
+    type: string
+    answer_text: string
+    answer_blanks?: number
+    rows_to_answer?: number
+  }>
+}> {
+  const res = await fetchWithAuth(`${API_BASE}/history/${shortId}/answers`)
+
+  if (!res.ok) {
+    const error = await res.text()
+    throw new Error(error || '获取答案失败')
+  }
+
+  return res.json()
+}
+
+/** 通过分享链接获取试卷题目（无需登录） */
+export async function getSharedQuestions(shortId: string, token: string): Promise<{
+  meta: { record_id: number; short_id: string; title: string; created_at: string }
+  questions: StructuredQuestion[]
+}> {
+  const url = `${API_BASE}/share/history/${shortId}/questions?token=${encodeURIComponent(token)}`
+  const res = await fetch(url)
+
+  if (!res.ok) {
+    const error = await res.text()
+    throw new Error(error || '分享题目不存在或链接无效')
+  }
+
+  return res.json()
+}
+
+/** 通过分享链接获取整卷答案（无需登录） */
+export async function getSharedAnswers(shortId: string, token: string): Promise<{
+  record_id: number
+  answers: Array<{
+    question_id: number
+    type: string
+    answer_text: string
+    answer_blanks?: number
+    rows_to_answer?: number
+  }>
+}> {
+  const url = `${API_BASE}/share/history/${shortId}/answers?token=${encodeURIComponent(token)}`
+  const res = await fetch(url)
+
+  if (!res.ok) {
+    const error = await res.text()
+    throw new Error(error || '分享答案不存在或链接无效')
   }
 
   return res.json()

@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import { getToken } from '@/auth'
 import { handlePrint } from '@/utils/printUtils'
 import QuestionRenderer from '@/components/QuestionRenderer'
-import { generateStructuredQuestions } from '@/api/history'
+import { generateStructuredQuestions, getHistoryAnswers } from '@/api/history'
 import { renderInlineMarkdown } from '@/utils/markdownProcessor'
 import './StructuredPreview.css'
 import type { StructuredGenerateResponse, Question } from '@/types/structured'
@@ -19,6 +19,15 @@ export default function StructuredPreview() {
   const [title, setTitle] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [shortId, setShortId] = useState<string | null>(null)
+  const [answers, setAnswers] = useState<Array<{
+    question_id: number
+    type: string
+    answer_text: string
+    rows_to_answer?: number
+  }>>([])
+  const [showAnswers, setShowAnswers] = useState(false)
+  const [answersLoading, setAnswersLoading] = useState(false)
 
   // 加载 MathJax
   useEffect(() => {
@@ -99,6 +108,9 @@ export default function StructuredPreview() {
       const data: StructuredGenerateResponse = await generateStructuredQuestions(prompt)
       setQuestions(data.questions || [])
       setTitle(data.meta?.title || '结构化题目')
+      setShortId(data.short_id || null)
+      setAnswers([])
+      setShowAnswers(false)
     } catch (err: any) {
       console.error('生成题目失败:', err)
       const errorMessage = err?.message || '生成题目失败'
@@ -110,6 +122,33 @@ export default function StructuredPreview() {
 
   const handleBack = () => {
     navigate('/workbench')
+  }
+
+  /**
+   * 查看答案功能
+   */
+  const handleToggleAnswers = async () => {
+    if (showAnswers) {
+      setShowAnswers(false)
+      return
+    }
+
+    if (!shortId) {
+      alert('请先生成题目')
+      return
+    }
+
+    setAnswersLoading(true)
+    try {
+      const data = await getHistoryAnswers(shortId)
+      setAnswers(data.answers)
+      setShowAnswers(true)
+    } catch (err: any) {
+      console.error('获取答案失败:', err)
+      alert('获取答案失败：' + (err?.message || '未知错误'))
+    } finally {
+      setAnswersLoading(false)
+    }
   }
 
   const handlePrintWrapper = async () => {
@@ -148,7 +187,10 @@ export default function StructuredPreview() {
       <div className="preview-header">
         <h2>{title || '结构化题目生成'}</h2>
         <div className="preview-actions">
-          <button onClick={handlePrintWrapper} className="btn-print">打印</button>
+          <button onClick={handleToggleAnswers} className="btn-print" disabled={!shortId || answersLoading}>
+            {showAnswers ? '收起答案' : (answersLoading ? '加载中...' : '查看答案')}
+          </button>
+          <button onClick={handlePrintWrapper} className="btn-print" disabled={!shortId}>打印</button>
           <button onClick={handleBack} className="btn-back">返回</button>
         </div>
       </div>
@@ -184,6 +226,27 @@ export default function StructuredPreview() {
               </div>
             ))}
           </div>
+
+          {/* 答案区域 */}
+          {showAnswers && answers.length > 0 && (
+            <div className="answers-section">
+              <h3>参考答案</h3>
+              <div className="answers-list">
+                {answers.map((answer, idx) => (
+                  <div key={answer.question_id} className="answer-item">
+                    <div className="answer-header">
+                      <span className="answer-index">第 {idx + 1} 题</span>
+                      <span className="answer-type">{answer.type}</span>
+                    </div>
+                    <div className="answer-content">
+                      <strong>答案：</strong>
+                      {answer.answer_text || '暂无答案'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

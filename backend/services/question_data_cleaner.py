@@ -18,9 +18,7 @@ class QuestionType:
     FILL_BLANK = "FILL_BLANK"                 # 填空题
     CALCULATION = "CALCULATION"               # 计算题
     WORD_PROBLEM = "WORD_PROBLEM"             # 应用题
-    GEOMETRY = "GEOMETRY"                     # 几何题
     READ_COMP = "READ_COMP"                   # 阅读理解
-    POETRY_APP = "POETRY_APP"                 # 古诗文鉴赏
     CLOZE = "CLOZE"                           # 完形填空
     ESSAY = "ESSAY"                           # 作文题
 
@@ -46,8 +44,6 @@ def calculate_rows_to_answer(question_type: str, question_data: Dict[str, Any]) 
         QuestionType.FILL_BLANK: 1,
         QuestionType.CALCULATION: 3,
         QuestionType.WORD_PROBLEM: 3,
-        QuestionType.GEOMETRY: 3,
-        QuestionType.POETRY_APP: 3,
         QuestionType.ESSAY: 10,
     }
 

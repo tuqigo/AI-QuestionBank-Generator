@@ -177,8 +177,18 @@ npm run deploy
 |------|------|------|------|
 | `/api/history` | GET | 是 | 获取历史记录列表 |
 | `/api/history/{id}` | GET | 是 | 获取单条记录详情 |
+| `/api/history/{id}/questions` | GET | 是 | 获取试卷题目详情（含作答行数） |
+| `/api/history/{id}/answers` | GET | 是 | 获取整卷答案 |
 | `/api/history/{id}/share` | POST | 是 | 生成分享链接 |
 | `/api/history/{id}/copy` | POST | 是 | 复制记录 (运营功能) |
+
+### 分享页接口（无需登录）
+
+| 端点 | 方法 | 认证 | 说明 |
+|------|------|------|------|
+| `/api/share/history/{id}` | GET | 否 | 通过分享链接获取记录 |
+| `/api/share/history/{id}/questions` | GET | 否 | 分享页获取试卷题目 |
+| `/api/share/history/{id}/answers` | GET | 否 | 分享页获取整卷答案 |
 
 ### 管理后台接口
 
@@ -212,6 +222,46 @@ npm run deploy
 | `OTP_EXPIRE_MINUTES` | 否 | 验证码有效期 (分钟) | `5` |
 | `ADMIN_PASSWORD` | 否 | 管理员密码 | `admin123` |
 | `TARGET_USER_IDS` | 否 | 运营目标用户 ID 列表 | - |
+
+---
+
+## 数据库设计
+
+### 核心表结构
+
+| 表名 | 说明 | 主要字段 |
+|------|------|----------|
+| `users` | 用户表 | id, email, password_hash, created_at |
+| `user_question_records` | 试卷表 | id, short_id, user_id, title, ai_response |
+| `questions` | 题目表 | id, short_id, record_id, type, stem, options, answer_blanks, rows_to_answer, answer_text |
+| `otps` | 验证码表 | id, email, code, expire_at |
+| `admin_logs` | 管理日志表 | id, admin_id, action, details |
+
+### 表关系
+
+```
+users (用户表)
+  └── 一对多 → user_question_records (试卷表)
+       └── 一对多 → questions (题目表)
+```
+
+### questions 表字段说明
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `id` | INTEGER | 主键 |
+| `short_id` | TEXT | 短 ID（用于 URL） |
+| `record_id` | INTEGER | 所属试卷 ID |
+| `question_index` | INTEGER | 题号 |
+| `type` | TEXT | 题型（SINGLE_CHOICE 等） |
+| `stem` | TEXT | 题干 |
+| `options` | TEXT | 选项 JSON（选择题用） |
+| `passage` | TEXT | 阅读材料 JSON（阅读理解用） |
+| `sub_questions` | TEXT | 子题 JSON（阅读理解/完形填空用） |
+| `knowledge_points` | TEXT | 知识点 JSON |
+| `answer_blanks` | INTEGER | 填空题空格数 |
+| `rows_to_answer` | INTEGER | 预留作答行数 |
+| `answer_text` | TEXT | 参考答案 |
 
 ---
 

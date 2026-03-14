@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { getToken } from '@/auth'
 import { getSharedRecord } from '@/api/history'
@@ -31,6 +31,7 @@ export default function SharePage() {
   const { id } = useParams<{ id: string }>()
   const [searchParams] = useSearchParams()
   const token = searchParams.get('token') || ''
+  const hasLoadedRef = useRef(false) // 跟踪是否已加载数据
 
   const [record, setRecord] = useState<QuestionRecord | null>(null)
   const [loading, setLoading] = useState(true)
@@ -47,11 +48,14 @@ export default function SharePage() {
   }, [])
 
   useEffect(() => {
-    if (!id || !token) {
-      setError('无效的分享链接')
-      setLoading(false)
+    if (!id || !token || hasLoadedRef.current) {
+      if (!id || !token) {
+        setError('无效的分享链接')
+        setLoading(false)
+      }
       return
     }
+    hasLoadedRef.current = true
 
     getSharedRecord(id, token)
       .then((data: QuestionRecord) => {

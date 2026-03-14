@@ -74,6 +74,8 @@ export interface Question {
 /** 带后端填充字段的题目 */
 export interface StructuredQuestion extends Question {
   rows_to_answer: number;  // 预留作答行数
+  answer_blanks?: number;  // 填空题空格数
+  answer_text?: string;    // 参考答案
 }
 
 // ===================== API 响应 =====================

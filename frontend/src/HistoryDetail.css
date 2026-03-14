@@ -201,11 +201,91 @@
   margin: 6px 0;
 }
 
-/* 答案部分 */
-.detail-content .answer-section {
+/* 答案区域样式 */
+.answers-section {
   margin-top: 32px;
   padding-top: 24px;
   border-top: 2px dashed #e5e5e5;
+}
+
+.answers-section h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #262626;
+  margin: 0 0 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.answers-section h3::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 20px;
+  background: linear-gradient(135deg, #ff6b4a 0%, #ff8a65 100%);
+  border-radius: 2px;
+}
+
+.answers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.answer-item {
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 138, 101, 0.2);
+}
+
+.answer-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.answer-index {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #c2410c;
+  background: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 107, 74, 0.2);
+}
+
+.answer-type {
+  font-size: 0.75rem;
+  color: #737373;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.answer-content {
+  font-size: 0.9375rem;
+  color: #262626;
+  line-height: 1.7;
+}
+
+.answer-content strong {
+  color: #c2410c;
+  margin-right: 8px;
+}
+
+/* 答案区域打印样式 */
+@media print {
+  .answers-section {
+    break-inside: avoid;
+  }
+
+  .answer-item {
+    break-inside: avoid;
+    background: #fff7ed;
+    border: 1px solid #ddd;
+  }
 }
 
 /* 加载状态 */
