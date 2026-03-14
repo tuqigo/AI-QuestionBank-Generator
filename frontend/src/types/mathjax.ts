@@ -17,6 +17,10 @@ export interface MathJaxConfig {
   svg?: {
     fontCache?: string
   }
+  startup?: {
+    typeset?: boolean
+    ready?: () => void
+  }
   typeset?: (elements: HTMLElement[]) => void
   typesetPromise?: (elements: HTMLElement[]) => Promise<void>
 }
@@ -24,5 +28,6 @@ export interface MathJaxConfig {
 declare global {
   interface Window {
     MathJax?: MathJaxConfig
+    mathJaxReady?: boolean
   }
 }

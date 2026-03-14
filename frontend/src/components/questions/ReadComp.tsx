@@ -52,7 +52,7 @@ export default function ReadComp({ question, index, mode = 'render' }: ReadCompP
         {subQuestions.map((subQ, subIdx) => {
           const subQuestionProps = {
             question: subQ,
-            index: subIdx + 1,
+            index: `${index}.${subIdx + 1}`,
             mode
           }
 

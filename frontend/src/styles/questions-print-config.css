@@ -139,69 +139,70 @@
 }
 
 /* ===== 题型专属打印样式 ===== */
+/* 注意：类名与组件实际使用的类名保持一致 */
 
 /* 单选题/多选题 */
-.print-single-choice .question-options,
-.print-multiple-choice .question-options {
+.question-print-mode.question-single-choice .question-options,
+.question-print-mode.question-multiple-choice .question-options {
   padding-left: 36px;
 }
 
 /* 判断题 - 选项横向排列 */
-.print-true-false .question-options {
+.question-print-mode.question-true-false .question-options {
   display: flex;
   gap: 24px;
   padding-left: 36px;
 }
 
 /* 填空题 */
-.print-fill-blank .answer-line {
+.question-print-mode.question-fill-blank .answer-line {
   margin-top: 8px;
 }
 
-.print-fill-blank .answer-placeholder {
+.question-print-mode.question-fill-blank .answer-placeholder {
   display: inline-block;
   min-width: var(--answer-placeholder-width);
   border-bottom: 1px var(--answer-placeholder-style) var(--answer-placeholder-color);
 }
 
-/* 计算题/应用题/几何题 */
-.print-calculation .answer-area,
-.print-word-problem .answer-area,
-.print-geometry .answer-area {
+/* 计算题/应用题/几何题答案区域 */
+.question-print-mode.question-calculation .answer-area,
+.question-print-mode.question-word-problem .answer-area,
+.question-print-mode.question-geometry .answer-area {
   margin-top: var(--answer-area-margin-top);
   min-height: var(--answer-area-min-height);
 }
 
 /* 阅读理解 */
-.print-read-comp .passage-section {
+.question-print-mode.question-read-comp .passage-section {
   margin: 12px 0;
   padding: 8px 0;
   background: var(--passage-background);
   border-left: var(--passage-border-left);
 }
 
-.print-read-comp .sub-questions {
+.question-print-mode.question-read-comp .sub-questions {
   padding-left: 20px;
   border-left: 1px solid #ddd;
 }
 
 /* 完形填空 */
-.print-cloze .passage-section {
+.question-print-mode.question-cloze .passage-section {
   margin: 12px 0;
   padding: 8px 0;
 }
 
 /* 作文题 */
-.print-essay .essay-grid {
+.question-print-mode.question-essay .essay-grid {
   margin-top: 12px;
 }
 
-.print-essay .essay-line {
+.question-print-mode.question-essay .essay-line {
   height: var(--essay-line-height);
   border-bottom: var(--essay-line-border);
 }
 
-.print-essay .line-number {
+.question-print-mode.question-essay .line-number {
   width: var(--essay-line-number-width);
   font-size: var(--essay-line-number-font-size);
 }
