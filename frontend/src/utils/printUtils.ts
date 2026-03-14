@@ -79,8 +79,8 @@ function renderSubQuestions(subQuestions: any[], mode: 'print' | 'render' = 'pri
   return subQuestions.map((subQ, subIdx) => {
     const subStemHtml = renderMarkdown(subQ.stem)
     let html = `<div class="question-item question-sub" style="margin-bottom: 8px; padding: 0; background: transparent; box-shadow: none;">`
-    html += `<div class="question-header" style="display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px; flex-wrap: nowrap;">`
-    html += `<span class="question-number" style="font-weight: bold; min-width: 24px; flex-shrink: 0; white-space: nowrap; font-size: 10.5pt; line-height: 1.8;">${subIdx + 1}. </span>`
+    html += `<div class="question-header" style="display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px; flex-wrap: nowrap;">`
+    html += `<span class="question-number" style="font-weight: bold; min-width: 20px; flex-shrink: 0; white-space: nowrap; font-size: 10.5pt; line-height: 1.8;">${subIdx + 1}.</span>`
     html += `<div class="question-stem" style="font-size: 10.5pt; line-height: 1.8;">${subStemHtml}</div>`
     html += `</div>`
 
@@ -90,7 +90,7 @@ function renderSubQuestions(subQuestions: any[], mode: 'print' | 'render' = 'pri
         const optionText = opt.replace(/^[A-D]\.\s*/, '')
         const label = optionLabels[optIndex] || String.fromCharCode(65 + optIndex)
         html += `<div class="option-item" style="margin: 4px 0; padding: 4px 0; background: transparent;">`
-        html += `<span class="option-label" style="font-weight: 600; margin-right: 6px; font-size: 10.5pt; line-height: 1.8;">${label}.</span>`
+        html += `<span class="option-label" style="font-weight: 600; font-size: 10.5pt; line-height: 1.8;">${label}.</span>`
         html += `<span class="option-text" style="font-size: 10.5pt; line-height: 1.8;">${renderMarkdown(optionText)}</span>`
         html += `</div>`
       })
@@ -118,8 +118,8 @@ function renderStructuredQuestions(questions: StructuredQuestion[], title: strin
     html += `<div class="question-item ${typeClass}" style="margin-bottom: 12px; page-break-inside: avoid;">`
 
     // 题目头部 - 修复题号和题目换行问题（使用 baseline 对齐）
-    html += `<div class="question-header" style="display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px; flex-wrap: nowrap;">`
-    html += `<span class="question-number" style="font-weight: bold; min-width: 24px; flex-shrink: 0; white-space: nowrap; font-size: 10.5pt; line-height: 1.8;">${index + 1}. </span>`
+    html += `<div class="question-header" style="display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px; flex-wrap: nowrap;">`
+    html += `<span class="question-number" style="font-weight: bold; min-width: 20px; flex-shrink: 0; white-space: nowrap; font-size: 10.5pt; line-height: 1.8;">${index + 1}.</span>`
     html += `<div class="question-stem" style="flex: 1; font-size: 10.5pt; line-height: 1.8;">${stemHtml}</div>`
     html += `</div>`
 
@@ -130,7 +130,7 @@ function renderStructuredQuestions(questions: StructuredQuestion[], title: strin
         const optionText = opt.replace(/^[A-D]\.\s*/, '')
         const optHtml = renderMarkdown(optionText)
         html += `<div class="option-item" style="margin: 4px 0; padding: 4px 0;">`
-        html += `<span class="option-label" style="font-weight: 600; margin-right: 6px; font-size: 10.5pt; line-height: 1.8;">${optionLabels[optIndex] || String.fromCharCode(65 + optIndex)}.</span>`
+        html += `<span class="option-label" style="font-weight: 600; font-size: 10.5pt; line-height: 1.8;">${optionLabels[optIndex] || String.fromCharCode(65 + optIndex)}.</span>`
         html += `<span class="option-text" style="font-size: 10.5pt; line-height: 1.8;">${optHtml}</span>`
         html += `</div>`
       })
