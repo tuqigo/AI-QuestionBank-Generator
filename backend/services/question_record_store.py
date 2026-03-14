@@ -25,54 +25,6 @@ def _get_connection() -> sqlite3.Connection:
     return conn
 
 
-def _init_db():
-    """初始化数据库表"""
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = _get_connection()
-    try:
-        # 创建用户题目记录表
-        # 使用 datetime('now') 存储 UTC 时间（SQLite 默认行为）
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS user_question_records (
-                id              INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id         INTEGER NOT NULL,
-                title           VARCHAR(200) NOT NULL,
-                prompt_type     VARCHAR(10) NOT NULL,
-                prompt_content  TEXT NOT NULL,
-                image_path      VARCHAR(500),
-                ai_response     TEXT NOT NULL,
-                short_id        TEXT UNIQUE,
-                share_token     VARCHAR(64) UNIQUE,
-                is_deleted      INTEGER DEFAULT 0,
-                created_at      TIMESTAMP DEFAULT (datetime('now'))
-            )
-        """)
-        # 创建索引
-        conn.execute("""
-            CREATE INDEX IF NOT EXISTS idx_user_question_records_user_deleted
-            ON user_question_records(user_id, is_deleted, created_at DESC)
-        """)
-        conn.execute("""
-            CREATE INDEX IF NOT EXISTS idx_user_question_records_share_token
-            ON user_question_records(share_token)
-        """)
-        conn.execute("""
-            CREATE INDEX IF NOT EXISTS idx_user_question_records_short_id
-            ON user_question_records(short_id)
-        """)
-        conn.commit()
-        user_logger.info("用户题目记录表初始化完成")
-    except Exception as e:
-        user_logger.error(f"初始化数据库表失败：{e}")
-        raise
-    finally:
-        conn.close()
-
-
-# 启动时初始化数据库
-_init_db()
-
-
 def create_record(user_id: int, record: QuestionRecordCreate) -> Tuple[int, str]:
     """创建题目记录，返回新记录的 (ID, short_id)"""
     user_logger.info(f"创建题目记录：user_id={user_id}, title={record.title[:50]}...")

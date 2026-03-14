@@ -22,44 +22,6 @@ def _get_connection() -> sqlite3.Connection:
     return conn
 
 
-def _init_db():
-    """初始化操作日志表"""
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = _get_connection()
-    try:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS admin_operation_logs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                operator TEXT NOT NULL,
-                action TEXT NOT NULL,
-                target_type TEXT,
-                target_id INTEGER,
-                ip TEXT,
-                details TEXT,
-                created_at TIMESTAMP DEFAULT (datetime('now'))
-            )
-        """)
-        conn.execute("""
-            CREATE INDEX IF NOT EXISTS idx_admin_logs_action
-            ON admin_operation_logs(action, created_at DESC)
-        """)
-        conn.execute("""
-            CREATE INDEX IF NOT EXISTS idx_admin_logs_target
-            ON admin_operation_logs(target_type, target_id)
-        """)
-        conn.commit()
-        api_logger.info("管理员操作日志表初始化完成")
-    except Exception as e:
-        api_logger.error(f"初始化操作日志表失败：{e}")
-        raise
-    finally:
-        conn.close()
-
-
-# 启动时初始化
-_init_db()
-
-
 def log_operation(
     operator: str,
     action: str,

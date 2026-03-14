@@ -23,44 +23,6 @@ def _get_connection() -> sqlite3.Connection:
     return conn
 
 
-def _init_db():
-    """初始化 OTP 表"""
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = _get_connection()
-    try:
-        # 创建表（如果不存在）
-        # 使用 datetime('now') 存储 UTC 时间（SQLite 默认行为）
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS otp_codes (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                email TEXT NOT NULL,
-                code TEXT NOT NULL,
-                purpose TEXT NOT NULL DEFAULT 'register',
-                attempts INTEGER DEFAULT 0,
-                created_at TIMESTAMP DEFAULT (datetime('now')),
-                expires_at TIMESTAMP NOT NULL
-            )
-        """)
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS otp_rate_limit (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                email TEXT NOT NULL,
-                purpose TEXT NOT NULL DEFAULT 'register',
-                ip_address TEXT,
-                request_count INTEGER DEFAULT 1,
-                reset_at TIMESTAMP NOT NULL
-            )
-        """)
-        conn.commit()
-        auth_logger.info("OTP 数据库表初始化完成")
-    finally:
-        conn.close()
-
-
-# 启动时初始化数据库
-_init_db()
-
-
 def generate_code() -> str:
     """生成 6 位数字验证码"""
     return str(random.randint(100000, 999999))

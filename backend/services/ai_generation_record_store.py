@@ -24,58 +24,6 @@ def _get_connection() -> sqlite3.Connection:
     return conn
 
 
-def _init_db():
-    """初始化数据库表"""
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = _get_connection()
-    try:
-        # 创建 AI 生成记录表
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS ai_generation_records (
-                id              INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id         INTEGER NOT NULL,
-                prompt          TEXT NOT NULL,
-                prompt_type     VARCHAR(20) NOT NULL,
-                success         INTEGER NOT NULL,
-                duration        REAL NOT NULL,
-                error_message   TEXT,
-                created_at      TIMESTAMP DEFAULT (datetime('now'))
-            )
-        """)
-        # 创建索引
-        conn.execute("""
-            CREATE INDEX IF NOT EXISTS idx_ai_generation_records_user_id
-            ON ai_generation_records(user_id)
-        """)
-        conn.execute("""
-            CREATE INDEX IF NOT EXISTS idx_ai_generation_records_success
-            ON ai_generation_records(success)
-        """)
-        conn.execute("""
-            CREATE INDEX IF NOT EXISTS idx_ai_generation_records_prompt_type
-            ON ai_generation_records(prompt_type)
-        """)
-        conn.execute("""
-            CREATE INDEX IF NOT EXISTS idx_ai_generation_records_created_at
-            ON ai_generation_records(created_at DESC)
-        """)
-        conn.execute("""
-            CREATE INDEX IF NOT EXISTS idx_ai_generation_records_composite
-            ON ai_generation_records(user_id, success, prompt_type, created_at DESC)
-        """)
-        conn.commit()
-        user_logger.info("AI 生成记录表初始化完成")
-    except Exception as e:
-        user_logger.error(f"初始化数据库表失败：{e}")
-        raise
-    finally:
-        conn.close()
-
-
-# 启动时初始化数据库
-_init_db()
-
-
 def create_record(record: AiGenerationRecordCreate) -> int:
     """创建 AI 生成记录，返回新记录的 ID"""
     user_logger.info(f"创建 AI 生成记录：user_id={record.user_id}, prompt_type={record.prompt_type}, success={record.success}")

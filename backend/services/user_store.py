@@ -25,40 +25,6 @@ def _get_connection() -> sqlite3.Connection:
     return conn
 
 
-def _init_db():
-    """初始化数据库表"""
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = _get_connection()
-    try:
-        # 创建表（如果不存在）
-        # 使用 CURRENT_TIMESTAMP 存储服务器时区时间
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                email TEXT UNIQUE NOT NULL,
-                hashed_password TEXT NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                is_disabled INTEGER DEFAULT 0
-            )
-        """)
-        # 检查是否需要添加 is_disabled 列（兼容已有数据库）
-        try:
-            conn.execute("ALTER TABLE users ADD COLUMN is_disabled INTEGER DEFAULT 0")
-            conn.commit()
-            user_logger.info("为用户表添加 is_disabled 列成功")
-        except Exception:
-            # 列已存在，忽略
-            pass
-        conn.commit()
-        user_logger.info("数据库表初始化完成")
-    finally:
-        conn.close()
-
-
-# 启动时初始化数据库
-_init_db()
-
-
 def get_user(email: str) -> Optional[UserInDB]:
     """根据邮箱查询用户"""
     user_logger.info(f"查询用户：{email}")

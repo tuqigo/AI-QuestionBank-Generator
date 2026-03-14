@@ -2,6 +2,11 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from sql import init_database
+
+# 初始化数据库
+init_database()
+
 from routers import questions, auth, extend, history, admin
 
 app = FastAPI(title="题小宝 API")
