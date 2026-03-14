@@ -547,6 +547,7 @@ npm run dev
 ```bash
 # 构建到 dist/ 目录
 npm run build
+npm run build:cf
 ```
 
 构建产物：
@@ -560,6 +561,7 @@ npm run build
 ```bash
 # 构建并部署到 Cloudflare Pages
 npm run deploy
+npx wrangler pages deploy dist --project-name=zyb-frontend --commit-dirty=true
 ```
 
 部署要求：

@@ -78,20 +78,20 @@ function renderSubQuestions(subQuestions: any[], mode: 'print' | 'render' = 'pri
 
   return subQuestions.map((subQ, subIdx) => {
     const subStemHtml = renderMarkdown(subQ.stem)
-    let html = `<div class="question-item question-sub" style="margin-bottom: 12px; padding: 10px; background: transparent; box-shadow: none;">`
-    html += `<div class="question-header" style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px;">`
-    html += `<span class="question-number">${subIdx + 1}. </span>`
-    html += `<div class="question-stem">${subStemHtml}</div>`
+    let html = `<div class="question-item question-sub" style="margin-bottom: 8px; padding: 0; background: transparent; box-shadow: none;">`
+    html += `<div class="question-header" style="display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px; flex-wrap: nowrap;">`
+    html += `<span class="question-number" style="font-weight: bold; min-width: 24px; flex-shrink: 0; white-space: nowrap; font-size: 10.5pt; line-height: 1.8;">${subIdx + 1}. </span>`
+    html += `<div class="question-stem" style="font-size: 10.5pt; line-height: 1.8;">${subStemHtml}</div>`
     html += `</div>`
 
     if (subQ.options && subQ.options.length > 0) {
-      html += `<div class="question-options" style="margin-top: 8px; padding-left: 24px;">`
+      html += `<div class="question-options" style="margin-top: 6px; padding-left: 24px;">`
       subQ.options.forEach((opt: string, optIndex: number) => {
         const optionText = opt.replace(/^[A-D]\.\s*/, '')
         const label = optionLabels[optIndex] || String.fromCharCode(65 + optIndex)
         html += `<div class="option-item" style="margin: 4px 0; padding: 4px 0; background: transparent;">`
-        html += `<span class="option-label" style="font-weight: 600;">${label}.</span> `
-        html += `<span class="option-text">${renderMarkdown(optionText)}</span>`
+        html += `<span class="option-label" style="font-weight: 600; margin-right: 6px; font-size: 10.5pt; line-height: 1.8;">${label}.</span>`
+        html += `<span class="option-text" style="font-size: 10.5pt; line-height: 1.8;">${renderMarkdown(optionText)}</span>`
         html += `</div>`
       })
       html += `</div>`
@@ -115,23 +115,23 @@ function renderStructuredQuestions(questions: StructuredQuestion[], title: strin
     const optionLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
 
     // 题目容器 - 使用 CSS 类名
-    html += `<div class="question-item ${typeClass}" style="margin-bottom: 24px; page-break-inside: avoid;">`
+    html += `<div class="question-item ${typeClass}" style="margin-bottom: 12px; page-break-inside: avoid;">`
 
-    // 题目头部 - 修复题号和题目换行问题
-    html += `<div class="question-header" style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; flex-wrap: nowrap;">`
-    html += `<span class="question-number" style="font-weight: bold; min-width: 24px; flex-shrink: 0; white-space: nowrap;">${index + 1}. </span>`
+    // 题目头部 - 修复题号和题目换行问题（使用 baseline 对齐）
+    html += `<div class="question-header" style="display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px; flex-wrap: nowrap;">`
+    html += `<span class="question-number" style="font-weight: bold; min-width: 24px; flex-shrink: 0; white-space: nowrap; font-size: 10.5pt; line-height: 1.8;">${index + 1}. </span>`
     html += `<div class="question-stem" style="flex: 1; font-size: 10.5pt; line-height: 1.8;">${stemHtml}</div>`
     html += `</div>`
 
     // 选项
     if (question.options && question.options.length > 0) {
-      html += `<div class="question-options" style="margin-top: 12px; padding-left: 36px;">`
+      html += `<div class="question-options" style="margin-top: 8px; padding-left: 36px;">`
       question.options.forEach((opt, optIndex) => {
         const optionText = opt.replace(/^[A-D]\.\s*/, '')
         const optHtml = renderMarkdown(optionText)
-        html += `<div class="option-item" style="margin: 8px 0; padding: 4px 0;">`
-        html += `<span class="option-label" style="font-weight: 600; margin-right: 8px;">${optionLabels[optIndex] || String.fromCharCode(65 + optIndex)}.</span>`
-        html += `<span class="option-text">${optHtml}</span>`
+        html += `<div class="option-item" style="margin: 4px 0; padding: 4px 0;">`
+        html += `<span class="option-label" style="font-weight: 600; margin-right: 6px; font-size: 10.5pt; line-height: 1.8;">${optionLabels[optIndex] || String.fromCharCode(65 + optIndex)}.</span>`
+        html += `<span class="option-text" style="font-size: 10.5pt; line-height: 1.8;">${optHtml}</span>`
         html += `</div>`
       })
       html += `</div>`
@@ -140,14 +140,14 @@ function renderStructuredQuestions(questions: StructuredQuestion[], title: strin
     // 阅读材料
     if (question.passage) {
       const passageText = question.passage.replace(/【阅读材料】/, '').replace(/【材料】/, '').trim()
-      html += `<div class="passage-section" style="margin: 16px 0; padding: 12px; background: #fff7ed; border-left: 3px solid #ff6b4a; border-radius: 4px;">`
+      html += `<div class="passage-section" style="margin: 8px 0; padding: 8px; background: #fff7ed; border-left: 3px solid #ff6b4a; border-radius: 4px;">`
       html += `<div class="passage-content" style="font-size: 10.5pt; line-height: 1.8; color: #262626;">${renderMarkdown(passageText)}</div>`
       html += `</div>`
     }
 
     // 子题目
     if (question.sub_questions && question.sub_questions.length > 0) {
-      html += `<div class="sub-questions" style="margin-top: 16px; padding-left: 20px; border-left: 2px solid #f0f0f0;">`
+      html += `<div class="sub-questions" style="margin-top: 8px; padding-left: 20px; border-left: 2px solid #f0f0f0;">`
       html += renderSubQuestions(question.sub_questions)
       html += `</div>`
     }
@@ -179,7 +179,7 @@ function getPrintStyles(): string {
     /* CSS 变量定义 */
     .question-print-mode {
       --question-padding: 0;
-      --question-margin-bottom: 16px;
+      --question-margin-bottom: 12px;
       --question-background: transparent;
       --question-border: none;
       --question-box-shadow: none;
@@ -192,7 +192,7 @@ function getPrintStyles(): string {
       --question-stem-color: #000;
       --option-background: transparent;
       --option-border-radius: 0;
-      --option-padding: 4px 0;
+      --option-padding: 0;
       --option-margin: 4px 0;
       --option-label-font-weight: bold;
       --option-text-color: #000;
@@ -227,9 +227,9 @@ function getPrintStyles(): string {
 
     .question-header {
       display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      margin-bottom: 8px;
+      align-items: baseline;
+      gap: 6px;
+      margin-bottom: 6px;
       flex-wrap: nowrap;
     }
 
@@ -239,12 +239,14 @@ function getPrintStyles(): string {
       min-width: var(--question-number-min-width);
       flex-shrink: 0;
       white-space: nowrap;
+      font-size: 10.5pt;
+      line-height: 1.8;
     }
 
     .question-stem {
       flex: 1;
-      font-size: var(--question-stem-font-size);
-      line-height: var(--question-stem-line-height);
+      font-size: 10.5pt;
+      line-height: 1.8;
       color: var(--question-stem-color);
       display: inline;
     }
@@ -264,18 +266,20 @@ function getPrintStyles(): string {
     }
 
     .option-item {
-      margin: var(--option-margin);
-      padding: var(--option-padding);
+      margin: 4px 0;
+      padding: 4px 0;
       background: var(--option-background);
       border-radius: var(--option-border-radius);
       display: flex;
-      align-items: flex-start;
-      gap: 8px;
+      align-items: baseline;
+      gap: 6px;
     }
 
     .option-label {
       font-weight: var(--option-label-font-weight);
       min-width: 24px;
+      font-size: 10.5pt;
+      line-height: 1.8;
     }
 
     .option-text {
