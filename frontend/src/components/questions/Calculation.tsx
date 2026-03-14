@@ -4,11 +4,16 @@
 import { QuestionRendererProps } from '@/types/structured'
 import { renderMarkdown } from '@/utils/markdownProcessor'
 
-export default function Calculation({ question, index }: QuestionRendererProps) {
+interface CalculationProps extends QuestionRendererProps {
+  mode?: 'render' | 'print'
+}
+
+export default function Calculation({ question, index, mode = 'render' }: CalculationProps) {
   const html = renderMarkdown(question.stem)
+  const modeClass = mode === 'print' ? 'question-print-mode' : 'question-render-mode'
 
   return (
-    <div className="question-item question-calculation">
+    <div className={`question-item question-calculation ${modeClass}`}>
       <div className="question-header">
         <span className="question-number">{index}. </span>
         <div className="question-stem" dangerouslySetInnerHTML={{ __html: html }} />

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchWithAuth, clearToken } from './auth'
 import { validatePrompt } from './utils/promptValidator'
+import { handlePrint } from './utils/printUtils'
 import HistoryDropdown from './HistoryList'
 import ProgressModal from './components/ProgressModal'
 import StructuredPreviewShared from './components/StructuredPreviewShared'
@@ -129,74 +130,12 @@ export default function MainContent({ email, onLogout }: Props) {
   }
 
   /**
-   * 打印功能 - 使用 CSS @media print 实现
+   * 打印功能 - 使用 printUtils 中的 handlePrint
    */
-  const handlePrint = async () => {
+  const handlePrintWrapper = async () => {
     if (!questions.length || !meta) return
-
-    // 创建打印专用容器（平时隐藏，打印时显示）
-    const printContainer = document.createElement('div')
-    printContainer.id = 'print-container'
-    printContainer.style.cssText = `
-      display: none;
-      position: fixed;
-      left: 0;
-      top: 0;
-      width: 210mm;
-      min-height: 297mm;
-      padding: 30mm 25mm;
-      margin: 10mm auto;
-      background: white;
-      font-family: "Microsoft YaHei", "SimSun", sans-serif;
-      font-size: 14pt;
-      line-height: 1.8;
-      z-index: 10000;
-    `
-
-    // 构建打印内容
-    let contentHtml = `<h1 style="text-align: center; margin-bottom: 30px; font-size: 18pt; font-weight: bold;">${meta.title || '题目练习'}</h1>`
-
-    // 渲染每道题目
-    questions.forEach((question, index) => {
-      contentHtml += `<div class="question-wrapper" style="margin-bottom: 24px; page-break-inside: avoid;">`
-      contentHtml += `<div style="font-weight: bold; margin-bottom: 12px;">${index + 1}. ${question.stem}</div>`
-
-      // 选项
-      if (question.options && question.options.length > 0) {
-        question.options.forEach((opt, optIndex) => {
-          const optionLabel = ['A', 'B', 'C', 'D'][optIndex]
-          const optionText = opt.replace(/^[A-D]\.\s*/, '')
-          contentHtml += `<div style="margin-left: 32px; margin-bottom: 8px;">${optionLabel}. ${optionText}</div>`
-        })
-      }
-
-      // 阅读材料
-      if (question.passage) {
-        contentHtml += `<div style="margin-top: 12px; margin-bottom: 12px; padding: 10px; background: #f5f5f5; border-left: 3px solid #ccc;">${question.passage}</div>`
-      }
-
-      contentHtml += `</div>`
-    })
-
-    printContainer.innerHTML = contentHtml
-    document.body.appendChild(printContainer)
-
-    // 等待 MathJax 渲染
-    if (window.MathJax?.typesetPromise) {
-      await window.MathJax.typesetPromise([printContainer])
-    } else if (window.MathJax?.typeset) {
-      window.MathJax.typeset([printContainer])
-    }
-
-    // 添加延迟确保 DOM 完全渲染
-    await new Promise(resolve => setTimeout(resolve, 100))
-
-    window.print()
-
-    // 打印完成后移除容器
-    setTimeout(() => {
-      document.body.removeChild(printContainer)
-    }, 100)
+    // 使用 printUtils 中的 handlePrint，传入结构化题目数据
+    await handlePrint(undefined, meta.title, questions, null)
   }
 
   return (
@@ -364,7 +303,7 @@ export default function MainContent({ email, onLogout }: Props) {
                   <button
                     type="button"
                     className="btn-icon-action"
-                    onClick={handlePrint}
+                    onClick={handlePrintWrapper}
                     title="打印题目（可另存为 PDF）"
                     aria-label="打印题目"
                   >

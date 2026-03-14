@@ -1,0 +1,207 @@
+/**
+ * 题目打印样式配置
+ * 使用 CSS 变量控制打印时的题型样式
+ * 与 questions.css 配合使用
+ */
+
+/* ===== 打印模式 CSS 变量定义 ===== */
+.question-print-mode {
+  /* 题目容器 */
+  --question-padding: 0;
+  --question-margin-bottom: 16px;
+  --question-background: transparent;
+  --question-border: 1px solid #ddd;
+  --question-box-shadow: none;
+  --question-border-radius: 0;
+
+  /* 题号 */
+  --question-number-font-weight: bold;
+  --question-number-color: #000;
+  --question-number-min-width: 24px;
+
+  /* 题干 */
+  --question-stem-font-size: 10.5pt;
+  --question-stem-line-height: 1.8;
+  --question-stem-color: #000;
+
+  /* 选项 */
+  --option-background: transparent;
+  --option-border-radius: 0;
+  --option-padding: 4px 0;
+  --option-margin: 4px 0;
+  --option-label-font-weight: bold;
+  --option-text-color: #000;
+
+  /* 答案区域 */
+  --answer-area-background: transparent;
+  --answer-area-min-height: 40px;
+  --answer-area-border-radius: 0;
+  --answer-area-margin-top: 8px;
+
+  /* 填空/答案占位符 */
+  --answer-placeholder-color: #000;
+  --answer-placeholder-style: solid;
+  --answer-placeholder-width: 200px;
+
+  /* 阅读材料 */
+  --passage-background: transparent;
+  --passage-border-left: 2px solid #000;
+  --passage-padding: 8px 0;
+  --passage-title-color: #000;
+  --passage-title-font-size: 10.5pt;
+
+  /* 作文格子 */
+  --essay-line-height: 28px;
+  --essay-line-border: 1px dashed #999;
+  --essay-line-number-width: 20px;
+  --essay-line-number-font-size: 6pt;
+}
+
+/* ===== 渲染模式（屏幕显示）CSS 变量 ===== */
+.question-render-mode {
+  /* 题目容器 */
+  --question-padding: 16px;
+  --question-margin-bottom: 24px;
+  --question-background: white;
+  --question-border: 1px solid #f0f0f0;
+  --question-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --question-border-radius: 12px;
+
+  /* 题号 */
+  --question-number-font-weight: 700;
+  --question-number-color: #ff6b4a;
+  --question-number-min-width: 28px;
+
+  /* 题干 */
+  --question-stem-font-size: 1rem;
+  --question-stem-line-height: 1.6;
+  --question-stem-color: #262626;
+
+  /* 选项 */
+  --option-background: #fafafa;
+  --option-border-radius: 8px;
+  --option-padding: 8px 12px;
+  --option-margin: 8px 0;
+  --option-label-font-weight: 600;
+  --option-text-color: #262626;
+
+  /* 答案区域 */
+  --answer-area-background: #fafafa;
+  --answer-area-min-height: 60px;
+  --answer-area-border-radius: 8px;
+  --answer-area-margin-top: 12px;
+
+  /* 填空/答案占位符 */
+  --answer-placeholder-color: #a1a1aa;
+  --answer-placeholder-style: dotted;
+  --answer-placeholder-width: auto;
+
+  /* 阅读材料 */
+  --passage-background: #fff7ed;
+  --passage-border-left: 4px solid #ff6b4a;
+  --passage-padding: 16px;
+  --passage-title-color: #c2410c;
+  --passage-title-font-size: 1rem;
+
+  /* 作文格子 */
+  --essay-line-height: 32px;
+  --essay-line-border: 1px dashed #e5e5e5;
+  --essay-line-number-width: 32px;
+  --essay-line-number-font-size: 0.75rem;
+}
+
+/* ===== 打印媒体查询覆盖 ===== */
+@media print {
+  .question-print-mode {
+    /* 确保打印时使用打印变量 */
+    page-break-inside: avoid;
+  }
+
+  /* 隐藏屏幕专属元素 */
+  .screen-only {
+    display: none !important;
+  }
+
+  /* 显示打印专属元素 */
+  .print-only {
+    display: block !important;
+  }
+
+  /* 选项悬停效果禁用 */
+  .option-item:hover {
+    background: transparent !important;
+  }
+
+  /* 作文格子行避免分页 */
+  .essay-line {
+    break-inside: avoid;
+  }
+}
+
+/* ===== 题型专属打印样式 ===== */
+
+/* 单选题/多选题 */
+.print-single-choice .question-options,
+.print-multiple-choice .question-options {
+  padding-left: 36px;
+}
+
+/* 判断题 - 选项横向排列 */
+.print-true-false .question-options {
+  display: flex;
+  gap: 24px;
+  padding-left: 36px;
+}
+
+/* 填空题 */
+.print-fill-blank .answer-line {
+  margin-top: 8px;
+}
+
+.print-fill-blank .answer-placeholder {
+  display: inline-block;
+  min-width: var(--answer-placeholder-width);
+  border-bottom: 1px var(--answer-placeholder-style) var(--answer-placeholder-color);
+}
+
+/* 计算题/应用题/几何题 */
+.print-calculation .answer-area,
+.print-word-problem .answer-area,
+.print-geometry .answer-area {
+  margin-top: var(--answer-area-margin-top);
+  min-height: var(--answer-area-min-height);
+}
+
+/* 阅读理解 */
+.print-read-comp .passage-section {
+  margin: 12px 0;
+  padding: 8px 0;
+  background: var(--passage-background);
+  border-left: var(--passage-border-left);
+}
+
+.print-read-comp .sub-questions {
+  padding-left: 20px;
+  border-left: 1px solid #ddd;
+}
+
+/* 完形填空 */
+.print-cloze .passage-section {
+  margin: 12px 0;
+  padding: 8px 0;
+}
+
+/* 作文题 */
+.print-essay .essay-grid {
+  margin-top: 12px;
+}
+
+.print-essay .essay-line {
+  height: var(--essay-line-height);
+  border-bottom: var(--essay-line-border);
+}
+
+.print-essay .line-number {
+  width: var(--essay-line-number-width);
+  font-size: var(--essay-line-number-font-size);
+}

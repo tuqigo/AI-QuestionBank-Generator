@@ -6,7 +6,11 @@ import { QuestionRendererProps } from '@/types/structured'
 import { renderMarkdown } from '@/utils/markdownProcessor'
 import FillBlank from './FillBlank'
 
-export default function Cloze({ question, index }: QuestionRendererProps) {
+interface ClozeProps extends QuestionRendererProps {
+  mode?: 'render' | 'print'
+}
+
+export default function Cloze({ question, index, mode = 'render' }: ClozeProps) {
   const passage = question.passage || ''
   const subQuestions = question.sub_questions || []
 
@@ -16,8 +20,10 @@ export default function Cloze({ question, index }: QuestionRendererProps) {
     return text
   }, [passage])
 
+  const modeClass = mode === 'print' ? 'question-print-mode' : 'question-render-mode'
+
   return (
-    <div className="question-item question-cloze">
+    <div className={`question-item question-cloze ${modeClass}`}>
       <div className="question-header">
         <span className="question-number">{index}. </span>
         <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderMarkdown(question.stem) }} />
@@ -36,6 +42,7 @@ export default function Cloze({ question, index }: QuestionRendererProps) {
             key={subIdx}
             question={subQ}
             index={subIdx + 1}
+            mode={mode}
           />
         ))}
       </div>

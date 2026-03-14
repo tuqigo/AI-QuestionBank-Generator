@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Query, Request
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List, Dict, Any
+from datetime import datetime
 
 from routers.auth import get_current_user_email
 from services.question_record_store import (
@@ -13,6 +14,12 @@ from services.question_record_store import (
     generate_share_token,
     get_user_record_count,
     delete_oldest_record,
+)
+from services.question_store import (
+    get_questions_by_record_id,
+    get_question_by_id,
+    get_question_answer,
+    get_answers_by_record_id,
 )
 from services.user_store import get_user as get_user_by_email
 from models.question_record import (
@@ -27,6 +34,43 @@ router = APIRouter(prefix="/api/history", tags=["history"])
 
 # 配置：每用户最大记录数
 MAX_RECORDS_PER_USER = 1000
+
+
+class QuestionDetailResponse(BaseModel):
+    """题目详情响应"""
+    id: int
+    short_id: str
+    question_index: int
+    type: str
+    stem: str
+    options: Optional[List[str]]
+    passage: Optional[str]
+    sub_questions: Optional[List[Dict[str, Any]]]
+    knowledge_points: List[str]
+    answer_blanks: Optional[int]
+    rows_to_answer: Optional[int]
+    answer_text: Optional[str]
+
+
+class QuestionsDetailResponse(BaseModel):
+    """试卷题目详情响应（含 meta 信息）"""
+    meta: Dict[str, Any]
+    questions: List[QuestionDetailResponse]
+
+
+class QuestionAnswerResponse(BaseModel):
+    """单题答案响应"""
+    question_id: int
+    type: str
+    answer_text: Optional[str]
+    answer_blanks: Optional[int]
+    rows_to_answer: Optional[int]
+
+
+class AnswersListResponse(BaseModel):
+    """整卷答案列表响应"""
+    record_id: int
+    answers: List[QuestionAnswerResponse]
 
 
 class ShareUrlResponse(BaseModel):
@@ -131,6 +175,96 @@ async def get_history_detail(
     return record
 
 
+@router.get("/{record_id}/questions", response_model=QuestionsDetailResponse)
+async def get_history_questions(
+    record_id: str,
+    email: str = Depends(get_current_user_email),
+):
+    """获取试卷的完整题目详情（含 rows_to_answer 等字段）"""
+    user = get_user_by_email(email)
+
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+
+    user_id = user.id
+
+    # 1. 获取试卷基本信息
+    record = get_record_by_short_id(record_id, user_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="记录不存在")
+
+    # 2. 获取试卷下所有题目
+    questions = get_questions_by_record_id(record.id)
+
+    # 3. 转换为响应格式
+    question_details = [
+        QuestionDetailResponse(
+            id=q["id"],
+            short_id=q["short_id"],
+            question_index=q["question_index"],
+            type=q["type"],
+            stem=q["stem"],
+            options=q.get("options"),
+            passage=q.get("passage"),
+            sub_questions=q.get("sub_questions"),
+            knowledge_points=q.get("knowledge_points", []),
+            answer_blanks=q.get("answer_blanks"),
+            rows_to_answer=q.get("rows_to_answer"),
+            answer_text=q.get("answer_text")
+        )
+        for q in questions
+    ]
+
+    return QuestionsDetailResponse(
+        meta={
+            "record_id": record.id,
+            "short_id": record.short_id,
+            "title": record.title,
+            "created_at": record.created_at
+        },
+        questions=question_details
+    )
+
+
+@router.get("/{record_id}/answers", response_model=AnswersListResponse)
+async def get_history_answers(
+    record_id: str,
+    email: str = Depends(get_current_user_email),
+):
+    """获取整卷答案"""
+    user = get_user_by_email(email)
+
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+
+    user_id = user.id
+
+    # 1. 获取试卷基本信息
+    record = get_record_by_short_id(record_id, user_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="记录不存在")
+
+    # 2. 获取所有题目答案
+    answers = get_answers_by_record_id(record.id)
+
+    # 3. 转换为响应格式
+    answer_details = [
+        QuestionAnswerResponse(
+            question_id=a["question_id"],
+            type=a["type"],
+            answer_text=a["answer_text"],
+            answer_blanks=a["answer_blanks"],
+            rows_to_answer=a["rows_to_answer"]
+        )
+        for a in answers
+    ]
+
+    return AnswersListResponse(
+        record_id=record.id,
+        answers=answer_details
+    )
+
+
 @router.delete("/{record_id}")
 async def delete_history(
     record_id: str,
@@ -200,3 +334,79 @@ async def get_share_record(record_id: str, token: Optional[str] = Query(None)):
         raise HTTPException(status_code=404, detail="记录不存在或分享链接无效")
 
     return record
+
+
+@share_router.get("/{record_id}/questions", response_model=QuestionsDetailResponse)
+async def get_share_questions(record_id: str, token: Optional[str] = Query(None)):
+    """通过分享链接获取试卷题目详情（无需登录）"""
+    if not token:
+        raise HTTPException(status_code=404, detail="分享链接无效：缺少 token 参数")
+
+    # 1. 通过 token 获取试卷基本信息
+    record = get_record_by_share_token(token)
+    if not record:
+        raise HTTPException(status_code=404, detail="记录不存在或分享链接无效")
+
+    # 2. 获取试卷下所有题目
+    questions = get_questions_by_record_id(record.id)
+
+    # 3. 转换为响应格式
+    question_details = [
+        QuestionDetailResponse(
+            id=q["id"],
+            short_id=q["short_id"],
+            question_index=q["question_index"],
+            type=q["type"],
+            stem=q["stem"],
+            options=q.get("options"),
+            passage=q.get("passage"),
+            sub_questions=q.get("sub_questions"),
+            knowledge_points=q.get("knowledge_points", []),
+            answer_blanks=q.get("answer_blanks"),
+            rows_to_answer=q.get("rows_to_answer"),
+            answer_text=q.get("answer_text")
+        )
+        for q in questions
+    ]
+
+    return QuestionsDetailResponse(
+        meta={
+            "record_id": record.id,
+            "short_id": record.short_id,
+            "title": record.title,
+            "created_at": record.created_at
+        },
+        questions=question_details
+    )
+
+
+@share_router.get("/{record_id}/answers", response_model=AnswersListResponse)
+async def get_share_answers(record_id: str, token: Optional[str] = Query(None)):
+    """通过分享链接获取整卷答案（无需登录）"""
+    if not token:
+        raise HTTPException(status_code=404, detail="分享链接无效：缺少 token 参数")
+
+    # 1. 通过 token 获取试卷基本信息
+    record = get_record_by_share_token(token)
+    if not record:
+        raise HTTPException(status_code=404, detail="记录不存在或分享链接无效")
+
+    # 2. 获取所有题目答案
+    answers = get_answers_by_record_id(record.id)
+
+    # 3. 转换为响应格式
+    answer_details = [
+        QuestionAnswerResponse(
+            question_id=a["question_id"],
+            type=a["type"],
+            answer_text=a["answer_text"],
+            answer_blanks=a["answer_blanks"],
+            rows_to_answer=a["rows_to_answer"]
+        )
+        for a in answers
+    ]
+
+    return AnswersListResponse(
+        record_id=record.id,
+        answers=answer_details
+    )

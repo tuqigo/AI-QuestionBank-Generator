@@ -1,6 +1,9 @@
 /* ===== 引入主题配置 ===== */
 @import './theme.css';
 
+/* ===== 引入题目打印样式配置 ===== */
+@import './styles/questions-print-config.css';
+
 /* ===== Reset & Base ===== */
 *,
 *::before,

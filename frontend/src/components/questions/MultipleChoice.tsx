@@ -5,7 +5,11 @@ import { useMemo } from 'react'
 import { QuestionRendererProps } from '@/types/structured'
 import { renderMarkdown } from '@/utils/markdownProcessor'
 
-export default function MultipleChoice({ question, index }: QuestionRendererProps) {
+interface MultipleChoiceProps extends QuestionRendererProps {
+  mode?: 'render' | 'print'
+}
+
+export default function MultipleChoice({ question, index, mode = 'render' }: MultipleChoiceProps) {
   const options = question.options || []
 
   // 多选题选项标签（A, B, C...）
@@ -17,8 +21,10 @@ export default function MultipleChoice({ question, index }: QuestionRendererProp
     }))
   }, [options])
 
+  const modeClass = mode === 'print' ? 'question-print-mode' : 'question-render-mode'
+
   return (
-    <div className="question-item question-multiple-choice">
+    <div className={`question-item question-multiple-choice ${modeClass}`}>
       <div className="question-header">
         <span className="question-number">{index}. </span>
         <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderMarkdown(question.stem) }} />

@@ -4,9 +4,15 @@
 import { QuestionRendererProps } from '@/types/structured'
 import { renderMarkdown } from '@/utils/markdownProcessor'
 
-export default function Essay({ question, index }: QuestionRendererProps) {
+interface EssayProps extends QuestionRendererProps {
+  mode?: 'render' | 'print'
+}
+
+export default function Essay({ question, index, mode = 'render' }: EssayProps) {
+  const modeClass = mode === 'print' ? 'question-print-mode' : 'question-render-mode'
+
   return (
-    <div className="question-item question-essay">
+    <div className={`question-item question-essay ${modeClass}`}>
       <div className="question-header">
         <span className="question-number">{index}. </span>
         <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderMarkdown(question.stem) }} />

@@ -127,7 +127,53 @@ CREATE TABLE IF NOT EXISTS ai_generation_records (
 );
 
 -- ============================================
--- 6. 管理员操作日志表 (admin_operation_logs)
+-- 6. 题目表 (questions)
+-- ============================================
+-- 用途：存储 AI 生成的每道题目的结构化数据
+-- 功能：
+--   - 支持按试卷 ID 批量获取题目
+--   - 支持按题目 ID 查询单题答案
+--   - 支持前端打印时预留作答区域
+-- 字段说明：
+--   - record_id: 关联 user_question_records.id（所属试卷）
+--   - question_index: 题目在试卷中的序号（1, 2, 3...）
+--   - type: 题型（SINGLE_CHOICE, CALCULATION 等）
+--   - stem: 题干内容
+--   - options: 选项数组（JSON 格式，仅选择题有值）
+--   - passage: 阅读材料（JSON 格式，仅阅读理解/完形填空有值）
+--   - sub_questions: 子题列表（JSON 格式，仅阅读理解/完形填空有值）
+--   - knowledge_points: 知识点列表（JSON 数组）
+--   - answer_blanks: 填空题预留空格数（后端自动计算）
+--   - rows_to_answer: 预留作答行数（后端自动计算）
+--   - answer_text: 标准答案（后端从 AI 响应中提取）
+-- ============================================
+CREATE TABLE IF NOT EXISTS questions (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    short_id         TEXT UNIQUE,
+    record_id        INTEGER NOT NULL,
+    question_index   INTEGER NOT NULL,
+    type             TEXT NOT NULL,
+    stem             TEXT NOT NULL,
+    options          TEXT,
+    passage          TEXT,
+    sub_questions    TEXT,
+    knowledge_points TEXT NOT NULL,
+    answer_blanks    INTEGER,
+    rows_to_answer   INTEGER,
+    answer_text      TEXT,
+    created_at       TIMESTAMP DEFAULT (datetime('now')),
+    FOREIGN KEY (record_id) REFERENCES user_question_records(id)
+);
+
+-- 题目表索引
+CREATE INDEX IF NOT EXISTS idx_questions_record_id
+    ON questions(record_id, question_index);
+
+CREATE INDEX IF NOT EXISTS idx_questions_short_id
+    ON questions(short_id);
+
+-- ============================================
+-- 7. 管理员操作日志表 (admin_operation_logs)
 -- ============================================
 -- 用途：记录管理员的所有操作行为，用于审计
 -- 功能：

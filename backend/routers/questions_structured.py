@@ -11,6 +11,8 @@ from pydantic import BaseModel
 
 from services.qwen_client import generate_questions_async
 from services.question_record_store import create_record, QuestionRecordCreate, get_record_by_short_id
+from services.question_data_cleaner import QuestionDataCleaner
+from services.question_store import batch_insert_questions
 from routers.auth import get_current_user_email
 from services.user_store import get_user as get_user_by_email
 from utils.logger import api_logger, qwen_logger
@@ -158,6 +160,8 @@ async def generate_structured(
         ]
 
         # 保存历史记录（原始 JSON 字符串）
+        record_id = None
+        short_id = None
         try:
             record = QuestionRecordCreate(
                 title=actual_title,  # 使用正确的标题
@@ -168,10 +172,20 @@ async def generate_structured(
             )
             record_id, short_id = create_record(user.id, record)
             api_logger.info(f"历史记录保存成功：id={record_id}, short_id={short_id}, title={actual_title}")
+
+            # 数据清洗：解析 AI 返回的 JSON，填充 answer_blanks, rows_to_answer, answer_text
+            meta, cleaned_questions = QuestionDataCleaner.parse_ai_response(content)
+            api_logger.info(f"数据清洗完成：题目数={len(cleaned_questions)}")
+
+            # 批量插入题目到 questions 表
+            if cleaned_questions:
+                insert_results = batch_insert_questions(record_id, cleaned_questions)
+                api_logger.info(f"题目批量插入完成：成功={len(insert_results)}")
+
         except Exception as e:
-            api_logger.error(f"历史记录保存失败：{e}")
-            record_id = None
-            short_id = None
+            api_logger.error(f"历史记录保存或题目插入失败：{e}")
+            api_logger.error(f"堆栈跟踪:\n{traceback.format_exc()}")
+            # 保存失败不阻塞主流程，记录错误但继续返回
 
         return StructuredGenerateResponse(
             meta=MetaData(

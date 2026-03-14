@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getToken } from '@/auth'
+import { handlePrint } from '@/utils/printUtils'
 import QuestionRenderer from '@/components/QuestionRenderer'
 import { generateStructuredQuestions } from '@/api/history'
 import { renderInlineMarkdown } from '@/utils/markdownProcessor'
@@ -111,69 +112,13 @@ export default function StructuredPreview() {
     navigate('/workbench')
   }
 
-  const handlePrint = async () => {
+  const handlePrintWrapper = async () => {
     if (questions.length === 0) {
       alert('没有可打印的内容')
       return
     }
-
-    // 创建打印专用容器（平时隐藏，打印时显示）
-    const printContainer = document.createElement('div')
-    printContainer.id = 'print-container'
-    printContainer.style.cssText = `
-      display: none;
-      position: fixed;
-      left: 0;
-      top: 0;
-      width: 210mm;
-      min-height: 297mm;
-      padding: 30mm 25mm;
-      margin: 10mm auto;
-      background: white;
-      font-family: "Microsoft YaHei", "SimSun", sans-serif;
-      font-size: 14pt;
-      line-height: 1.8;
-      z-index: 10000;
-    `
-
-    // 构建打印内容
-    let contentHtml = `<h1 style="text-align: center; margin-bottom: 30px; font-size: 18pt; font-weight: bold;">${title || '结构化题目'}</h1>`
-
-    // 渲染每道题目
-    questions.forEach((question, index) => {
-      contentHtml += `<div class="question-wrapper" style="margin-bottom: 24px; page-break-inside: avoid;">`
-
-      // 题干
-      contentHtml += `<div style="font-weight: bold; margin-bottom: 12px;">${index + 1}. ${renderInlineMarkdown(question.stem)}</div>`
-
-      // 选项
-      if (question.options && question.options.length > 0) {
-        question.options.forEach((opt, optIndex) => {
-          const optionLabel = ['A', 'B', 'C', 'D'][optIndex]
-          const optionText = opt.replace(/^[A-D]\.\s*/, '')
-          contentHtml += `<div style="margin-left: 32px; margin-bottom: 8px;">${optionLabel}. ${renderInlineMarkdown(optionText)}</div>`
-        })
-      }
-
-      contentHtml += `</div>`
-    })
-
-    printContainer.innerHTML = contentHtml
-    document.body.appendChild(printContainer)
-
-    // 等待 MathJax 渲染
-    if (window.MathJax?.typesetPromise) {
-      await window.MathJax.typesetPromise([printContainer])
-    } else if (window.MathJax?.typeset) {
-      window.MathJax.typeset([printContainer])
-    }
-
-    window.print()
-
-    // 打印完成后移除容器
-    setTimeout(() => {
-      document.body.removeChild(printContainer)
-    }, 100)
+    // 使用 printUtils 中的 handlePrint，传入结构化题目数据
+    await handlePrint(undefined, title || '结构化题目', questions as any, null)
   }
 
   if (loading) {
@@ -203,7 +148,7 @@ export default function StructuredPreview() {
       <div className="preview-header">
         <h2>{title || '结构化题目生成'}</h2>
         <div className="preview-actions">
-          <button onClick={handlePrint} className="btn-print">打印</button>
+          <button onClick={handlePrintWrapper} className="btn-print">打印</button>
           <button onClick={handleBack} className="btn-back">返回</button>
         </div>
       </div>

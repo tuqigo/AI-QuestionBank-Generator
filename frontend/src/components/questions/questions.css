@@ -1,13 +1,14 @@
 /* ===== 结构化题目样式 ===== */
+/* 使用 CSS 变量支持渲染/打印双模式 */
 
 /* 题目容器 */
 .question-item {
-  margin-bottom: 24px;
-  padding: 16px;
-  background: white;
-  border-radius: 12px;
-  border: 1px solid #f0f0f0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  margin-bottom: var(--question-margin-bottom, 24px);
+  padding: var(--question-padding, 16px);
+  background: var(--question-background, white);
+  border-radius: var(--question-border-radius, 12px);
+  border: var(--question-border, 1px solid #f0f0f0);
+  box-shadow: var(--question-box-shadow, 0 2px 8px rgba(0, 0, 0, 0.04));
 }
 
 .question-header {
@@ -18,17 +19,18 @@
 }
 
 .question-number {
-  font-weight: 700;
-  color: #ff6b4a;
+  font-weight: var(--question-number-font-weight, 700);
+  color: var(--question-number-color, #ff6b4a);
   font-size: 1rem;
   line-height: 1.6;
+  min-width: var(--question-number-min-width, 28px);
 }
 
 .question-stem {
   flex: 1;
-  font-size: 1rem;
-  line-height: 1.6;
-  color: #262626;
+  font-size: var(--question-stem-font-size, 1rem);
+  line-height: var(--question-stem-line-height, 1.6);
+  color: var(--question-stem-color, #262626);
   font-weight: 500;
 }
 
@@ -39,10 +41,10 @@
 }
 
 .option-item {
-  margin: 8px 0;
-  padding: 8px 12px;
-  background: #fafafa;
-  border-radius: 8px;
+  margin: var(--option-margin, 8px 0);
+  padding: var(--option-padding, 8px 12px);
+  background: var(--option-background, #fafafa);
+  border-radius: var(--option-border-radius, 8px);
   display: flex;
   align-items: flex-start;
   gap: 8px;
@@ -50,42 +52,45 @@
 }
 
 .option-item:hover {
-  background: #ffedd5;
+  background: var(--option-hover-background, #ffedd5);
 }
 
 .option-label {
-  font-weight: 600;
-  color: #525252;
+  font-weight: var(--option-label-font-weight, 600);
+  color: var(--option-label-color, #525252);
   min-width: 36px;
 }
 
 .option-text {
   flex: 1;
-  color: #262626;
+  color: var(--option-text-color, #262626);
   line-height: 1.6;
 }
 
 /* 填空题样式 */
 .question-fill-blank .answer-line {
-  margin-top: 12px;
-  padding: 12px;
-  background: #fafafa;
-  border-radius: 8px;
+  margin-top: 8px;
+  padding: 0;
+  background: var(--answer-area-background, #fafafa);
+  border-radius: var(--answer-area-border-radius, 8px);
 }
 
 .answer-placeholder {
-  color: #a1a1aa;
+  color: var(--answer-placeholder-color, #a1a1aa);
   font-family: monospace;
   font-size: 0.9rem;
+  display: inline-block;
+  min-width: var(--answer-placeholder-width, auto);
+  border-bottom: 1px var(--answer-placeholder-style, dotted) var(--answer-placeholder-color, #a1a1aa);
 }
 
 /* 计算题/应用题/几何题答案区域 */
 .answer-area {
-  margin-top: 12px;
+  margin-top: var(--answer-area-margin-top, 12px);
   padding: 12px;
-  background: #fafafa;
-  border-radius: 8px;
-  min-height: 60px;
+  background: var(--answer-area-background, #fafafa);
+  border-radius: var(--answer-area-border-radius, 8px);
+  min-height: var(--answer-area-min-height, 60px);
 }
 
 /* 阅读理解样式 */
@@ -95,16 +100,17 @@
 
 .passage-section {
   margin: 16px 0;
-  padding: 16px;
-  background: #fff7ed;
+  padding: var(--passage-padding, 16px);
+  background: var(--passage-background, #fff7ed);
   border-radius: 8px;
-  border-left: 4px solid #ff6b4a;
+  border-left: var(--passage-border-left, 4px solid #ff6b4a);
 }
 
 .passage-title {
   font-weight: 600;
-  color: #c2410c;
+  color: var(--passage-title-color, #c2410c);
   margin-bottom: 8px;
+  font-size: var(--passage-title-font-size, 1rem);
 }
 
 .passage-content {
@@ -142,15 +148,15 @@
 }
 
 .essay-grid {
-  background: #fafafa;
+  background: var(--essay-grid-background, #fafafa);
   border-radius: 8px;
   overflow: hidden;
 }
 
 .essay-line {
   display: flex;
-  height: 32px;
-  border-bottom: 1px dashed #e5e5e5;
+  height: var(--essay-line-height, 32px);
+  border-bottom: var(--essay-line-border, 1px dashed #e5e5e5);
 }
 
 .essay-line:last-child {
@@ -161,10 +167,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  font-size: 0.75rem;
-  color: #a1a1aa;
-  background: #f5f5f5;
+  width: var(--essay-line-number-width, 32px);
+  font-size: var(--essay-line-number-font-size, 0.75rem);
+  color: var(--essay-line-number-color, #a1a1aa);
+  background: var(--essay-line-number-background, #f5f5f5);
   flex-shrink: 0;
 }
 
@@ -241,30 +247,21 @@
   }
 }
 
-/* 打印样式 */
+/* ===== 打印样式 ===== */
+/* 注意：详细的打印样式已在 ../../styles/questions-print-config.css 中定义 */
+/* 此处保留关键的打印覆盖样式 */
 @media print {
   .question-item {
     page-break-inside: avoid;
-    box-shadow: none;
-    border: 1px solid #ddd;
   }
 
-  .option-item,
-  .passage-section,
-  .answer-area {
-    background: transparent;
-    border-radius: 0;
-    padding: 0;
+  /* 打印时强制使用打印变量 */
+  .question-print-mode {
+    --option-hover-background: transparent;
   }
 
-  .option-label,
-  .question-number {
-    font-weight: bold;
-  }
-
-  .answer-placeholder {
-    color: #000;
-    text-decoration: underline;
+  .option-item:hover {
+    background: transparent !important;
   }
 
   .essay-line {

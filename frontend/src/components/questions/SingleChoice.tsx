@@ -5,7 +5,11 @@ import { useMemo } from 'react'
 import type { QuestionRendererProps } from '@/types/structured'
 import { renderInlineMarkdown } from '@/utils/markdownProcessor'
 
-export default function SingleChoice({ question, index }: QuestionRendererProps) {
+interface SingleChoiceProps extends QuestionRendererProps {
+  mode?: 'render' | 'print'
+}
+
+export default function SingleChoice({ question, index, mode = 'render' }: SingleChoiceProps) {
   const options = question.options || []
 
   // 处理选项：移除可能存在的 A. B. C. D. 前缀（如果 AI 返回了前缀）
@@ -17,8 +21,10 @@ export default function SingleChoice({ question, index }: QuestionRendererProps)
     })
   }, [options])
 
+  const modeClass = mode === 'print' ? 'question-print-mode' : 'question-render-mode'
+
   return (
-    <div className="question-item question-single-choice">
+    <div className={`question-item question-single-choice ${modeClass}`}>
       <div className="question-header">
         <span className="question-number">{index}.</span>
         <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(question.stem) }} />

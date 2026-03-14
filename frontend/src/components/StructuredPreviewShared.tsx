@@ -7,12 +7,14 @@ interface StructuredPreviewSharedProps {
   questions: StructuredQuestion[]
   meta?: MetaData | null
   recordTitle?: string // 历史记录的标题（如果存在）
+  mode?: 'render' | 'print'  // 渲染模式：render（默认）或 print
 }
 
 export default function StructuredPreviewShared({
   questions,
   meta,
-  recordTitle
+  recordTitle,
+  mode = 'render'
 }: StructuredPreviewSharedProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const initializedRef = useRef(false)
@@ -116,7 +118,7 @@ export default function StructuredPreviewShared({
       <div className="questions-container">
         {questions.map((question, index) => (
           <div key={index} className="question-wrapper">
-            <QuestionRenderer question={question} index={index + 1} />
+            <QuestionRenderer question={question} index={index + 1} mode={mode} />
           </div>
         ))}
       </div>

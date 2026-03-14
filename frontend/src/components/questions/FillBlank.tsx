@@ -1,12 +1,18 @@
 /**
  * 填空题组件
  */
-import { QuestionRendererProps } from '@/types/structured'
+import type { QuestionRendererProps } from '@/types/structured'
 import { renderMarkdown } from '@/utils/markdownProcessor'
 
-export default function FillBlank({ question, index }: QuestionRendererProps) {
+interface FillBlankProps extends QuestionRendererProps {
+  mode?: 'render' | 'print'
+}
+
+export default function FillBlank({ question, index, mode = 'render' }: FillBlankProps) {
+  const modeClass = mode === 'print' ? 'question-print-mode' : 'question-render-mode'
+
   return (
-    <div className="question-item question-fill-blank">
+    <div className={`question-item question-fill-blank ${modeClass}`}>
       <div className="question-header">
         <span className="question-number">{index}. </span>
         <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderMarkdown(question.stem) }} />

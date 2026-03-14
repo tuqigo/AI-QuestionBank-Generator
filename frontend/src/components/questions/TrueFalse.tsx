@@ -1,12 +1,18 @@
 /**
  * 判断题组件
  */
-import { QuestionRendererProps } from '@/types/structured'
+import type { QuestionRendererProps } from '@/types/structured'
 import { renderMarkdown } from '@/utils/markdownProcessor'
 
-export default function TrueFalse({ question, index }: QuestionRendererProps) {
+interface TrueFalseProps extends QuestionRendererProps {
+  mode?: 'render' | 'print'
+}
+
+export default function TrueFalse({ question, index, mode = 'render' }: TrueFalseProps) {
+  const modeClass = mode === 'print' ? 'question-print-mode' : 'question-render-mode'
+
   return (
-    <div className="question-item question-true-false">
+    <div className={`question-item question-true-false ${modeClass}`}>
       <div className="question-header">
         <span className="question-number">{index}. </span>
         <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderMarkdown(question.stem) }} />

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { getToken } from '@/auth'
 import { getHistoryDetail, createShareUrl } from '@/api/history'
+import { handlePrint } from '@/utils/printUtils'
 import { renderMarkdown } from '@/utils/markdownProcessor'
 import type { QuestionRecord } from '@/types'
 import type { StructuredQuestion } from '@/types/structured'
@@ -82,8 +83,11 @@ export default function HistoryDetail() {
   /**
    * 打印功能
    */
-  const handlePrint = async () => {
-    if (!structuredData?.questions || structuredData.questions.length === 0) return
+  const handlePrintWrapper = async () => {
+    if (!structuredData?.questions || structuredData.questions.length === 0) {
+      alert('没有可打印的内容')
+      return
+    }
 
     // 等待 MathJax 加载完成
     if (!window.MathJax || !window.MathJax.typesetPromise) {
@@ -91,60 +95,9 @@ export default function HistoryDetail() {
       return
     }
 
-    // 创建打印专用容器（平时隐藏，打印时显示）
-    const printContainer = document.createElement('div')
-    printContainer.id = 'print-container'
-    printContainer.style.cssText = `
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: white;
-      z-index: 10000;
-      padding: 20mm;
-      box-sizing: border-box;
-      overflow: visible;
-    `
-
-    // 构建打印内容
+    // 使用 printUtils 中的 handlePrint，传入结构化题目数据
     const title = record?.title || structuredData.meta?.title || '题目练习'
-    let contentHtml = `<h1 style="text-align: center; margin-bottom: 30px; font-size: 18pt; font-weight: bold;">${title}</h1>`
-
-    // 渲染每道题目
-    structuredData.questions.forEach((question, index) => {
-      contentHtml += `<div style="margin-bottom: 24px; page-break-inside: avoid;">`
-      // 序号单独放在外面，只渲染 stem 内容
-      const stemHtml = renderMarkdown(question.stem)
-      contentHtml += `<div style="font-weight: bold; margin-bottom: 12px;"><span>${index + 1}. </span>${stemHtml}</div>`
-
-      // 选项
-      if (question.options && question.options.length > 0) {
-        question.options.forEach((opt, optIndex) => {
-          const optionLabel = ['A', 'B', 'C', 'D'][optIndex]
-          const optionText = opt.replace(/^[A-D]\.\s*/, '')
-          const optHtml = renderMarkdown(optionText)
-          contentHtml += `<div style="margin-left: 32px; margin-bottom: 8px;">${optionLabel}. ${optHtml}</div>`
-        })
-      }
-
-      contentHtml += `</div>`
-    })
-
-    printContainer.innerHTML = contentHtml
-    document.body.appendChild(printContainer)
-
-    // 等待 MathJax 渲染
-    await window.MathJax.typesetPromise([printContainer])
-
-    // 立即打印
-    window.print()
-
-    // 打印完成后移除容器
-    setTimeout(() => {
-      document.body.removeChild(printContainer)
-    }, 100)
+    await handlePrint(undefined, title, structuredData.questions, null)
   }
 
   if (loading) {
@@ -178,7 +131,7 @@ export default function HistoryDetail() {
       <div className="detail-header">
         <h2>{record.title}</h2>
         <div className="detail-actions">
-          <button onClick={handlePrint} className="btn-action">打印</button>
+          <button onClick={handlePrintWrapper} className="btn-action">打印</button>
           <button onClick={handleShare} className="btn-action">分享</button>
           <Link to="/" className="btn-back">返回首页</Link>
         </div>

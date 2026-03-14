@@ -7,7 +7,11 @@ import { renderMarkdown } from '@/utils/markdownProcessor'
 import SingleChoice from './SingleChoice'
 import FillBlank from './FillBlank'
 
-export default function ReadComp({ question, index }: QuestionRendererProps) {
+interface ReadCompProps extends QuestionRendererProps {
+  mode?: 'render' | 'print'
+}
+
+export default function ReadComp({ question, index, mode = 'render' }: ReadCompProps) {
   const passage = question.passage || ''
   const subQuestions = question.sub_questions || []
 
@@ -22,8 +26,10 @@ export default function ReadComp({ question, index }: QuestionRendererProps) {
     return text
   }, [passage])
 
+  const modeClass = mode === 'print' ? 'question-print-mode' : 'question-render-mode'
+
   return (
-    <div className="question-item question-read-comp">
+    <div className={`question-item question-read-comp ${modeClass}`}>
       <div className="question-header">
         <span className="question-number">{index}. </span>
         <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderMarkdown(question.stem) }} />
@@ -40,7 +46,8 @@ export default function ReadComp({ question, index }: QuestionRendererProps) {
         {subQuestions.map((subQ, subIdx) => {
           const subQuestionProps = {
             question: subQ,
-            index: subIdx + 1
+            index: subIdx + 1,
+            mode
           }
 
           switch (subQ.type) {
