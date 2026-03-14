@@ -15,9 +15,7 @@ import TrueFalse from './questions/TrueFalse'
 import FillBlank from './questions/FillBlank'
 import Calculation from './questions/Calculation'
 import WordProblem from './questions/WordProblem'
-import Geometry from './questions/Geometry'
 import ReadComp from './questions/ReadComp'
-import PoetryApp from './questions/PoetryApp'
 import Cloze from './questions/Cloze'
 import Essay from './questions/Essay'
 
@@ -61,14 +59,8 @@ export default function QuestionRenderer({ question, index = 1 }: QuestionRender
       case 'WORD_PROBLEM':
         return <WordProblem question={question} index={index} />
 
-      case 'GEOMETRY':
-        return <Geometry question={question} index={index} />
-
       case 'READ_COMP':
         return <ReadComp question={question} index={index} />
-
-      case 'POETRY_APP':
-        return <PoetryApp question={question} index={index} />
 
       case 'CLOZE':
         return <Cloze question={question} index={index} />
