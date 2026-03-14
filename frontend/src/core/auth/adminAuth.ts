@@ -1,29 +1,23 @@
+import { createAuthStorage, createFetchWithAuth } from './authFactory'
+
 const ADMIN_TOKEN_KEY = 'admin_token'
 
-export function getAdminToken(): string | null {
-  return localStorage.getItem(ADMIN_TOKEN_KEY)
-}
+// 管理员认证存储
+const auth = createAuthStorage(ADMIN_TOKEN_KEY)
 
-export function setAdminToken(token: string): void {
-  localStorage.setItem(ADMIN_TOKEN_KEY, token)
-}
-
-export function clearAdminToken(): void {
-  localStorage.removeItem(ADMIN_TOKEN_KEY)
-}
+export const getAdminToken = auth.getToken
+export const setAdminToken = auth.setToken
+export const clearAdminToken = auth.clearToken
 
 export function isAdminLoggedIn(): boolean {
   return !!getAdminToken()
 }
 
-export async function fetchWithAdminAuth(
-  url: string,
-  options: RequestInit = {}
-): Promise<Response> {
-  const token = getAdminToken()
-  const headers = new Headers(options.headers)
-  if (token) {
-    headers.set('Authorization', `Bearer ${token}`)
+// 带 401 处理的 fetch 封装
+export const fetchWithAdminAuth = createFetchWithAuth(
+  auth,
+  0, // 不设置超时
+  () => {
+    window.location.href = '/admin/login'
   }
-  return fetch(url, { ...options, headers })
-}
+)

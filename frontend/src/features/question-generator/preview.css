@@ -1,0 +1,302 @@
+/* ===== 预览区 ===== */
+.preview {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-height: calc(100vh - var(--space-16));
+  overflow: hidden;
+}
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-secondary);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--gray-200);
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  min-height: 50px;
+}
+
+.preview-header:empty {
+  display: none;
+}
+
+.question-count {
+  font-size: 0.8125rem;
+  color: var(--primary-700);
+  background: var(--primary-100);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.preview-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.btn-icon-action {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  color: var(--gray-600);
+}
+
+.btn-icon-action svg {
+  width: 18px;
+  height: 18px;
+}
+
+.btn-icon-action:hover:not(:disabled) {
+  background: white;
+  border-color: var(--primary-300);
+  color: var(--primary-600);
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.2);
+  transform: translateY(-1px);
+}
+
+.btn-icon-action:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-icon-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.preview-card {
+  flex: 1;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-6);
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--gray-200);
+}
+
+/* 占位符 */
+.placeholder {
+  height: 100%;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-400);
+  text-align: center;
+  padding: var(--space-8);
+}
+
+.placeholder-icon {
+  width: 100px;
+  height: 100px;
+  margin-bottom: var(--space-5);
+  background: linear-gradient(135deg, var(--gray-100) 0%, var(--gray-50) 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.placeholder-icon svg {
+  width: 48px;
+  height: 48px;
+  color: var(--gray-300);
+}
+
+.placeholder p {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--gray-400);
+  font-weight: 500;
+}
+
+.placeholder-hint {
+  font-size: 0.875rem;
+  color: var(--gray-300);
+  margin-top: var(--space-2);
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+/* Markdown 内容 */
+.markdown-body {
+  font-size: 0.9375rem;
+  line-height: 1.9;
+  color: var(--gray-800);
+  overflow-x: hidden;
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.markdown-body h1,
+.markdown-body h2 {
+  margin: var(--space-6) 0 var(--space-3);
+  font-size: 1.15em;
+  font-weight: 700;
+  color: var(--gray-900);
+  word-wrap: break-word;
+  max-width: 100%;
+}
+
+.markdown-body p {
+  margin: var(--space-2) 0;
+  word-wrap: break-word;
+  word-break: break-word;
+}
+
+.markdown-body ol,
+.markdown-body ul {
+  margin: var(--space-2) 0;
+  padding-left: var(--space-6);
+  max-width: 100%;
+  list-style-position: outside;
+}
+
+.markdown-body li {
+  margin: var(--space-1) 0;
+  word-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+  list-style-position: outside;
+}
+
+.markdown-body ol li,
+.markdown-body ul li {
+  display: list-item !important;
+}
+
+/* 答案部分 */
+.answer-section {
+  margin-top: var(--space-8);
+  padding-top: var(--space-5);
+  border-top: 2px dashed var(--gray-300);
+}
+
+/* 特殊符号样式 */
+.comparison-circle {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  line-height: 28px;
+  text-align: center;
+  border: 2px solid var(--gray-700);
+  border-radius: var(--radius-md);
+  margin: 0 var(--space-1);
+  font-size: 1rem;
+  vertical-align: middle;
+  background: white;
+}
+
+.blank-line {
+  display: inline-block;
+  min-width: 60px;
+  border-bottom: 2px solid var(--gray-700);
+  margin: 0 var(--space-1);
+  height: 24px;
+  vertical-align: bottom;
+}
+
+.blank-box {
+  display: inline-block;
+  min-width: 24px;
+  height: 24px;
+  border: 1px solid var(--gray-500);
+  margin: 0 var(--space-1);
+  vertical-align: middle;
+  background: white;
+  border-radius: var(--radius-sm);
+}
+
+.blank-parentheses {
+  display: inline-block;
+  min-width: 36px;
+  height: 24px;
+  border: 1px solid var(--gray-500);
+  border-radius: var(--radius-sm);
+  margin: 0 var(--space-1);
+  vertical-align: baseline;
+  background: white;
+}
+
+/* 题号样式 */
+.question-number {
+  display: inline-block;
+  min-width: 28px;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin-right: var(--space-1);
+}
+
+.markdown-body img {
+  max-width: 200px;
+  height: auto;
+  margin: var(--space-2) 0;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+}
+
+/* 分数样式 */
+sup {
+  font-size: 0.8em;
+  vertical-align: super;
+  line-height: 0;
+}
+
+sub {
+  font-size: 0.8em;
+  vertical-align: sub;
+  line-height: 0;
+}
+
+small {
+  font-size: 0.8em;
+  vertical-align: middle;
+}
+
+/* ===== Structured Preview 样式 ===== */
+.structured-preview {
+  font-size: 0.9375rem;
+  line-height: 1.9;
+  color: var(--gray-800);
+}
+
+.structured-preview .question-wrapper {
+  page-break-inside: avoid;
+  margin-bottom: var(--space-6);
+}
+
+/* 统一各题型组件的外部样式由父容器控制 */
+.question-content {
+  margin-bottom: var(--space-2);
+}
+
+.option-item {
+  margin-bottom: var(--space-1);
+}
+
+.sub-question {
+  margin-top: var(--space-3);
+  padding-left: var(--space-4);
+  border-left: 2px solid var(--gray-200);
+}

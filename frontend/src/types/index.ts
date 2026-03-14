@@ -2,6 +2,8 @@
  * 类型定义统一导出
  */
 
+import './mathjax'
+
 // ===================== 历史记录相关类型 =====================
 
 export interface GenerateResponse {
@@ -40,29 +42,4 @@ export interface QuestionRecordListResponse {
 
 export interface ShareUrlResponse {
   share_url: string
-}
-
-// ===================== MathJax 类型定义 =====================
-
-declare global {
-  interface Window {
-    MathJax?: {
-      tex: {
-        inlineMath: string[][]
-        displayMath: string[][]
-        processEscapes: boolean
-        processEnvironments: boolean
-        packages?: string[]
-      }
-      options: {
-        skipHtmlTags: string[]
-        ignoreHtmlClass?: string
-      }
-      svg: {
-        fontCache: string
-      }
-      typeset?: (elements: HTMLElement[]) => void
-      typesetPromise?: (elements: HTMLElement[]) => Promise<void>
-    }
-  }
 }

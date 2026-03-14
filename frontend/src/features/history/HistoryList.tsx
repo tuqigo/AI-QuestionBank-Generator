@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { getHistoryList, deleteHistory } from '@/core/api/history'
-import type { QuestionRecord, QuestionRecordListItem } from '@/types'
+import type { QuestionRecordListItem } from '@/types'
 
 // 内联样式 - 避免 CSS 加载延迟
 const inlineStyles = {

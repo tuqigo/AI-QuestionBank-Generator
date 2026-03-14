@@ -34,7 +34,7 @@ export async function fetchWithAdminAuth(
   options?: RequestInit
 ): Promise<Response> {
   const token = getAdminToken()
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   }
 

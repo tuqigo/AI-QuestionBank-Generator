@@ -1,0 +1,321 @@
+/* ===== 进度条 Modal ===== */
+.progress-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+  padding: var(--space-4);
+}
+
+.progress-modal {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-8);
+  width: 100%;
+  max-width: 400px;
+  box-shadow: var(--shadow-2xl);
+  animation: slideUp 0.3s ease-out;
+  border: 1px solid var(--gray-200);
+}
+
+.progress-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin-bottom: var(--space-2);
+  text-align: center;
+}
+
+.progress-subtitle {
+  font-size: 0.875rem;
+  color: var(--gray-500);
+  text-align: center;
+  margin-bottom: var(--space-6);
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 6px;
+  background: var(--gray-200);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: var(--space-5);
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff6b4a 0%, #ff8a65 100%);
+  border-radius: var(--radius-full);
+  transition: width 0.5s ease-out;
+  position: relative;
+}
+
+.progress-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.progress-steps {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--space-6);
+}
+
+.progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  position: relative;
+}
+
+.progress-step-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gray-200);
+  color: var(--gray-400);
+  transition: all 0.3s ease;
+}
+
+.progress-step-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.progress-step.active .progress-step-icon {
+  background: linear-gradient(135deg, #ff6b4a 0%, #ff8a65 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 107, 74, 0.4);
+  animation: pulse 1.5s infinite;
+}
+
+.progress-step.completed .progress-step-icon {
+  background: linear-gradient(135deg, var(--success-500) 0%, var(--success-600) 100%);
+  color: white;
+}
+
+.progress-step-label {
+  font-size: 0.6875rem;
+  color: var(--gray-500);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.progress-step.active .progress-step-label {
+  color: var(--primary-600);
+  font-weight: 600;
+}
+
+.progress-step.completed .progress-step-label {
+  color: var(--success-600);
+}
+
+.progress-time-hint {
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--gray-500);
+  padding: var(--space-3);
+  background: var(--gray-50);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+.progress-time-hint svg {
+  width: 14px;
+  height: 14px;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 进度 Modal 移动端适配 */
+@media (max-width: 640px) {
+  .progress-modal {
+    padding: var(--space-6);
+  }
+
+  .progress-title {
+    font-size: 1rem;
+  }
+
+  .progress-step-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .progress-step-label {
+    font-size: 0.625rem;
+  }
+}
+
+/* ===== 删除确认对话框 ===== */
+.delete-confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.2s ease-out;
+  padding: var(--space-4);
+}
+
+.delete-confirm-dialog {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  width: 100%;
+  max-width: 380px;
+  box-shadow: var(--shadow-2xl);
+  animation: slideUp 0.3s ease-out;
+  border: 1px solid var(--gray-200);
+}
+
+.delete-confirm-title {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin: 0 0 var(--space-2);
+}
+
+.delete-confirm-message {
+  font-size: 0.9375rem;
+  color: var(--gray-600);
+  margin: 0 0 var(--space-5);
+  line-height: 1.6;
+}
+
+.delete-confirm-record-title {
+  font-weight: 500;
+  color: var(--gray-800);
+  display: block;
+  margin: var(--space-1) 0;
+  padding: var(--space-2) var(--space-3);
+  background: var(--gray-50);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  word-break: break-word;
+}
+
+.delete-confirm-actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+}
+
+.btn-delete-confirm-cancel,
+.btn-delete-confirm-delete {
+  padding: var(--space-2) var(--space-5);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  border-radius: var(--radius-lg);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  min-width: 80px;
+}
+
+.btn-delete-confirm-cancel {
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border: 1px solid var(--gray-200);
+}
+
+.btn-delete-confirm-cancel:hover:not(:disabled) {
+  background: var(--gray-200);
+}
+
+.btn-delete-confirm-delete {
+  background: linear-gradient(135deg, var(--error-500) 0%, var(--error-600) 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+}
+
+.btn-delete-confirm-delete:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+}
+
+.btn-delete-confirm-cancel:disabled,
+.btn-delete-confirm-delete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 删除确认对话框移动端适配 */
+@media (max-width: 640px) {
+  .delete-confirm-dialog {
+    max-width: none;
+    padding: var(--space-5);
+  }
+
+  .delete-confirm-title {
+    font-size: 1rem;
+  }
+
+  .delete-confirm-message {
+    font-size: 0.875rem;
+  }
+
+  .btn-delete-confirm-cancel,
+  .btn-delete-confirm-delete {
+    min-width: 70px;
+    padding: var(--space-2) var(--space-4);
+    font-size: 0.875rem;
+  }
+}
