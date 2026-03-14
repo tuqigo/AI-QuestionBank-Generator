@@ -2,14 +2,11 @@
 
 import sqlite3
 import random
-from pathlib import Path
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Literal
 
 from utils.logger import auth_logger
-
-# 数据库文件路径
-DB_PATH = Path(__file__).parent.parent / "data" / "users.db"
+from config import DB_PATH
 
 
 # 验证码用途

@@ -10,11 +10,11 @@ from models.admin import (
     DisableUserRequest
 )
 from models.ai_generation_record import AiGenerationRecordFilter
-from services.admin_auth import verify_admin_password, create_admin_token, decode_admin_token, get_admin_token_expire_seconds
-from services.admin_operation_log import log_operation, get_operation_logs
-from services.user_store import get_all_users, get_user_by_id_with_status, set_user_disabled
-from services.question_record_store import get_user_records, get_record_by_id as get_question_record_by_id
-from services.ai_generation_record_store import get_records, get_record_by_id, get_user_records as get_ai_user_records
+from services.admin.admin_auth import verify_admin_password, create_admin_token, decode_admin_token, get_admin_token_expire_seconds
+from services.admin.admin_operation_log import log_operation, get_operation_logs
+from services.user.user_store import get_all_users, get_user_by_id_with_status, set_user_disabled
+from services.question.question_record_store import get_user_records, get_record_by_id as get_question_record_by_id
+from services.question.ai_generation_record_store import get_records, get_record_by_id, get_user_records as get_ai_user_records
 from utils.logger import api_logger
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])

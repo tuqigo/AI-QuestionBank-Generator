@@ -5,8 +5,8 @@ from pathlib import Path
 
 # SQL 文件路径
 SCHEMA_PATH = Path(__file__).parent / "schema.sql"
-# 数据库文件路径
-DB_PATH = Path(__file__).parent.parent / "data" / "users.db"
+# 数据库文件路径 - 使用 config 中的统一配置
+from config import DB_PATH
 
 
 def init_database():

@@ -5,10 +5,10 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
 from pydantic import BaseModel
 
-from routers.auth import get_current_user_email
-from services.qwen_vision import extend_questions_from_image
-from services.user_store import get_user
-from services.question_record_store import create_record, QuestionRecordCreate
+from api.v1.auth import get_current_user_email
+from services.ai.qwen_vision import extend_questions_from_image
+from services.user.user_store import get_user
+from services.question.question_record_store import create_record, QuestionRecordCreate
 from utils.logger import api_logger
 from utils.validators import validate_prompt
 

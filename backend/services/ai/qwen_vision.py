@@ -9,9 +9,9 @@ from dashscope import MultiModalConversation
 from requests.exceptions import SSLError, RequestException
 
 from config import DASHSCOPE_API_KEY, VISION_SYSTEM_PROMPT
-from services.qwen_client import generate_questions
+from services.ai.qwen_client import generate_questions
 from utils.logger import qwen_logger
-from services.ai_generation_record_store import create_record, AiGenerationRecordCreate
+from services.question.ai_generation_record_store import create_record, AiGenerationRecordCreate
 
 VISION_MODEL = os.getenv("QWEN_VISION_MODEL", "qwen-vl-plus")
 

@@ -1,13 +1,10 @@
 """管理员操作日志服务"""
 import sqlite3
-from pathlib import Path
 from typing import Optional, List, Tuple
 from datetime import datetime, timezone
 
 from utils.logger import api_logger
-
-# 数据库文件路径
-DB_PATH = Path(__file__).parent.parent / "data" / "users.db"
+from config import DB_PATH
 
 
 def _utc_now() -> str:

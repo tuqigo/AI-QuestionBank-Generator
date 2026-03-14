@@ -3,8 +3,8 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 
-from routers.auth import get_current_user_email
-from services.question_record_store import (
+from api.v1.auth import get_current_user_email
+from services.question.question_record_store import (
     create_record,
     get_record_by_id,
     get_record_by_short_id,
@@ -15,13 +15,13 @@ from services.question_record_store import (
     get_user_record_count,
     delete_oldest_record,
 )
-from services.question_store import (
+from services.question.question_store import (
     get_questions_by_record_id,
     get_question_by_id,
     get_question_answer,
     get_answers_by_record_id,
 )
-from services.user_store import get_user as get_user_by_email
+from services.user.user_store import get_user as get_user_by_email
 from models.question_record import (
     QuestionRecordCreate,
     QuestionRecordResponse,

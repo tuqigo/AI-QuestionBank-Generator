@@ -1,15 +1,12 @@
 """AI 生成记录存储 - SQLite"""
 
 import sqlite3
-from pathlib import Path
 from typing import Optional, List, Tuple
 from datetime import datetime, timezone
 
 from models.ai_generation_record import AiGenerationRecordCreate, AiGenerationRecordResponse, AiGenerationRecordFilter
 from utils.logger import user_logger
-
-# 数据库文件路径（与用户表同一个数据库）
-DB_PATH = Path(__file__).parent.parent / "data" / "users.db"
+from config import DB_PATH
 
 
 def _utc_now() -> str:

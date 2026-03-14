@@ -3,22 +3,32 @@ import os
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
 from typing import Optional
+import bcrypt
 
 from config import JWT_SECRET, JWT_ALGORITHM
 from utils.logger import auth_logger
 
-# 管理员密码（明文存储）
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
+# 管理员密码哈希存储
+ADMIN_PASSWORD_HASH = os.getenv("ADMIN_PASSWORD_HASH")
+if not ADMIN_PASSWORD_HASH:
+    # 首次运行时生成默认哈希（实际应通过 .env 配置）
+    # 默认密码：admin123
+    ADMIN_PASSWORD_HASH = bcrypt.hashpw("admin123".encode(), bcrypt.gensalt()).decode()
+    auth_logger.warning("使用默认管理员密码哈希（admin123），生产环境请配置 ADMIN_PASSWORD_HASH 环境变量")
 
 # 管理员 Token 有效期（2 小时）
 ADMIN_JWT_EXPIRE_MINUTES = int(os.getenv("ADMIN_JWT_EXPIRE_MINUTES", "120"))
 
 
 def verify_admin_password(password: str) -> bool:
-    """验证管理员密码"""
-    is_valid = password == ADMIN_PASSWORD
-    auth_logger.debug(f"管理员密码验证：{'成功' if is_valid else '失败'}")
-    return is_valid
+    """验证管理员密码（bcrypt 加密）"""
+    try:
+        is_valid = bcrypt.checkpw(password.encode(), ADMIN_PASSWORD_HASH.encode())
+        auth_logger.debug(f"管理员密码验证：{'成功' if is_valid else '失败'}")
+        return is_valid
+    except Exception as e:
+        auth_logger.error(f"管理员密码验证异常：{e}")
+        return False
 
 
 def create_admin_token() -> str:

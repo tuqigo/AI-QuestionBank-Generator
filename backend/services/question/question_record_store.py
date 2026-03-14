@@ -1,16 +1,13 @@
 """SQLite 用户题目记录存储"""
 
 import sqlite3
-from pathlib import Path
 from typing import Optional, List, Tuple
 from datetime import datetime, timezone
 
 from models.question_record import QuestionRecordCreate, QuestionRecordResponse, QuestionRecordListItem
 from utils.short_id import generate_short_id
 from utils.logger import user_logger
-
-# 数据库文件路径
-DB_PATH = Path(__file__).parent.parent / "data" / "users.db"
+from config import DB_PATH
 
 
 def _utc_now() -> str:

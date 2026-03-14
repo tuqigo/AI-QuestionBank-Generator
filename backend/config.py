@@ -1,11 +1,26 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
 
-DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY", "sk-2e75976e9ede47a6aa4ef4aeaf69ee16")
+# ==================== 路径配置 ====================
+# 项目根目录（backend/）
+BASE_DIR = Path(__file__).parent
+# 数据库文件路径
+DB_PATH = BASE_DIR / "data" / "users.db"
+
+# ==================== DashScope API 配置 ====================
+DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY")
+if not DASHSCOPE_API_KEY:
+    raise RuntimeError("DASHSCOPE_API_KEY 必须在环境变量中设置，请参考 .env.example 配置")
+
 QWEN_MODEL = os.getenv("QWEN_MODEL", "qwen-plus-latest")
-JWT_SECRET = os.getenv("JWT_SECRET", "change-me-in-production")
+
+# JWT Secret - 必须从环境变量读取安全随机值
+JWT_SECRET = os.getenv("JWT_SECRET")
+if not JWT_SECRET or JWT_SECRET == "change-me-in-production":
+    raise RuntimeError("JWT_SECRET 必须在环境变量中设置一个安全随机值，建议使用 secrets.token_urlsafe(32) 生成")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 

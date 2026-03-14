@@ -4,14 +4,11 @@
 """
 import sqlite3
 import json
-from pathlib import Path
 from typing import Optional, List, Dict, Any, Tuple
 from datetime import datetime, timezone
 from utils.logger import api_logger
 from utils.short_id import generate_short_id
-
-# 数据库文件路径
-DB_PATH = Path(__file__).parent.parent / "data" / "users.db"
+from config import DB_PATH
 
 
 def _utc_now() -> str:

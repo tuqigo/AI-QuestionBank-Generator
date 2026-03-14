@@ -17,7 +17,7 @@ from config import (
     QUESTION_SYSTEM_PROMPT
 )
 from utils.logger import qwen_logger
-from services.ai_generation_record_store import create_record, AiGenerationRecordCreate
+from services.question.ai_generation_record_store import create_record, AiGenerationRecordCreate
 
 # 设置 DashScope API Key
 if DASHSCOPE_API_KEY:
@@ -94,8 +94,8 @@ class QwenBatchManager:
         qwen_logger.info("[Batch 超时检查] 线程启动")
         while self.is_running:
             time.sleep(0.5)  # 每 0.5 秒检查一次，提高响应速度
+            batch_to_submit = None
             try:
-                should_submit = False
                 with self.lock:
                     if not self.request_queue:
                         continue
@@ -104,22 +104,22 @@ class QwenBatchManager:
                     first_req_time = self.request_queue[0].create_time
                     elapsed = time.time() - first_req_time
                     qwen_logger.info(f"[Batch 超时检查] 队列有 {len(self.request_queue)} 条，最早请求已等待 {elapsed:.2f}秒")
-                    if elapsed >= self.max_wait_seconds:
+
+                    if elapsed >= self.max_wait_seconds and len(self.request_queue) > 0:
                         qwen_logger.info(
                             f"[Batch 管理器] 超时触发提交，当前队列数={len(self.request_queue)}"
                         )
-                        should_submit = True
+                        # 在锁内复制要提交的请求
+                        batch_size = min(len(self.request_queue), self.batch_size)
+                        batch_to_submit = list(self.request_queue)[:batch_size]
+                        # 从队列移除已提交的请求
+                        self.request_queue = deque(list(self.request_queue)[batch_size:])
 
-                # 在锁外提交，避免死锁
-                if should_submit:
-                    try:
-                        self._submit_batch()
-                        qwen_logger.info("[Batch 超时检查] _submit_batch 完成")
-                    except Exception as e:
-                        qwen_logger.error(f"[Batch 超时检查] _submit_batch 异常：{e}")
-                        qwen_logger.error(f"堆栈跟踪:\n{traceback.format_exc()}")
+                # 在锁外处理批次
+                if batch_to_submit:
+                    self._process_batch(batch_to_submit)
             except Exception as e:
-                qwen_logger.error(f"[Batch 超时检查] 循环异常：{e}")
+                qwen_logger.error(f"[Batch 超时检查] 异常：{e}")
                 qwen_logger.error(f"堆栈跟踪:\n{traceback.format_exc()}")
 
     def add_request(self, user_prompt: str, user_id: Optional[int] = None) -> Future:
@@ -127,6 +127,7 @@ class QwenBatchManager:
         request = _BatchRequest(user_prompt, user_id)
         request.is_simple = self._is_simple_question(user_prompt)
 
+        batch_to_submit = None
         with self.lock:
             self.request_queue.append(request)
             queue_size = len(self.request_queue)
@@ -136,48 +137,48 @@ class QwenBatchManager:
             # 攒够批次大小则提交
             if queue_size >= self.batch_size:
                 qwen_logger.info(f"[Batch 管理器] 数量触发提交，队列数={queue_size}")
-                try:
-                    self._submit_batch()
-                    qwen_logger.info("[Batch 管理器] 数量触发提交完成")
-                except Exception as e:
-                    qwen_logger.error(f"[Batch 管理器] 数量触发提交异常：{e}")
-                    qwen_logger.error(f"堆栈跟踪:\n{traceback.format_exc()}")
+                # 在锁内复制要提交的请求
+                batch_to_submit = list(self.request_queue)[:self.batch_size]
+                # 从队列移除已提交的请求
+                self.request_queue = deque(list(self.request_queue)[self.batch_size:])
+
+        # 在锁外处理批次
+        if batch_to_submit:
+            self._process_batch(batch_to_submit)
 
         qwen_logger.info(f"[Batch 管理器] 返回 future，done={request.future.done()}")
         return request.future
 
-    def _submit_batch(self):
-        """提交 Batch 请求"""
-        qwen_logger.info("[Batch 提交] _submit_batch 被调用")
-        with self.lock:
-            if not self.request_queue:
-                qwen_logger.warning("[Batch 提交] 队列空，无法提交")
-                return
-
-            # 取出当前批次请求
-            batch_requests = list(self.request_queue)[:self.batch_size]
-            # 剩余请求留到下一批
-            self.request_queue = deque(list(self.request_queue)[self.batch_size:])
-            qwen_logger.info(f"[Batch 提交] 取出 {len(batch_requests)} 条请求，队列剩余 {len(self.request_queue)} 条")
+    def _process_batch(self, batch_requests: List[_BatchRequest]):
+        """处理批次请求（在锁外调用）"""
+        qwen_logger.info("[Batch 处理] _process_batch 被调用")
 
         if not batch_requests:
-            qwen_logger.warning("[Batch 提交] batch_requests 为空")
+            qwen_logger.warning("[Batch 处理] batch_requests 为空")
             return
 
-        # 按模型分组（Turbo/Plus 分开调用）
-        turbo_reqs = [req for req in batch_requests if req.is_simple]
-        plus_reqs = [req for req in batch_requests if not req.is_simple]
+        try:
+            # 按模型分组（Turbo/Plus 分开调用）
+            turbo_reqs = [req for req in batch_requests if req.is_simple]
+            plus_reqs = [req for req in batch_requests if not req.is_simple]
 
-        qwen_logger.info(f"[Batch 提交] turbo_reqs={len(turbo_reqs)}, plus_reqs={len(plus_reqs)}")
+            qwen_logger.info(f"[Batch 处理] turbo_reqs={len(turbo_reqs)}, plus_reqs={len(plus_reqs)}")
 
-        if turbo_reqs:
-            qwen_logger.info(f"[Batch 提交] 调用 turbo 模型")
-            self._call_model_batch(MODEL_CONFIG["turbo"], turbo_reqs)
-        if plus_reqs:
-            qwen_logger.info(f"[Batch 提交] 调用 plus 模型")
-            self._call_model_batch(MODEL_CONFIG["plus"], plus_reqs)
+            if turbo_reqs:
+                qwen_logger.info(f"[Batch 处理] 调用 turbo 模型")
+                self._call_model_batch(MODEL_CONFIG["turbo"], turbo_reqs)
+            if plus_reqs:
+                qwen_logger.info(f"[Batch 处理] 调用 plus 模型")
+                self._call_model_batch(MODEL_CONFIG["plus"], plus_reqs)
 
-        qwen_logger.info("[Batch 提交] _submit_batch 完成")
+            qwen_logger.info("[Batch 处理] _process_batch 完成")
+        except Exception as e:
+            qwen_logger.error(f"[Batch 处理] 异常：{e}")
+            qwen_logger.error(f"堆栈跟踪:\n{traceback.format_exc()}")
+            # 确保失败的请求也设置异常
+            for req in batch_requests:
+                if not req.future.done():
+                    req.future.set_exception(e)
 
     def _call_model_batch(self, model_name: str, batch_requests: List[_BatchRequest]):
         """

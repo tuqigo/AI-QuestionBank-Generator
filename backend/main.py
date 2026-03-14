@@ -1,13 +1,17 @@
 import os
-from fastapi import FastAPI
+from datetime import datetime
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
 
-from sql import init_database
+from db import init_database
+from utils.logger import api_logger
 
 # 初始化数据库
 init_database()
 
-from routers import questions, auth, extend, history, admin
+from api.v1 import questions, auth, extend, history, admin
 
 app = FastAPI(title="题小宝 API")
 
@@ -26,7 +30,7 @@ app.include_router(auth.router)
 app.include_router(questions.router)
 
 # 注册结构化题目路由（独立导入以避免循环依赖）
-from routers.questions_structured import router as structured_router
+from api.v1.questions_structured import router as structured_router
 app.include_router(structured_router)
 
 app.include_router(extend.router)
@@ -34,6 +38,49 @@ app.include_router(history.router)
 app.include_router(admin.router)
 # 注册分享路由（独立前缀，避免路由冲突）
 app.include_router(history.share_router)
+
+
+# ==================== 全局异常处理器 ====================
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """全局异常处理器 - 捕获所有未处理的异常"""
+    api_logger.error(f"全局异常：{exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "内部服务器错误，请联系管理员"}
+    )
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """HTTP 异常处理器"""
+    api_logger.warning(f"HTTP 异常：{exc.status_code} - {exc.detail}")
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail, "status_code": exc.status_code}
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """请求验证异常处理器"""
+    api_logger.warning(f"请求验证失败：{exc.errors()}")
+    return JSONResponse(
+        status_code=422,
+        content={"detail": "请求参数验证失败", "errors": exc.errors()}
+    )
+
+
+# ==================== 健康检查接口 ====================
+
+@app.get("/health")
+async def health_check():
+    """健康检查接口"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat()
+    }
 
 
 @app.get("/")

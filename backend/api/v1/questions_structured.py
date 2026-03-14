@@ -9,12 +9,12 @@ from typing import Optional, List
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 
-from services.qwen_client import generate_questions_async
-from services.question_record_store import create_record, QuestionRecordCreate, get_record_by_short_id
-from services.question_data_cleaner import QuestionDataCleaner
-from services.question_store import batch_insert_questions
-from routers.auth import get_current_user_email
-from services.user_store import get_user as get_user_by_email
+from services.ai.qwen_client import generate_questions_async
+from services.question.question_record_store import create_record, QuestionRecordCreate, get_record_by_short_id
+from services.ai.question_data_cleaner import QuestionDataCleaner
+from services.question.question_store import batch_insert_questions
+from api.v1.auth import get_current_user_email
+from services.user.user_store import get_user as get_user_by_email
 from utils.logger import api_logger, qwen_logger
 from utils.validators import validate_prompt
 from utils.json_validator import validate_question_json, extract_question_text

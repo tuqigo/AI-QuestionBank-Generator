@@ -71,7 +71,13 @@ export default function LoginModal({ onClose, onSuccess, mode: initialMode = 're
 
   // 验证密码强度
   const isValidPassword = (pwd: string) => {
-    return pwd.length >= 6 && pwd.length <= 32
+    if (pwd.length < 8 || pwd.length > 32) {
+      return false
+    }
+    if (!/[A-Za-z]/.test(pwd) || !/\d/.test(pwd)) {
+      return false
+    }
+    return true
   }
 
   // 发送验证码
@@ -97,9 +103,15 @@ export default function LoginModal({ onClose, onSuccess, mode: initialMode = 're
           purpose: 'register'
         }),
       })
-      const data = await res.json()
+      let data: any
+      const contentType = res.headers.get('content-type')
+      if (contentType && contentType.includes('application/json')) {
+        data = await res.json()
+      } else {
+        data = { detail: `服务器错误 (${res.status})` }
+      }
       if (!res.ok) {
-        throw new Error((data as { detail?: string }).detail || '发送失败')
+        throw new Error(data.detail || '发送失败')
       }
       setCountdown(60)
     } catch (e) {
@@ -127,7 +139,7 @@ export default function LoginModal({ onClose, onSuccess, mode: initialMode = 're
         return
       }
       if (!isValidPassword(passwordVal)) {
-        setError('密码至少 6 个字符')
+        setError('密码至少 8 个字符，且必须包含字母和数字')
         return
       }
       if (codeVal.length !== 6 || !/^\d+$/.test(codeVal)) {
@@ -142,9 +154,15 @@ export default function LoginModal({ onClose, onSuccess, mode: initialMode = 're
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: emailVal, password: passwordVal, code: codeVal }),
         })
-        const data = await res.json()
+        let data: any
+        const contentType = res.headers.get('content-type')
+        if (contentType && contentType.includes('application/json')) {
+          data = await res.json()
+        } else {
+          data = { detail: `服务器错误 (${res.status})` }
+        }
         if (!res.ok) {
-          throw new Error((data as { detail?: string }).detail || '注册失败')
+          throw new Error(data.detail || '注册失败')
         }
         setToken((data as { access_token: string }).access_token)
         onSuccess()
@@ -164,7 +182,7 @@ export default function LoginModal({ onClose, onSuccess, mode: initialMode = 're
         return
       }
       if (!isValidPassword(passwordVal)) {
-        setError('密码至少 6 个字符')
+        setError('密码至少 8 个字符，且必须包含字母和数字')
         return
       }
 
@@ -175,9 +193,15 @@ export default function LoginModal({ onClose, onSuccess, mode: initialMode = 're
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email: emailVal, password: passwordVal }),
         })
-        const data = await res.json()
+        let data: any
+        const contentType = res.headers.get('content-type')
+        if (contentType && contentType.includes('application/json')) {
+          data = await res.json()
+        } else {
+          data = { detail: `服务器错误 (${res.status})` }
+        }
         if (!res.ok) {
-          throw new Error((data as { detail?: string }).detail || '登录失败')
+          throw new Error(data.detail || '登录失败')
         }
         setToken((data as { access_token: string }).access_token)
         onSuccess()

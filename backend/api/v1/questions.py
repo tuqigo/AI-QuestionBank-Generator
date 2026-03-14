@@ -3,10 +3,10 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 
-from services.qwen_client import generate_questions_async
-from services.question_record_store import create_record, QuestionRecordCreate, get_record_by_short_id
-from routers.auth import get_current_user_email
-from services.user_store import get_user as get_user_by_email
+from services.ai.qwen_client import generate_questions_async
+from services.question.question_record_store import create_record, QuestionRecordCreate, get_record_by_short_id
+from api.v1.auth import get_current_user_email
+from services.user.user_store import get_user as get_user_by_email
 from utils.logger import api_logger, qwen_logger
 from utils.validators import validate_prompt
 
