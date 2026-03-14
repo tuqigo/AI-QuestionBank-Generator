@@ -50,6 +50,49 @@ npm run deploy
 
 ---
 
+## 前端架构说明
+
+### 双模式渲染
+
+前端支持**屏幕渲染**和**打印输出**两种模式：
+
+- **渲染模式** (`render`): 用于浏览器预览，包含丰富的视觉效果
+- **打印模式** (`print`): 用于打印/PDF 导出，布局紧凑
+
+### 题目组件位置
+
+| 组件 | 路径 | 说明 |
+|------|------|------|
+| QuestionRenderer | `src/components/QuestionRenderer.tsx` | 题目渲染入口 |
+| StructuredPreviewShared | `src/components/StructuredPreviewShared.tsx` | 预览/分享通用组件 |
+| 单选题 | `src/components/questions/SingleChoice.tsx` | 单选题渲染 |
+| 多选题 | `src/components/questions/MultipleChoice.tsx` | 多选题渲染 |
+| 判断题 | `src/components/questions/TrueFalse.tsx` | 判断题渲染 |
+| 填空题 | `src/components/questions/FillBlank.tsx` | 填空题渲染 |
+| 计算题 | `src/components/questions/Calculation.tsx` | 计算题渲染 |
+| 应用题 | `src/components/questions/WordProblem.tsx` | 应用题渲染 |
+| 阅读理解 | `src/components/questions/ReadComp.tsx` | 阅读理解渲染 |
+| 完形填空 | `src/components/questions/Cloze.tsx` | 完形填空渲染 |
+| 作文 | `src/components/questions/Essay.tsx` | 作文渲染 |
+
+### 打印功能
+
+打印功能由 `src/utils/printUtils.ts` 提供：
+
+```typescript
+import { handlePrint } from '@/utils/printUtils'
+
+// 调用打印
+await handlePrint(
+  undefined,           // markdown (可选，向后兼容)
+  title,               // 试卷标题
+  questions,           // 结构化题目数据
+  null                 // 答案 (可选)
+)
+```
+
+---
+
 ## 后端命令
 
 ### 基础命令

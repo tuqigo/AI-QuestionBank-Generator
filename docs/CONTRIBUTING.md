@@ -86,6 +86,64 @@ interface GenerateResponse {
 }
 ```
 
+#### 题目组件开发规范
+
+前端采用**双模式渲染架构**，支持屏幕显示和打印输出两种模式：
+
+**1. 模式定义**
+
+```typescript
+type RenderMode = 'render' | 'print'
+```
+
+- `render` - 屏幕渲染模式：包含背景色、圆角边框、较大间距等视觉效果
+- `print` - 打印输出模式：紧凑布局、无背景色、适合 PDF 导出
+
+**2. CSS 变量系统**
+
+通过 CSS 变量控制两种模式的样式差异：
+
+```css
+/* 渲染模式 */
+.question-render-mode {
+  --question-padding: 16px;
+  --option-background: #fafafa;
+  --question-border: 1px solid #e0e0e0;
+}
+
+/* 打印模式 */
+.question-print-mode {
+  --question-padding: 0;
+  --option-background: transparent;
+  --question-border: none;
+}
+```
+
+**3. 组件 Props 规范**
+
+所有题目组件必须支持 `mode` prop：
+
+```typescript
+interface QuestionProps {
+  question: StructuredQuestion
+  index: number
+  mode?: 'render' | 'print'
+}
+```
+
+**4. 配置中心**
+
+题型配置统一在 `src/config/questionConfig.ts` 管理：
+
+```typescript
+export interface QuestionTypeConfig {
+  showAnswerArea: boolean
+  answerAreaType: 'none' | 'blank' | 'lined' | 'grid'
+  optionLayout: 'horizontal' | 'vertical'
+  // ...
+}
+```
+
 ---
 
 ## 提交流程

@@ -40,7 +40,8 @@
       "Bash(cd /d/project/AI-QuestionBank-Generator && node test_math.js 2>&1)",
       "Bash(node test_math.js 2>&1)",
       "Bash(cd /d/project/AI-QuestionBank-Generator/frontend && node test_math_processor.js 2>&1)",
-      "Bash(node test_math_processor.js 2>&1)"
+      "Bash(node test_math_processor.js 2>&1)",
+      "Bash(ls:*)"
     ]
   }
 }
