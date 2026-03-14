@@ -37,7 +37,6 @@ export default function ReadComp({ question, index, mode = 'render' }: ReadCompP
 
       {/* 阅读材料区域 */}
       <div className="passage-section">
-        <div className="passage-title">阅读材料：</div>
         <div className="passage-content" dangerouslySetInnerHTML={{ __html: renderMarkdown(passageText) }} />
       </div>
 

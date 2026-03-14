@@ -59,7 +59,6 @@ function renderStructuredQuestions(questions: StructuredQuestion[], title: strin
     if (question.passage) {
       const passageText = question.passage.replace(/【阅读材料】/, '').replace(/【材料】/, '').trim()
       html += `<div style="margin: 16px 0; padding: 16px; background: #fff7ed; border-left: 4px solid #ff6b4a; border-radius: 8px;">`
-      html += `<div style="font-weight: 600; color: #c2410c; margin-bottom: 8px;">阅读材料：</div>`
       html += `<div style="font-size: 10.5pt; line-height: 1.8; color: #262626;">${renderMarkdown(passageText)}</div>`
       html += `</div>`
     }
