@@ -8,7 +8,7 @@ load_dotenv()
 # 项目根目录（backend/）
 BASE_DIR = Path(__file__).parent
 # 数据库文件路径
-DB_PATH = BASE_DIR / "data" / "users.db"
+DB_PATH = BASE_DIR / "data" / "tixiaobao.db"
 
 # ==================== DashScope API 配置 ====================
 DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY")

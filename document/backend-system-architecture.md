@@ -46,33 +46,41 @@
 │  FastAPI 应用 (uvicorn)                                          │
 │  - CORS 中间件                                                   │
 │  - JWT 认证中间件                                                 │
+│  - 全局异常处理                                                   │
 │  - 请求日志                                                      │
+│  - 健康检查端点 (/health)                                        │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                      业务逻辑层 (Services)                       │
+│                      业务逻辑层 (API Routes)                      │
 ├─────────────────────────────────────────────────────────────────┤
-│  auth  │  questions  │  history  │  extend  │  admin  │  routers │
+│  api/v1/                                                         │
+│  ├── auth.py         - 用户认证                                 │
+│  ├── questions.py    - 题目生成                                 │
+│  ├── questions_structured.py - 结构化题目                       │
+│  ├── history.py      - 历史记录                                 │
+│  ├── extend.py       - 图片扩展题                               │
+│  └── admin.py        - 管理后台                                 │
 └─────────────────────────────────────────────────────────────────┘
                               │
               ┌───────────────┼───────────────┐
               ▼               ▼               ▼
 ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
 │   数据访问层     │ │   AI 服务层      │ │   工具层        │
-│  (Stores)       │ │  (Qwen Client)  │ │  (Utils)        │
+│  (Services)     │ │  (AI Services)  │ │  (Utils)        │
 ├─────────────────┤ ├─────────────────┤ ├─────────────────┤
-│ user_store      │ │ qwen_client     │ │ logger          │
-│ question_store  │ │ qwen_vision     │ │ validators      │
-│ record_store    │ │ batch_manager   │ │ short_id        │
-│ admin_log_store │ │                 │ │ json_validator  │
+│ user/           │ │ ai/             │ │ logger          │
+│ question/       │ │ - qwen_client   │ │ validators      │
+│ admin/          │ │ - qwen_vision   │ │ short_id        │
+│                 │ │ - data_cleaner  │ │ json_validator  │
 └─────────────────┘ └─────────────────┘ └─────────────────┘
               │
               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                      数据存储层 (Data)                           │
 ├─────────────────────────────────────────────────────────────────┤
-│  SQLite Database (data/users.db)                                │
+│  SQLite Database (data/users.db) - 路径统一在 config.py 配置     │
 │  - users                - ai_generation_records                 │
 │  - otp_codes            - questions                             │
 │  - otp_rate_limit       - admin_operation_logs                  │
@@ -86,25 +94,52 @@
 - **FastAPI 应用**: 主应用入口，注册所有路由
 - **CORS 中间件**: 跨域请求控制，支持 Cloudflare Pages 部署
 - **认证中间件**: JWT Token 验证
+- **全局异常处理**: 统一错误响应格式
+- **健康检查**: `/health` 端点
 
-#### 2.2.2 业务逻辑层 (Routers)
+#### 2.2.2 业务逻辑层 (api/v1/)
 按业务领域划分的路由模块：
-- `auth`: 用户认证（注册、登录、找回密码）
-- `questions`: 题目生成（结构化/非结构化）
-- `history`: 历史记录管理
-- `extend`: 图片扩展题
-- `admin`: 管理后台
+- `auth.py`: 用户认证（注册、登录、找回密码）
+- `questions.py`: 题目生成（非结构化）
+- `questions_structured.py`: 结构化题目生成（JSON）
+- `history.py`: 历史记录管理（含分享接口）
+- `extend.py`: 图片扩展题
+- `admin.py`: 管理后台
 
-#### 2.2.3 数据访问层 (Stores)
-封装数据库操作：
-- `user_store`: 用户 CRUD
-- `question_store`: 题目数据 CRUD
-- `question_record_store`: 题目记录管理
-- `ai_generation_record_store`: AI 生成记录
+#### 2.2.3 服务层 (services/)
+按领域分组的业务逻辑：
 
-#### 2.2.4 AI 服务层
-- `qwen_client`: 通义千问文本生成（支持 Batch 批量调用）
-- `qwen_vision`: 通义千问视觉识别（图片题目识别）
+| 子目录 | 模块 | 说明 |
+|--------|------|------|
+| `services/ai/` | `qwen_client` | 通义千问文本生成（Batch 批量调用，线程安全） |
+| | `qwen_vision` | 通义千问视觉识别 |
+| | `question_data_cleaner` | AI 响应数据清洗 |
+| `services/user/` | `user_service` | 用户业务逻辑 |
+| | `user_store` | 用户数据访问 |
+| `services/question/` | `question_service` | 题目业务逻辑 |
+| | `question_store` | 题目数据访问 |
+| | `question_record_store` | 题目记录管理 |
+| | `ai_generation_record_store` | AI 生成记录 |
+| `services/admin/` | `admin_auth` | 管理员认证（bcrypt 加密） |
+| | `admin_operation_log` | 操作日志记录 |
+
+#### 2.2.4 核心层 (core/)
+- `security.py`: JWT、密码加密等安全功能
+- `exceptions.py`: 自定义异常类
+- `middleware.py`: 全局中间件
+
+#### 2.2.5 数据访问层
+封装数据库操作，统一使用 `config.DB_PATH`:
+
+```python
+# 所有服务文件使用统一配置
+from config import DB_PATH
+
+def _get_connection():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+```
 
 ---
 
@@ -140,7 +175,7 @@
 
 ```python
 # Token 配置
-JWT_SECRET = "your-random-secret"  # 生产环境需修改
+JWT_SECRET = os.getenv("JWT_SECRET")  # 必须设置，无默认值
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRE_MINUTES = 60 * 24 * 7  # 7 天
 
@@ -150,6 +185,19 @@ JWT_EXPIRE_MINUTES = 60 * 24 * 7  # 7 天
     "exp": 1234567890           # 过期时间戳
 }
 ```
+
+#### 3.1.4 密码策略
+
+- **最小长度**: 8 个字符
+- **最大长度**: 32 个字符
+- **复杂度要求**: 必须包含字母和数字
+- **加密方式**: bcrypt 哈希存储
+
+#### 3.1.5 管理员认证
+
+- **密码存储**: bcrypt 哈希（`ADMIN_PASSWORD_HASH` 环境变量）
+- **Token 验证**: 独立的 `decode_admin_token()` 函数
+- **操作日志**: 所有管理员操作记录到数据库
 
 ### 3.2 题目生成模块
 
@@ -165,6 +213,30 @@ max_wait_seconds = 3     # 超时自动提交
 # 模型路由
 - 简单问题 → qwen-turbo-latest (低成本)
 - 复杂问题 → qwen-plus-latest (高质量)
+```
+
+**线程安全修复** (重构后):
+
+```python
+# 问题：_check_timeout 在锁外调用 _submit_batch，存在竞态条件
+# 修复：在锁内复制队列，锁外处理批次
+
+def _check_timeout(self):
+    while self.is_running:
+        time.sleep(0.5)
+        batch_to_submit = None
+        with self.lock:
+            if not self.request_queue:
+                continue
+            first_req_time = self.request_queue[0].create_time
+            elapsed = time.time() - first_req_time
+            if elapsed >= self.max_wait_seconds:
+                batch_size = min(len(self.request_queue), self.batch_size)
+                batch_to_submit = list(self.request_queue)[:batch_size]
+                self.request_queue = deque(list(self.request_queue)[batch_size:])
+        # 在锁外处理批次
+        if batch_to_submit:
+            self._process_batch(batch_to_submit)
 ```
 
 #### 3.2.2 题目生成流程
@@ -336,6 +408,45 @@ user_question_records (题目记录表)
 
 详见 [数据库表结构](#附录 - 数据库表结构)
 
+### 4.3 数据库路径配置（重构后）
+
+**重构前问题**:
+- 每个文件重复定义 `DB_PATH`
+- 路径计算复杂 (`parent.parent.parent`)
+- 文件移动时需要更新路径逻辑
+- 违反 DRY 原则
+
+**重构后方案**:
+
+```python
+# config.py
+BASE_DIR = Path(__file__).parent  # backend/ 目录
+DB_PATH = BASE_DIR / "data" / "users.db"
+
+# 所有服务文件统一导入
+from config import DB_PATH
+
+def _get_connection():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+```
+
+**涉及文件** (全部改为 `from config import DB_PATH`):
+- `services/user/user_store.py`
+- `services/question/question_store.py`
+- `services/question/question_record_store.py`
+- `services/question/ai_generation_record_store.py`
+- `services/admin/admin_operation_log.py`
+- `models/otp.py`
+- `db/__init__.py`
+
+**优势**:
+- 代码减少约 39 行
+- 单一职责：路径配置只在一个地方管理
+- 易于维护：修改数据库位置只需改一处
+- 不易出错：无需计算多层 `parent`
+
 ---
 
 ## 5. API 设计
@@ -403,11 +514,14 @@ POST /api/history/{short_id}/share
 
 | 风险点 | 防护措施 |
 |--------|---------|
-| 密码存储 | bcrypt 加密 |
+| 密码存储 | bcrypt 加密（用户和管理员） |
 | Token 安全 | JWT + HTTPS 传输 |
 | OTP 防爆破 | 速率限制 + 尝试次数限制 |
 | SQL 注入 | 参数化查询 |
 | CORS | 限制允许的来源 |
+| API Key 泄露 | 环境变量强制设置，无默认值 |
+| 弱密码 | 密码策略（8 字符 + 字母 + 数字） |
+| 密钥弱 | JWT_SECRET 强制环境变量验证 |
 
 ### 6.3 日志记录
 
@@ -418,6 +532,34 @@ POST /api/history/{short_id}/share
 | 用户日志 | user_logger | 用户操作 |
 | AI 日志 | qwen_logger | AI 调用详情 |
 | 管理日志 | 数据库 | 管理员操作审计 |
+
+### 6.4 异常处理
+
+**全局异常处理器** (main.py):
+
+```python
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    api_logger.error(f"全局异常：{exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "内部服务器错误，请联系管理员"}
+    )
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail, "status_code": exc.status_code}
+    )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content={"detail": "请求参数验证失败", "errors": exc.errors()}
+    )
+```
 
 ---
 
@@ -450,13 +592,42 @@ POST /api/history/{short_id}/share
 
 ```bash
 # .env 配置
+# AI 服务 - 必须设置，无默认值
 DASHSCOPE_API_KEY=sk-your-api-key
 QWEN_MODEL=qwen-plus-latest
-JWT_SECRET=your-random-secret
-ALLOW_ORIGINS=http://localhost:5173,https://your-domain.com
+QWEN_VISION_MODEL=qwen-vl-plus
+
+# 认证 - 必须设置，无默认值
+JWT_SECRET=your-random-secret  # 使用强随机字符串
+
+# 管理员认证 - bcrypt 哈希
+ADMIN_PASSWORD_HASH=$2b$12$...  # bcrypt.hashpw("admin123", bcrypt.gensalt())
+
+# 邮件服务
 SMTP_HOST=smtp.163.com
-SMTP_USER=your-email
+SMTP_PORT=465
+SMTP_USER=your-email@163.com
 SMTP_PASS=your-password
+SMTP_FROM_NAME=题小宝
+SMTP_USE_TLS=true
+
+# OTP 配置
+OTP_EXPIRE_MINUTES=5
+
+# CORS 配置
+ALLOW_ORIGINS=http://localhost:5173,https://your-domain.com
+```
+
+**环境变量验证** (config.py):
+
+```python
+DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY")
+if not DASHSCOPE_API_KEY:
+    raise RuntimeError("DASHSCOPE_API_KEY 必须在环境变量中设置")
+
+JWT_SECRET = os.getenv("JWT_SECRET")
+if not JWT_SECRET:
+    raise RuntimeError("JWT_SECRET 必须在环境变量中设置")
 ```
 
 ### 7.3 启动命令
@@ -473,9 +644,43 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 ### A. 数据库表结构
 
-详见 [schema.sql](../backend/sql/schema.sql)
+详见 [schema.sql](../backend/db/schema.sql)
 
-### B. 相关文档
+### B. 安全特性
+
+**环境变量强制验证**:
+- `DASHSCOPE_API_KEY` - 无默认值，缺失则启动失败
+- `JWT_SECRET` - 无默认值，缺失则启动失败
+- `ADMIN_PASSWORD_HASH` - bcrypt 哈希存储
+
+**密码策略**:
+- 最小长度：8 字符
+- 必须包含：字母 + 数字
+- 加密方式：bcrypt
+
+**全局异常处理**:
+- 统一错误响应格式
+- 详细日志记录
+- 友好用户提示
+
+### C. 架构优化 (重构后)
+
+**数据库路径统一配置**:
+- 配置位置：`config.py`
+- 使用方式：所有服务 `from config import DB_PATH`
+- 代码减少：约 39 行
+
+**Batch 管理器线程安全**:
+- 问题：锁外调用存在竞态条件
+- 修复：锁内复制队列，锁外处理批次
+
+**服务层领域分组**:
+- `services/ai/` - AI 服务
+- `services/user/` - 用户服务
+- `services/question/` - 题目服务
+- `services/admin/` - 管理员服务
+
+### D. 相关文档
 - [后端代码结构](./backend-code-structure.md)
 - [前后端交互逻辑](./frontend-backend-interaction-logic.md)
 - [前端系统架构](./frontend-system-architecture.md)

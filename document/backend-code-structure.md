@@ -38,49 +38,60 @@ backend/
 │   ├── user.py                 # 用户模型（UserCreate, UserLogin, UserInDB）
 │   ├── admin.py                # 管理员模型
 │   ├── otp.py                  # OTP 验证码模型
-│   ├── structured_question.py  # 结构化题目模型
+│   ├── structured_question.py  # 结构化题目模型（QuestionBank, Question, MetaData）
 │   ├── question_record.py      # 题目记录模型
 │   ├── ai_generation_record.py # AI 生成记录模型
 │   └── admin_operation_log.py  # 管理员操作日志模型
 │
-├── routers/                    # 路由控制器层
+├── api/                        # API 路由层（原 routers/）
 │   ├── __init__.py
-│   ├── auth.py                 # 用户认证路由（登录/注册/找回密码）
-│   ├── questions.py            # 题目生成路由（非结构化）
-│   ├── questions_structured.py # 结构化题目生成路由
-│   ├── history.py              # 历史记录路由（含分享接口）
-│   ├── extend.py               # 图片扩展题路由
-│   └── admin.py                # 管理后台路由
+│   ├── deps.py                 # 统一依赖注入（认证、权限）
+│   └── v1/
+│       ├── auth.py             # 用户认证路由（登录/注册/找回密码）
+│       ├── questions.py        # 题目生成路由（非结构化）
+│       ├── questions_structured.py  # 结构化题目生成路由
+│       ├── history.py          # 历史记录路由（含分享接口）
+│       ├── extend.py           # 图片扩展题路由
+│       └── admin.py            # 管理后台路由
 │
-├── services/                   # 业务逻辑层
+├── services/                   # 业务逻辑层（按领域分组）
 │   ├── __init__.py
-│   ├── auth.py                 # JWT 认证服务
-│   ├── admin_auth.py           # 管理员认证
-│   ├── user_store.py           # 用户数据访问
-│   ├── question_store.py       # 题目数据访问
-│   ├── question_record_store.py# 题目记录存储
-│   ├── ai_generation_record_store.py  # AI 生成记录存储
-│   ├── admin_operation_log.py  # 管理员操作日志
-│   ├── qwen_client.py          # 通义千问客户端（Batch 批量调用）
-│   ├── qwen_vision.py          # 通义千问视觉识别
-│   ├── email_sender.py         # 邮件发送服务
-│   └── question_data_cleaner.py# 题目数据清洗
+│   ├── ai/                     # AI 服务
+│   │   ├── qwen_client.py      # 通义千问客户端（Batch 批量调用，线程安全）
+│   │   ├── qwen_vision.py      # 通义千问视觉识别
+│   │   └── question_data_cleaner.py  # 题目数据清洗
+│   ├── user/                   # 用户服务
+│   │   ├── user_service.py     # 用户业务逻辑
+│   │   └── user_store.py       # 用户数据访问
+│   ├── question/               # 题目服务
+│   │   ├── question_service.py # 题目业务逻辑
+│   │   ├── question_store.py   # 题目数据访问
+│   │   ├── question_record_store.py  # 题目记录存储
+│   │   └── ai_generation_record_store.py  # AI 生成记录存储
+│   └── admin/                  # 管理员服务
+│       ├── admin_auth.py       # 管理员认证（bcrypt 加密）
+│       └── admin_operation_log.py  # 管理员操作日志
 │
-├── sql/                        # 数据库 SQL 脚本
+├── db/                         # 数据层（原 sql/）
 │   ├── __init__.py             # 数据库初始化入口
 │   ├── schema.sql              # 表结构定义
 │   └── migrations/             # 数据库迁移脚本
 │       └── 001_add_questions_table.sql
 │
 ├── utils/                      # 工具函数层
+│   ├── __init__.py
 │   ├── logger.py               # 日志配置（多 logger 实例）
 │   ├── validators.py           # 输入校验函数
 │   ├── json_validator.py       # JSON Schema 校验
 │   └── short_id.py             # 短 ID 生成
 │
-├── config.py                   # 全局配置（从 .env 读取）
-├── config copy.py              # 配置备份（可删除）
-├── main.py                     # FastAPI 应用入口
+├── core/                       # 核心模块
+│   ├── security.py             # 安全相关（JWT、密码加密）
+│   ├── exceptions.py           # 自定义异常类
+│   └── middleware.py           # 全局中间件
+│
+├── config.py                   # 全局配置（环境变量、数据库路径）
+├── main.py                     # FastAPI 应用入口（含全局异常处理）
 ├── requirements.txt            # Python 依赖
 ├── .env                        # 环境变量（不提交到 git）
 └── .env.example                # 环境变量模板
@@ -92,17 +103,20 @@ backend/
 
 ```
 backend/
-├── routers/        # 路由层：处理 HTTP 请求/响应
-├── services/       # 服务层：业务逻辑实现
+├── api/            # 路由层：处理 HTTP 请求/响应
+├── core/           # 核心层：安全、异常、中间件
+├── services/       # 服务层：业务逻辑实现（按领域分组）
 ├── models/         # 模型层：数据结构定义
 ├── utils/          # 工具层：通用辅助函数
-└── sql/            # 数据层：SQL 脚本
+├── db/             # 数据层：SQL 脚本、数据库初始化
+└── config.py       # 配置层：统一配置管理
 ```
 
 **优点**:
 - 职责清晰：每层有明确的职责边界
 - 易于测试：各层可独立单元测试
 - 易于维护：修改影响范围可控
+- 领域分组：同领域代码集中，便于导航
 
 ---
 
@@ -126,15 +140,21 @@ FastAPI 应用入口：
 
 | 配置项 | 说明 | 默认值 |
 |--------|------|--------|
-| DASHSCOPE_API_KEY | 通义千问 API Key | - |
+| DASHSCOPE_API_KEY | 通义千问 API Key | **无** (必须设置) |
 | QWEN_MODEL | 文本生成模型 | qwen-plus-latest |
-| JWT_SECRET | JWT 密钥 | change-me-in-production |
+| JWT_SECRET | JWT 密钥 | **无** (必须设置) |
 | JWT_EXPIRE_MINUTES | Token 有效期 | 10080 (7 天) |
 | SMTP_HOST | SMTP 服务器 | smtp.163.com |
 | SMTP_USER | 邮箱账号 | - |
+| ADMIN_PASSWORD_HASH | 管理员密码哈希 | - |
 | QUESTION_SYSTEM_PROMPT | AI 系统提示词 | - |
 
-### 3.2 路由模块 (routers/)
+**重要**:
+- `DASHSCOPE_API_KEY` 和 `JWT_SECRET` 必须通过环境变量设置，启动时验证
+- 管理员密码使用 bcrypt 哈希存储，不保存明文
+- 数据库路径 `DB_PATH` 统一在此配置，所有服务通过 `from config import DB_PATH` 使用
+
+### 3.2 路由模块 (api/v1/)
 
 #### auth.py - 用户认证
 
@@ -191,24 +211,53 @@ FastAPI 应用入口：
 
 ### 3.3 服务模块 (services/)
 
-#### 认证服务
+服务层按领域分组为四个子目录：
 
-**auth.py** - JWT 认证：
-```python
-def verify_password(plain, hashed) -> bool
-def get_password_hash(password) -> str
-def create_access_token(data: dict) -> str
-def decode_token(token: str) -> Optional[str]
+```
+services/
+├── ai/         # AI 服务（Qwen 客户端、数据清洗）
+├── user/       # 用户服务（认证、存储）
+├── question/   # 题目服务（生成、存储、记录）
+└── admin/      # 管理员服务（认证、日志）
 ```
 
-**admin_auth.py** - 管理员认证：
+#### AI 服务 (services/ai/)
+
+**qwen_client.py** - 通义千问客户端（线程安全）：
+
 ```python
-def verify_admin_password(password) -> bool
-def create_admin_token() -> str
-def decode_admin_token(token) -> Optional[str]
+# 核心类
+class QwenBatchManager:
+    """Batch 请求管理器
+    - 数量触发：攒够 batch_size 条立即提交
+    - 超时触发：距离首个请求超过 max_wait_seconds 自动提交
+    - 线程安全：锁内复制队列，锁外处理批次
+    """
+
+# 主要函数
+def generate_questions_async(user_prompt, user_id) -> Tuple[str, str]
+def _call_model_batch(model_name, batch_requests) -> None
+def _process_batch(batch_requests: List[_BatchRequest]) -> None  # 线程安全
 ```
 
-#### 数据访问服务
+**qwen_vision.py** - 视觉识别：
+```python
+def analyze_image(image_path, prompt) -> str
+```
+
+**question_data_cleaner.py** - 数据清洗：
+```python
+class QuestionDataCleaner:
+    @staticmethod
+    def parse_ai_response(content) -> Tuple[MetaData, List[dict]]
+```
+
+#### 用户服务 (services/user/)
+
+**user_service.py** - 用户业务逻辑：
+```python
+# 用户相关业务逻辑封装
+```
 
 **user_store.py** - 用户数据访问：
 ```python
@@ -217,6 +266,13 @@ def create_user(email, password) -> UserInDB
 def update_password(email, new_password) -> bool
 def get_all_users(page, page_size) -> Tuple[List, int, bool]
 def set_user_disabled(user_id, is_disabled) -> bool
+```
+
+#### 题目服务 (services/question/)
+
+**question_service.py** - 题目业务逻辑：
+```python
+# 题目相关业务逻辑封装
 ```
 
 **question_store.py** - 题目数据访问：
@@ -236,37 +292,35 @@ def soft_delete_record(record_id, user_id) -> bool
 def generate_share_token(record_id, user_id) -> str
 ```
 
-#### AI 服务
-
-**qwen_client.py** - 通义千问客户端：
-
+**ai_generation_record_store.py** - AI 生成记录存储：
 ```python
-# 核心类
-class QwenBatchManager:
-    """Batch 请求管理器
-    - 数量触发：攒够 batch_size 条立即提交
-    - 超时触发：距离首个请求超过 max_wait_seconds 自动提交
-    """
-
-# 主要函数
-def generate_questions_async(user_prompt, user_id) -> Tuple[str, str]
-def _call_model_batch(model_name, batch_requests) -> None
+def create_record(record: AiGenerationRecordCreate) -> int
+def get_record_by_id(record_id: int) -> Optional[AiGenerationRecordResponse]
+def get_records(filter, page, page_size) -> Tuple[List, int, bool]
+def get_user_records(user_id, page, page_size) -> Tuple[List, int, bool]
+def get_statistics_by_user(user_id: int) -> dict
 ```
 
-**qwen_vision.py** - 视觉识别：
+#### 管理员服务 (services/admin/)
+
+**admin_auth.py** - 管理员认证（bcrypt 加密）：
 ```python
-def analyze_image(image_path, prompt) -> str
+# 密码使用 bcrypt 哈希存储
+ADMIN_PASSWORD_HASH = os.getenv("ADMIN_PASSWORD_HASH")
+
+def verify_admin_password(password) -> bool:
+    return bcrypt.checkpw(password.encode(), ADMIN_PASSWORD_HASH.encode())
+
+def create_admin_token() -> str
+def decode_admin_token(token) -> Optional[str]
 ```
 
-#### 工具服务
-
-**email_sender.py** - 邮件发送：
+**admin_operation_log.py** - 管理员操作日志：
 ```python
-def send_otp_email(email, code, expire_minutes, subject_prefix) -> bool
+def log_operation(operator, action, target_type, target_id, ip, details) -> int
+def get_operation_logs(page, page_size) -> Tuple[List[dict], int, bool]
+def get_logs_by_target(target_type, target_id) -> List[dict]
 ```
-
-**question_data_cleaner.py** - 数据清洗：
-```python
 class QuestionDataCleaner:
     @staticmethod
     def parse_ai_response(content) -> Tuple[MetaData, List[dict]]
@@ -335,11 +389,25 @@ def generate_short_id() -> str
 
 ## 4. 数据库操作
 
-### 4.1 数据库连接
+### 4.1 数据库连接（重构后）
+
+**重构前问题**: 每个文件重复定义 `DB_PATH`，违反 DRY 原则
 
 ```python
-# 统一连接管理
+# 重构前 - 6 个文件都有重复代码
 DB_PATH = Path(__file__).parent.parent / "data" / "users.db"
+DB_PATH = Path(__file__).parent.parent.parent / "data" / "users.db"  # 路径混乱
+```
+
+**重构后 - 统一配置**:
+
+```python
+# config.py
+BASE_DIR = Path(__file__).parent  # backend/ 目录
+DB_PATH = BASE_DIR / "data" / "users.db"
+
+# 任何需要数据库的文件
+from config import DB_PATH
 
 def _get_connection() -> sqlite3.Connection:
     conn = sqlite3.connect(DB_PATH)
@@ -347,10 +415,16 @@ def _get_connection() -> sqlite3.Connection:
     return conn
 ```
 
+**优势**:
+- 单一职责：路径配置只在一个地方管理
+- 易于维护：修改数据库位置只需改一处
+- 不易出错：无需计算 `parent.parent.parent...`
+- 代码清晰：导入即用，意图明确
+
 ### 4.2 初始化流程
 
 ```python
-# sql/__init__.py
+# db/__init__.py
 def init_database():
     # 1. 创建 data 目录
     # 2. 连接数据库
@@ -361,7 +435,7 @@ def init_database():
 ### 4.3 迁移管理
 
 ```
-sql/migrations/
+db/migrations/
 └── 001_add_questions_table.sql  # 添加 questions 表
 ```
 
@@ -496,6 +570,28 @@ pytest tests/
 | dashscope | 通义千问 SDK |
 | aiosmtplib | 异步邮件发送 |
 
-### B. 相关文档
+### B. 重构说明
+
+**数据库路径配置重构**:
+- 问题：每个文件重复定义 `DB_PATH`，违反 DRY 原则
+- 解决：在 `config.py` 统一配置，所有文件导入使用
+- 代码减少：约 39 行
+
+**服务层按领域分组**:
+- 原结构：扁平 `services/` 目录
+- 新结构：`services/ai/`, `services/user/`, `services/question/`, `services/admin/`
+- 优势：同领域代码集中，便于导航和维护
+
+**路由层重命名**:
+- 原目录：`routers/`
+- 新目录：`api/v1/`
+- 优势：更清晰的 API 版本管理
+
+**数据库目录重命名**:
+- 原目录：`sql/`
+- 新目录：`db/`
+- 优势：更准确的语义
+
+### C. 相关文档
 - [后端系统架构](./backend-system-architecture.md)
 - [前后端交互逻辑](./frontend-backend-interaction-logic.md)
