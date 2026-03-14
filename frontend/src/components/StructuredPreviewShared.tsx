@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import type { StructuredQuestion, MetaData } from '@/types/structured'
+import type { StructuredQuestion } from '@/types/structured'
 import QuestionRenderer from '@/components/QuestionRenderer'
 import './StructuredPreviewShared.css'
 
 interface StructuredPreviewSharedProps {
   questions: StructuredQuestion[]
-  meta?: MetaData | null
+  meta?: { record_id?: number; short_id?: string; title?: string; created_at?: string } | null
   recordTitle?: string // 历史记录的标题（如果存在）
   mode?: 'render' | 'print'  // 渲染模式：render（默认）或 print
 }

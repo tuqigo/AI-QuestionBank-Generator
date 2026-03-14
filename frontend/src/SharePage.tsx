@@ -1,31 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { getToken } from '@/auth'
-import { getSharedRecord } from '@/api/history'
+import { getSharedRecord, getSharedQuestions } from '@/api/history'
 import type { QuestionRecord } from '@/types'
 import type { StructuredQuestion } from '@/types/structured'
 import StructuredPreviewShared from '@/components/StructuredPreviewShared'
 import './SharePage.css'
-
-// 解析结构化数据
-function parseStructuredData(aiResponse: string): {
-  questions: StructuredQuestion[]
-  meta: any | null
-} {
-  try {
-    const data = JSON.parse(aiResponse)
-    return {
-      questions: data.questions || [],
-      meta: data.meta || null
-    }
-  } catch (e) {
-    console.error('解析结构化数据失败:', e)
-    return {
-      questions: [],
-      meta: null
-    }
-  }
-}
 
 export default function SharePage() {
   const { id } = useParams<{ id: string }>()
@@ -39,7 +19,7 @@ export default function SharePage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [structuredData, setStructuredData] = useState<{
     questions: StructuredQuestion[]
-    meta: any | null
+    meta: { record_id: number; short_id: string; title: string; created_at: string } | null
   } | null>(null)
 
   // 检查登录状态
@@ -57,12 +37,18 @@ export default function SharePage() {
     }
     hasLoadedRef.current = true
 
-    getSharedRecord(id, token)
-      .then((data: QuestionRecord) => {
-        setRecord(data)
-        // 解析结构化数据
-        const parsed = parseStructuredData(data.ai_response)
-        setStructuredData(parsed)
+    // 并行调用两个接口：获取记录基本信息和结构化题目数据
+    Promise.all([
+      getSharedRecord(id, token),
+      getSharedQuestions(id, token)
+    ])
+      .then(([recordData, questionsData]) => {
+        setRecord(recordData)
+        // 使用新接口返回的结构化数据
+        setStructuredData({
+          questions: questionsData.questions,
+          meta: questionsData.meta
+        })
       })
       .catch((err: unknown) => {
         console.error('加载失败:', err)
