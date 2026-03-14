@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Optional, List, Tuple
 from datetime import datetime, timezone
 
-from models.question_record import QuestionRecordCreate, QuestionRecordResponse
+from models.question_record import QuestionRecordCreate, QuestionRecordResponse, QuestionRecordListItem
 from utils.short_id import generate_short_id
 from utils.logger import user_logger
 
@@ -162,7 +162,7 @@ def get_user_records(
     user_id: int,
     cursor: Optional[int] = None,
     limit: int = 20
-) -> Tuple[List[QuestionRecordResponse], Optional[int], bool]:
+) -> Tuple[List[QuestionRecordListItem], Optional[int], bool]:
     """获取用户的题目记录列表（游标分页）
     返回：(记录列表，下一个 cursor, 是否还有更多)
     """
@@ -170,11 +170,11 @@ def get_user_records(
     conn = _get_connection()
     try:
         # 游标分页：查询 cursor 之前的记录（因为 ID 递减）
+        # 列表接口只返回精简字段
         if cursor:
             rows = conn.execute(
                 """
-                SELECT id, short_id, title, prompt_type, prompt_content, image_path,
-                       ai_response, is_deleted, created_at
+                SELECT id, short_id, title, prompt_type, created_at
                 FROM user_question_records
                 WHERE user_id = ? AND is_deleted = 0 AND id < ?
                 ORDER BY id DESC
@@ -185,8 +185,7 @@ def get_user_records(
         else:
             rows = conn.execute(
                 """
-                SELECT id, short_id, title, prompt_type, prompt_content, image_path,
-                       ai_response, is_deleted, created_at
+                SELECT id, short_id, title, prompt_type, created_at
                 FROM user_question_records
                 WHERE user_id = ? AND is_deleted = 0
                 ORDER BY id DESC
@@ -197,7 +196,7 @@ def get_user_records(
 
         results = []
         for row in rows:
-            results.append(_row_to_response(row))
+            results.append(_row_to_list_item(row))
 
         # 判断是否有更多
         has_more = False
@@ -310,6 +309,17 @@ def delete_oldest_record(user_id: int) -> bool:
     except Exception as e:
         user_logger.error(f"删除最早记录失败：{e}")
         return False
+
+
+def _row_to_list_item(row: sqlite3.Row) -> QuestionRecordListItem:
+    """将数据库行转换为列表项响应（精简版）"""
+    return QuestionRecordListItem(
+        id=row["id"],
+        short_id=row["short_id"],
+        title=row["title"],
+        prompt_type=row["prompt_type"],
+        created_at=row["created_at"]
+    )
 
 
 def _row_to_response(row: sqlite3.Row) -> QuestionRecordResponse:

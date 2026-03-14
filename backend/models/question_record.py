@@ -20,7 +20,7 @@ class QuestionRecordUpdate(BaseModel):
 
 
 class QuestionRecordResponse(BaseModel):
-    """题目记录响应模型"""
+    """题目记录响应模型（详情）"""
     id: int
     short_id: str  # 对外暴露的短 ID
     title: str
@@ -35,9 +35,21 @@ class QuestionRecordResponse(BaseModel):
         from_attributes = True
 
 
+class QuestionRecordListItem(BaseModel):
+    """题目记录列表项（精简版）"""
+    id: int
+    short_id: str
+    title: str
+    prompt_type: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
 class QuestionRecordListResponse(BaseModel):
     """题目记录列表响应（游标分页）"""
-    data: List[QuestionRecordResponse]
+    data: List[QuestionRecordListItem]
     next_cursor: Optional[int] = None
     has_more: bool = False
 

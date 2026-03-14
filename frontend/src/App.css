@@ -1567,6 +1567,128 @@ small {
   }
 }
 
+/* ===== 删除确认对话框 ===== */
+.delete-confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.2s ease-out;
+  padding: var(--space-4);
+}
+
+.delete-confirm-dialog {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  width: 100%;
+  max-width: 380px;
+  box-shadow: var(--shadow-2xl);
+  animation: slideUp 0.3s ease-out;
+  border: 1px solid var(--gray-200);
+}
+
+.delete-confirm-title {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin: 0 0 var(--space-2);
+}
+
+.delete-confirm-message {
+  font-size: 0.9375rem;
+  color: var(--gray-600);
+  margin: 0 0 var(--space-5);
+  line-height: 1.6;
+}
+
+.delete-confirm-record-title {
+  font-weight: 500;
+  color: var(--gray-800);
+  display: block;
+  margin: var(--space-1) 0;
+  padding: var(--space-2) var(--space-3);
+  background: var(--gray-50);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  word-break: break-word;
+}
+
+.delete-confirm-actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+}
+
+.btn-delete-confirm-cancel,
+.btn-delete-confirm-delete {
+  padding: var(--space-2) var(--space-5);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  border-radius: var(--radius-lg);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  min-width: 80px;
+}
+
+.btn-delete-confirm-cancel {
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border: 1px solid var(--gray-200);
+}
+
+.btn-delete-confirm-cancel:hover:not(:disabled) {
+  background: var(--gray-200);
+}
+
+.btn-delete-confirm-delete {
+  background: linear-gradient(135deg, var(--error-500) 0%, var(--error-600) 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+}
+
+.btn-delete-confirm-delete:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+}
+
+.btn-delete-confirm-cancel:disabled,
+.btn-delete-confirm-delete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 删除确认对话框移动端适配 */
+@media (max-width: 640px) {
+  .delete-confirm-dialog {
+    max-width: none;
+    padding: var(--space-5);
+  }
+
+  .delete-confirm-title {
+    font-size: 1rem;
+  }
+
+  .delete-confirm-message {
+    font-size: 0.875rem;
+  }
+
+  .btn-delete-confirm-cancel,
+  .btn-delete-confirm-delete {
+    min-width: 70px;
+    padding: var(--space-2) var(--space-4);
+    font-size: 0.875rem;
+  }
+}
+
 /* ===== Structured Preview 样式 ===== */
 .structured-preview {
   font-size: 0.9375rem;

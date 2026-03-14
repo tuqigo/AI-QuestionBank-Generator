@@ -18,8 +18,17 @@ export interface QuestionRecord {
   created_at: string
 }
 
+/** 历史记录列表项（精简版） */
+export interface QuestionRecordListItem {
+  id: number
+  short_id: string
+  title: string
+  prompt_type: 'text' | 'image'
+  created_at: string
+}
+
 export interface QuestionRecordListResponse {
-  data: QuestionRecord[]
+  data: QuestionRecordListItem[]
   next_cursor: number | null
   has_more: boolean
 }

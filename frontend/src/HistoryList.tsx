@@ -52,11 +52,12 @@ interface HistoryDropdownProps {
 }
 
 export default function HistoryDropdown({ isOpen, onClose }: HistoryDropdownProps) {
-  const [records, setRecords] = useState<QuestionRecord[]>([])
+  const [records, setRecords] = useState<QuestionRecordListItem[]>([])
   const [nextCursor, setNextCursor] = useState<number | null>(null)
   const [hasMore, setHasMore] = useState(false)
   const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState<number | null>(null)
+  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; shortId: string; title: string } | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -118,18 +119,27 @@ export default function HistoryDropdown({ isOpen, onClose }: HistoryDropdownProp
     }
   }, [hasMore, loading, nextCursor])
 
-  const handleDelete = async (shortId: string) => {
-    if (!confirm('确定要删除这条记录吗？')) return
-    setDeleting(shortId as unknown as number)
+  const handleDeleteRequest = (shortId: string, title: string) => {
+    setDeleteConfirm({ open: true, shortId, title })
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirm) return
+    setDeleting(deleteConfirm.shortId as unknown as number)
     try {
-      await deleteHistory(shortId)
-      setRecords(records.filter(r => r.short_id !== shortId))
+      await deleteHistory(deleteConfirm.shortId)
+      setRecords(records.filter(r => r.short_id !== deleteConfirm.shortId))
+      setDeleteConfirm(null)
     } catch (error) {
       console.error('删除失败:', error)
       alert('删除失败')
     } finally {
       setDeleting(null)
     }
+  }
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirm(null)
   }
 
   const formatDate = (dateStr: string) => {
@@ -200,7 +210,7 @@ export default function HistoryDropdown({ isOpen, onClose }: HistoryDropdownProp
                 <button
                   onClick={(e) => {
                     e.preventDefault()
-                    handleDelete(record.short_id)
+                    handleDeleteRequest(record.short_id, record.title)
                   }}
                   disabled={deleting === (record.short_id as unknown as number)}
                   className="btn-delete-item"
@@ -223,6 +233,31 @@ export default function HistoryDropdown({ isOpen, onClose }: HistoryDropdownProp
             }}>加载中...</div>
           )}
         </>
+      )}
+
+      {/* 自定义删除确认对话框 */}
+      {deleteConfirm && (
+        <div className="delete-confirm-overlay">
+          <div className="delete-confirm-dialog">
+            <h4 className="delete-confirm-title">确定删除？</h4>
+            <div className="delete-confirm-actions">
+              <button
+                className="btn-delete-confirm-cancel"
+                onClick={handleDeleteCancel}
+                disabled={deleting !== null}
+              >
+                取消
+              </button>
+              <button
+                className="btn-delete-confirm-delete"
+                onClick={handleDeleteConfirm}
+                disabled={deleting !== null}
+              >
+                {deleting === (deleteConfirm.shortId as unknown as number) ? '删除中...' : '删除'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
