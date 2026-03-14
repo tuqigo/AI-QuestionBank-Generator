@@ -1,11 +1,18 @@
 /**
  * 阅读理解组件
+ * 支持所有题型的子题目
  */
 import { useMemo } from 'react'
 import { QuestionRendererProps } from '@/types/structured'
 import { renderMarkdown } from '@/utils/markdownProcessor'
 import SingleChoice from './SingleChoice'
+import MultipleChoice from './MultipleChoice'
+import TrueFalse from './TrueFalse'
 import FillBlank from './FillBlank'
+import Calculation from './Calculation'
+import WordProblem from './WordProblem'
+import Cloze from './Cloze'
+import Essay from './Essay'
 
 interface ReadCompProps extends QuestionRendererProps {
   mode?: 'render' | 'print'
@@ -52,8 +59,22 @@ export default function ReadComp({ question, index, mode = 'render' }: ReadCompP
           switch (subQ.type) {
             case 'SINGLE_CHOICE':
               return <SingleChoice key={subIdx} {...subQuestionProps as any} />
+            case 'MULTIPLE_CHOICE':
+              return <MultipleChoice key={subIdx} {...subQuestionProps as any} />
+            case 'TRUE_FALSE':
+              return <TrueFalse key={subIdx} {...subQuestionProps as any} />
             case 'FILL_BLANK':
               return <FillBlank key={subIdx} {...subQuestionProps as any} />
+            case 'CALCULATION':
+              return <Calculation key={subIdx} {...subQuestionProps as any} />
+            case 'WORD_PROBLEM':
+              return <WordProblem key={subIdx} {...subQuestionProps as any} />
+            case 'CLOZE':
+              return <Cloze key={subIdx} {...subQuestionProps as any} />
+            case 'ESSAY':
+              return <Essay key={subIdx} {...subQuestionProps as any} />
+            case 'POETRY_APP':
+              // 古诗文鉴赏/默写，使用默认渲染
             default:
               return (
                 <div key={subIdx} className="question-item question-sub">
@@ -61,6 +82,19 @@ export default function ReadComp({ question, index, mode = 'render' }: ReadCompP
                     <span className="question-number">{subIdx + 1}. </span>
                     <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderMarkdown(subQ.stem) }} />
                   </div>
+                  {subQ.options && subQ.options.length > 0 && (
+                    <div className="question-options">
+                      {subQ.options.map((opt, optIdx) => {
+                        const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
+                        return (
+                          <div key={optIdx} className="option-item">
+                            <span className="option-label">{letters[optIdx] || String.fromCharCode(65 + optIdx)}. </span>
+                            <span className="option-text" dangerouslySetInnerHTML={{ __html: renderMarkdown(opt) }} />
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
               )
           }
