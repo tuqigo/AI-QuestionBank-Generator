@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://example.com/question.schema.json",
   "title": "AI Question Bank Schema",
-  "description": "小学生AI题库生成器 - 结构化题目数据_schema",
+  "description": "中小学AI题库生成器 - 结构化题目数据_schema",
   "type": "object",
   "required": ["meta", "questions"],
   "properties": {
@@ -23,7 +23,7 @@
         },
         "title": {
           "type": "string",
-          "description": "试卷标题，简洁规范"
+          "description": "试卷标题，格式为「年级+学科+知识点/题型」"
         }
       },
       "additionalProperties": false
@@ -54,9 +54,7 @@
             "FILL_BLANK",
             "CALCULATION",
             "WORD_PROBLEM",
-            "GEOMETRY",
             "READ_COMP",
-            "POETRY_APP",
             "CLOZE",
             "ESSAY"
           ]
@@ -129,20 +127,14 @@
         {
           "allOf": [
             {"$ref": "#/definitions/QuestionWithOptions"},
-            {
-              "properties": {"type": {"const": "SINGLE_CHOICE"}},
-              "required": ["options"]
-            }
+            {"properties": {"type": {"const": "SINGLE_CHOICE"}}}
           ],
-          "description": "单选题：必须有4个选项（AI 会按提示生成）"
+          "description": "单选题：必须有4个选项"
         },
         {
           "allOf": [
             {"$ref": "#/definitions/QuestionWithOptions"},
-            {
-              "properties": {"type": {"const": "MULTIPLE_CHOICE"}},
-              "required": ["options"]
-            }
+            {"properties": {"type": {"const": "MULTIPLE_CHOICE"}}}
           ],
           "description": "多选题：至少2个选项"
         },
@@ -151,35 +143,28 @@
             {"$ref": "#/definitions/BaseQuestion"},
             {"properties": {"type": {"const": "TRUE_FALSE"}}}
           ],
-          "description": "判断题：只有题干和知识点"
+          "description": "判断题"
         },
         {
           "allOf": [
             {"$ref": "#/definitions/BaseQuestion"},
             {"properties": {"type": {"const": "FILL_BLANK"}}}
           ],
-          "description": "填空题：题干使用______或[  ]表示空格"
+          "description": "填空题：题干用___表示挖空"
         },
         {
           "allOf": [
             {"$ref": "#/definitions/BaseQuestion"},
             {"properties": {"type": {"const": "CALCULATION"}}}
           ],
-          "description": "计算题：数学计算/解方程/脱式计算"
+          "description": "数学计算题/解方程/脱式计算"
         },
         {
           "allOf": [
             {"$ref": "#/definitions/BaseQuestion"},
             {"properties": {"type": {"const": "WORD_PROBLEM"}}}
           ],
-          "description": "应用题：有实际场景"
-        },
-        {
-          "allOf": [
-            {"$ref": "#/definitions/BaseQuestion"},
-            {"properties": {"type": {"const": "GEOMETRY"}}}
-          ],
-          "description": "几何题：涉及图形"
+          "description": "数学应用题"
         },
         {
           "allOf": [
@@ -191,25 +176,18 @@
         },
         {
           "allOf": [
-            {"$ref": "#/definitions/BaseQuestion"},
-            {"properties": {"type": {"const": "POETRY_APP"}}}
-          ],
-          "description": "古诗文鉴赏/默写"
-        },
-        {
-          "allOf": [
             {"$ref": "#/definitions/QuestionWithPassage"},
             {"$ref": "#/definitions/QuestionWithSubQuestions"},
             {"properties": {"type": {"const": "CLOZE"}}}
           ],
-          "description": "完形填空：有原文和子题"
+          "description": "英语完形填空：有原文和子题"
         },
         {
           "allOf": [
             {"$ref": "#/definitions/BaseQuestion"},
             {"properties": {"type": {"const": "ESSAY"}}}
           ],
-          "description": "作文题：语文作文/英语书面表达"
+          "description": "作文题/书面表达"
         }
       ]
     }
