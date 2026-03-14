@@ -4,7 +4,7 @@
  */
 import { useMemo } from 'react'
 import { QuestionRendererProps } from '@/types/structured'
-import { renderMarkdown } from '@/utils/markdownProcessor'
+import { renderMarkdown, renderInlineMarkdown } from '@/utils/markdownProcessor'
 import SingleChoice from './SingleChoice'
 import MultipleChoice from './MultipleChoice'
 import TrueFalse from './TrueFalse'
@@ -39,7 +39,7 @@ export default function ReadComp({ question, index, mode = 'render' }: ReadCompP
     <div className={`question-item question-read-comp ${modeClass}`}>
       <div className="question-header">
         <span className="question-number">{index}. </span>
-        <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderMarkdown(question.stem) }} />
+        <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(question.stem) }} />
       </div>
 
       {/* 阅读材料区域 */}
@@ -80,7 +80,7 @@ export default function ReadComp({ question, index, mode = 'render' }: ReadCompP
                 <div key={subIdx} className="question-item question-sub">
                   <div className="question-header">
                     <span className="question-number">{subIdx + 1}. </span>
-                    <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderMarkdown(subQ.stem) }} />
+                    <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(subQ.stem) }} />
                   </div>
                   {subQ.options && subQ.options.length > 0 && (
                     <div className="question-options">
@@ -89,7 +89,7 @@ export default function ReadComp({ question, index, mode = 'render' }: ReadCompP
                         return (
                           <div key={optIdx} className="option-item">
                             <span className="option-label">{letters[optIdx] || String.fromCharCode(65 + optIdx)}. </span>
-                            <span className="option-text" dangerouslySetInnerHTML={{ __html: renderMarkdown(opt) }} />
+                            <span className="option-text" dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(opt) }} />
                           </div>
                         )
                       })}

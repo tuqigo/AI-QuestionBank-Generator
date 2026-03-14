@@ -2,7 +2,7 @@
  * 判断题组件
  */
 import type { QuestionRendererProps } from '@/types/structured'
-import { renderMarkdown } from '@/utils/markdownProcessor'
+import { renderInlineMarkdown } from '@/utils/markdownProcessor'
 
 interface TrueFalseProps extends QuestionRendererProps {
   mode?: 'render' | 'print'
@@ -15,7 +15,7 @@ export default function TrueFalse({ question, index, mode = 'render' }: TrueFals
     <div className={`question-item question-true-false ${modeClass}`}>
       <div className="question-header">
         <span className="question-number">{index}. </span>
-        <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderMarkdown(question.stem) }} />
+        <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(question.stem) }} />
       </div>
       <div className="question-options">
         <div className="option-item">

@@ -2,7 +2,7 @@
  * 应用题组件
  */
 import { QuestionRendererProps } from '@/types/structured'
-import { renderMarkdown } from '@/utils/markdownProcessor'
+import { renderInlineMarkdown } from '@/utils/markdownProcessor'
 
 interface WordProblemProps extends QuestionRendererProps {
   mode?: 'render' | 'print'
@@ -15,7 +15,7 @@ export default function WordProblem({ question, index, mode = 'render' }: WordPr
     <div className={`question-item question-word-problem ${modeClass}`}>
       <div className="question-header">
         <span className="question-number">{index}. </span>
-        <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderMarkdown(question.stem) }} />
+        <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(question.stem) }} />
       </div>
       <div className="answer-area">
         <span className="answer-placeholder">答：________________________</span>

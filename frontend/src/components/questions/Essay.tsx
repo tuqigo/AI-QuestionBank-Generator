@@ -2,7 +2,7 @@
  * 作文题组件
  */
 import { QuestionRendererProps } from '@/types/structured'
-import { renderMarkdown } from '@/utils/markdownProcessor'
+import { renderInlineMarkdown } from '@/utils/markdownProcessor'
 
 interface EssayProps extends QuestionRendererProps {
   mode?: 'render' | 'print'
@@ -15,7 +15,7 @@ export default function Essay({ question, index, mode = 'render' }: EssayProps) 
     <div className={`question-item question-essay ${modeClass}`}>
       <div className="question-header">
         <span className="question-number">{index}. </span>
-        <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderMarkdown(question.stem) }} />
+        <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(question.stem) }} />
       </div>
       <div className="answer-area essay-answer">
         <div className="essay-grid">

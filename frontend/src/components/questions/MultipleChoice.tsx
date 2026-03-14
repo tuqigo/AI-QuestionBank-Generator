@@ -3,7 +3,7 @@
  */
 import { useMemo } from 'react'
 import { QuestionRendererProps } from '@/types/structured'
-import { renderMarkdown } from '@/utils/markdownProcessor'
+import { renderInlineMarkdown } from '@/utils/markdownProcessor'
 
 interface MultipleChoiceProps extends QuestionRendererProps {
   mode?: 'render' | 'print'
@@ -27,13 +27,13 @@ export default function MultipleChoice({ question, index, mode = 'render' }: Mul
     <div className={`question-item question-multiple-choice ${modeClass}`}>
       <div className="question-header">
         <span className="question-number">{index}. </span>
-        <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderMarkdown(question.stem) }} />
+        <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(question.stem) }} />
       </div>
       <div className="question-options">
         {optionLabels.map((opt, idx) => (
           <div key={idx} className="option-item">
             <span className="option-label">{opt.letter}. </span>
-            <span className="option-text" dangerouslySetInnerHTML={{ __html: renderMarkdown(opt.text) }} />
+            <span className="option-text" dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(opt.text) }} />
           </div>
         ))}
       </div>

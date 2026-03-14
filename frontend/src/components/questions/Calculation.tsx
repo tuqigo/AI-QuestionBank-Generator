@@ -2,14 +2,14 @@
  * 计算题组件
  */
 import { QuestionRendererProps } from '@/types/structured'
-import { renderMarkdown } from '@/utils/markdownProcessor'
+import { renderInlineMarkdown } from '@/utils/markdownProcessor'
 
 interface CalculationProps extends QuestionRendererProps {
   mode?: 'render' | 'print'
 }
 
 export default function Calculation({ question, index, mode = 'render' }: CalculationProps) {
-  const html = renderMarkdown(question.stem)
+  const html = renderInlineMarkdown(question.stem)
   const modeClass = mode === 'print' ? 'question-print-mode' : 'question-render-mode'
 
   return (

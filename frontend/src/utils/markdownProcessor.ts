@@ -113,8 +113,11 @@ export function renderInlineMarkdown(content: string): string {
   if (!content || typeof content !== 'string') return ''
   if (!content.trim()) return ''
 
+  // 移除换行符，确保内容在同一行显示
+  const singleLineContent = content.replace(/[\r\n]+/g, ' ')
+
   // 保护数学内容
-  const { content: protectedContent, placeholders } = protectMath(content)
+  const { content: protectedContent, placeholders } = protectMath(singleLineContent)
 
   // 处理特殊格式
   let processed = processSpecialFormats(protectedContent)

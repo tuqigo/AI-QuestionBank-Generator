@@ -4,6 +4,9 @@
 /* ===== 引入题目打印样式配置 ===== */
 @import './styles/questions-print-config.css';
 
+/* ===== 引入题目样式 ===== */
+@import './components/questions/questions.css';
+
 /* ===== Reset & Base ===== */
 *,
 *::before,

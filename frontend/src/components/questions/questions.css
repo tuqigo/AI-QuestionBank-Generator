@@ -13,7 +13,7 @@
 
 .question-header {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   gap: 8px;
   margin-bottom: 8px;
 }
@@ -24,6 +24,7 @@
   font-size: 1rem;
   line-height: 1.6;
   min-width: var(--question-number-min-width, 28px);
+  flex-shrink: 0;
 }
 
 .question-stem {
@@ -32,6 +33,15 @@
   line-height: var(--question-stem-line-height, 1.6);
   color: var(--question-stem-color, #262626);
   font-weight: 500;
+}
+
+.question-stem > * {
+  display: inline !important;
+  margin: 0 !important;
+}
+
+.question-stem br {
+  display: none !important;
 }
 
 /* 选项样式 */
@@ -65,6 +75,16 @@
   flex: 1;
   color: var(--option-text-color, #262626);
   line-height: 1.6;
+  display: inline;
+}
+
+.option-text p {
+  display: inline;
+  margin: 0;
+}
+
+.option-text br {
+  display: none;
 }
 
 /* 填空题样式 */

@@ -3,7 +3,7 @@
  */
 import { useMemo } from 'react'
 import { QuestionRendererProps } from '@/types/structured'
-import { renderMarkdown } from '@/utils/markdownProcessor'
+import { renderInlineMarkdown, renderMarkdown } from '@/utils/markdownProcessor'
 import FillBlank from './FillBlank'
 
 interface ClozeProps extends QuestionRendererProps {
@@ -26,7 +26,7 @@ export default function Cloze({ question, index, mode = 'render' }: ClozeProps) 
     <div className={`question-item question-cloze ${modeClass}`}>
       <div className="question-header">
         <span className="question-number">{index}. </span>
-        <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderMarkdown(question.stem) }} />
+        <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(question.stem) }} />
       </div>
 
       {/* 完形填空原文 */}
