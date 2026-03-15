@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel, EmailStr
 
 
@@ -16,7 +17,7 @@ class UserInDB(BaseModel):
     id: int
     email: str
     hashed_password: str
-    grade: str | None = None
+    grade: Optional[str] = None
 
 
 class TokenResponse(BaseModel):
