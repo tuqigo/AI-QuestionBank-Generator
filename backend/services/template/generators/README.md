@@ -239,25 +239,54 @@
 
 ## 规则列表
 
+> **重要**: 规则配置已移至 `backend/config/template_rules.py`，无需修改代码即可添加新规则。
+>
+> 未来如需添加新规则（如 `result_within_50`），只需在配置文件中添加，无需修改模型文件。
+
 所有生成器支持的全局规则：
 
-| 规则名 | 说明 |
-|-------|------|
-| `ensure_different` | 确保两个数不同 |
-| `ensure_positive` | 确保结果为正数 |
-| `ensure_non_zero` | 确保结果非零 |
-| `result_within_10` | 结果在 10 以内 |
-| `result_within_100` | 结果在 100 以内 |
-| `ensure_integer_result` | 确保结果为整数 |
+| 规则名 | 说明 | 适用场景 |
+|-------|------|----------|
+| `ensure_different` | 确保两个数不同 | 比大小题目 |
+| `ensure_positive` | 确保结果为正数（含中间结果） | 减法、连加减 |
+| `ensure_non_zero` | 确保结果非零 | 除法、分母 |
+| `ensure_even` | 确保是偶数 | 整除练习 |
+| `ensure_odd` | 确保是奇数 | 特殊数练习 |
+| `ensure_prime` | 确保是质数 | 质数练习 |
+| `ensure_coprime` | 确保互质 | 分数约分 |
+| `ensure_divisible` | 确保除法能整除 | 除法练习 |
+| `ensure_borrowing` | 确保减法需要借位 | 借位减法 |
+| `ensure_carrying` | 确保加法需要进位 | 进位加法 |
+| `ensure_proper_fraction` | 确保是真分数（分子 < 分母） | 分数基础 |
+| `ensure_simplest_form` | 确保是最简分数 | 约分练习 |
+| `ensure_realistic_value` | 确保是实际存在的值 | 应用题、几何 |
+| `ensure_integer_result` | 确保计算结果为整数 | 单位换算 |
+| `ensure_unique_stem` | 确保题干不重复（默认开启） | 所有题型 |
+| `result_within_10` | 结果在 10 以内 | 一年级 |
+| `result_within_20` | 结果在 20 以内 | 二年级 |
+| `result_within_100` | 结果在 100 以内 | 三年级 |
+| `result_within_1000` | 结果在 1000 以内 | 四年级 |
+
+### 按年级分类的规则
+
+| 年级 | 可用规则 |
+|------|----------|
+| 一年级 | `result_within_10`, `ensure_positive`, `ensure_different`, `ensure_non_zero` |
+| 二年级 | `result_within_20`, `ensure_positive`, `ensure_different`, `ensure_even`, `ensure_odd` |
+| 三年级 | `result_within_100`, `ensure_divisible`, `ensure_borrowing`, `ensure_carrying` |
+| 四年级 | `result_within_1000`, `ensure_prime`, `ensure_coprime`, `ensure_simplest_form` |
 
 ---
 
 ## 添加新模板的步骤
 
+### 快速添加模板（复用现有生成器）
+
 1. **选择合适的生成器** - 根据上表选择功能匹配的生成器
 2. **编写 SQL 迁移** - 在 `db/migrations/` 下创建新的 SQL 文件
 3. **配置变量** - 根据生成器文档设置 `variables_config`
 4. **执行迁移** - 运行 SQL 插入新模板记录
+5. **添加规则**（如需要） - 在 `backend/config/template_rules.py` 中添加新规则名
 
 ### SQL 模板
 
@@ -271,15 +300,34 @@ INSERT INTO question_templates (
     'math',
     'grade1',
     'lower',
-    '人教版',
+    '沪教版',
     'FILL_BLANK',
     '模板模式描述',
-    '{"a": {"min": 1, "max": 10}}',
+    '{"num": {"min": 1, "max": 10}, "rules": ["ensure_positive"]}',
     '示例题目',
     'generator_module_name',
     1,
     1
 );
+```
+
+### 添加新规则（如需要）
+
+如果现有规则不够用（例如需要 `result_within_50`），编辑 `backend/config/template_rules.py`：
+
+```python
+RESULT_WITHIN_RULES = {
+    # ... 现有规则
+    "result_within_50": "确保结果 ≤ 50",  # 新增规则
+}
+```
+
+然后在生成器代码中使用：
+
+```python
+result_within_50 = "result_within_50" in template_config.get("rules", [])
+if result_within_50 and result > 50:
+    continue
 ```
 
 ---
@@ -300,3 +348,32 @@ INSERT INTO question_templates (
 3. 实现 `generate()` 方法
 4. 在 `__init__.py` 中注册
 5. 更新本文档
+
+---
+
+## 配置化设计
+
+### 为什么不写死规则？
+
+早期版本将规则定义在 `question_template.py` 中，但这样存在以下问题：
+
+- **扩展性差**: 每次添加新规则（如 `result_within_50`）都需要修改模型文件
+- **违反开闭原则**: 模型文件频繁变动，增加维护成本
+- **部署风险**: 简单的配置变更需要代码发布
+
+### 现在的做法
+
+```
+backend/config/template_rules.py  # 规则配置文件
+├── RESULT_WITHIN_RULES      # 数值范围规则
+├── NUMERIC_PROPERTY_RULES   # 数值属性规则
+├── OPERATION_RULES          # 运算规则
+├── FRACTION_RULES           # 分数规则
+├── GEOMETRY_RULES           # 几何规则
+└── UNIQUENESS_RULES         # 去重规则
+```
+
+**未来扩展方向**:
+- 通过数据库表 `generator_rules` 管理规则，实现后台页面动态配置
+- 支持按年级过滤可用规则
+- 规则说明支持多语言

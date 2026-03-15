@@ -154,17 +154,17 @@ print('迁移成功')
 
 ### 步骤 5：添加或更新规则（如需要）
 
-**如果你的模板需要新的规则约束**，编辑 `backend/models/question_template.py`：
+**如果你的模板需要新的规则约束**，编辑 `backend/config/template_rules.py`：
 
 ```python
-# 在 SUPPORTED_RULES 字典中添加新规则
-SUPPORTED_RULES = {
+# 在相应的规则字典中添加新规则
+RESULT_WITHIN_RULES = {
     # ... 现有规则
-    "my_new_rule",  # 添加新规则名
+    "result_within_50": "确保结果 ≤ 50",  # 添加新规则
 }
 ```
 
-> **说明**：规则列表用于文档化和验证，生成器代码中可以直接使用任何规则名，无需预先注册。但建议将通用规则添加到列表中供其他生成器复用。
+> **说明**：规则配置文件独立于模型文件，无需修改代码即可扩展。生成器代码中可以直接使用任何规则名，无需预先注册。但建议将通用规则添加到配置文件中供其他生成器复用。
 
 ### 步骤 6：验证测试
 
@@ -180,7 +180,9 @@ curl -X POST http://localhost:8000/api/templates/generate \
 
 ## 1.5 规则约束完整列表
 
-> **如何添加新规则**：如果现有规则不够用，在 `backend/models/question_template.py` 的 `SUPPORTED_RULES` 中添加即可。规则名建议用 `ensure_` 或 `result_` 前缀，然后在生成器代码中检查并实现对应逻辑。
+> **如何添加新规则**：如果现有规则不够用，在 `backend/config/template_rules.py` 的相应规则字典中添加即可。规则名建议用 `ensure_` 或 `result_` 前缀，然后在生成器代码中检查并实现对应逻辑。
+>
+> **配置化设计**：规则配置已移至独立文件 `backend/config/template_rules.py`，无需修改模型代码即可扩展。未来可通过数据库表 `generator_rules` 实现后台页面动态管理。
 
 ### 数值范围约束
 
@@ -717,80 +719,90 @@ stem = f"{a}（    ）{b}"
 
 ---
 
-### 5.2 AdditionSubtractionGenerator - 加减法
+### 5.2 MixedAdditionSubtractionGenerator - 加减法统一生成器
 
-**文件**: `services/template/generators/addition_subtraction.py`
+**文件**: `services/template/generators/mixed_addition_subtraction.py`
 
-**适用**: 一年级 10 以内加减法
+**适用**: 所有加减法相关题型（一年级 10 以内加减法、连加减、加减混合等）
 
-**例题**: 2 + 2 = （ ）
+**例题**:
+- `5 + 3 = （ ）`
+- `1+6+19=（ ）`
+- `96-23-45=（ ）`
+- `49-19+27=（ ）`
+- `17-（ ）= 2`
+- `54+6+16（ ）74`
+- `74-28+22（ ）75`
 
-**配置示例**:
+**说明**: 这是统一的加减法生成器，已替代原有的 `AdditionSubtractionGenerator` 和 `ConsecutiveAdditionSubtractionGenerator`。
+
+**支持的题型配置**:
+
+| 题型代码 | 说明 | 示例 |
+|---------|------|------|
+| `simple` | 简单加减 | `5 + 3 = （ ）` |
+| `simple_fill` | 简单填空 | `5 + （ ） = 8` |
+| `consecutive_add` | 连加 | `1+6+19=（ ）` |
+| `consecutive_subtract` | 连减 | `96-23-45=（ ）` |
+| `mixed_operation` | 加减混合 | `49-19+27=（ ）` |
+| `missing_operand` | 减法填空 | `17-（ ）=2` |
+| `compare_simple` | 简单运算比较 | `5+3（ ）8` |
+| `compare_with_result` | 混合运算比较 | `74-28+22（ ）75` |
+| `compare_mixed_operation` | 混合运算比较（确保有加有减） | `74-28+22（ ）75` |
+
+**配置示例 - 简单加减**:
 ```json
 {
-    "a": {"min": 1, "max": 10},
-    "b": {"min": 1, "max": 10},
+    "question_types": ["simple"],
+    "num": {"min": 1, "max": 10},
     "op": {"values": ["+", "-"]},
     "rules": ["ensure_positive"]
 }
 ```
 
-**核心逻辑**:
-```python
-a = random.randint(a_min, a_max)
-b = random.randint(b_min, b_max)
-op = random.choice(operators)
-
-if ensure_positive and op == "-" and a < b:
-    continue
-
-stem = f"{a} {op} {b} = （    ）"
-```
-
----
-
-### 5.3 ConsecutiveAdditionSubtractionGenerator - 连加减
-
-**文件**: `services/template/generators/consecutive_addition_subtraction.py`
-
-**适用**: 一年级 10 以内连加减
-
-**例题**: 2 + 3 + 4 = （ ）
-
-**特点**: 检查中间结果非负
-
-**配置示例**:
+**配置示例 - 连加减**:
 ```json
 {
-    "a": {"min": 1, "max": 10},
-    "b": {"min": 1, "max": 10},
-    "c": {"min": 1, "max": 10},
-    "op1_values": ["+", "-"],
-    "op2_values": ["+", "-"],
-    "rules": ["ensure_positive"]
+    "question_types": ["consecutive_add", "consecutive_subtract"],
+    "num": {"min": 1, "max": 10},
+    "rules": ["ensure_positive", "result_within_10"]
+}
+```
+
+**配置示例 - 综合型**:
+```json
+{
+    "question_types": ["mixed_operation", "missing_operand", "compare_mixed_operation"],
+    "num": {"min": 1, "max": 100},
+    "rules": ["ensure_positive", "result_within_100"]
 }
 ```
 
 **核心逻辑**:
 ```python
-a, b, c = random.randint(...), random.randint(...), random.randint(...)
-op1, op2 = random.choice(op1_values), random.choice(op2_values)
+# 读取题型配置
+question_types = template_config.get("question_types", ["simple"])
 
-# 计算中间结果
-intermediate = a + b if op1 == "+" else a - b
+# 随机选择题型生成
+q_type = random.choice(question_types)
 
-# 确保中间结果非负
-if ensure_positive and intermediate < 0:
-    continue
+if q_type == "simple":
+    a = random.randint(num_min, num_max)
+    b = random.randint(num_min, num_max)
+    op = random.choice(op_values)
 
-# 计算最终结果
-final = intermediate + c if op2 == "+" else intermediate - c
+    if ensure_positive and op == "-" and a < b:
+        continue
 
-# 确保最终结果非负
-if ensure_positive and final < 0:
-    continue
+    stem = f"{a}{op}（    ）"
 
-stem = f"{a} {op1} {b} {op2} {c} = （    ）"
+elif q_type == "consecutive_add":
+    # 连加逻辑
+    ...
+
+elif q_type == "compare_mixed_operation":
+    # 混合运算比较逻辑
+    ...
 ```
 
 ---
@@ -1224,11 +1236,18 @@ with open('db/migrations/002_add_question_templates.sql', 'r') as f:
 ### Q2: 如何添加新的规则约束？
 
 **步骤**:
-1. 在 `models/question_template.py` 的 `SUPPORTED_RULES` 中添加规则名
+1. 在 `backend/config/template_rules.py` 的相应规则字典中添加规则名
 2. 在生成器的 `generate` 方法中实现规则检查逻辑
 
 ```python
 # 示例：添加 ensure_even 规则（确保偶数）
+# 1. 在 template_rules.py 中添加:
+NUMERIC_PROPERTY_RULES = {
+    # ... 现有规则
+    "ensure_even": "确保是偶数",
+}
+
+# 2. 在生成器中使用:
 if "ensure_even" in template_config.get("rules", []) and a % 2 != 0:
     continue
 ```
@@ -1259,13 +1278,18 @@ backend/services/template/
 └── generators/
     ├── __init__.py             # 生成器注册表
     ├── base.py                 # 抽象基类
+    ├── README.md               # 生成器使用文档
     ├── compare_number.py       # 比大小生成器
-    ├── addition_subtraction.py # 加减法生成器
-    ├── consecutive_addition_subtraction.py  # 连加减生成器
+    ├── mixed_addition_subtraction.py  # 加减法统一生成器 ⭐
     ├── currency_conversion.py  # 人民币换算生成器
     ├── multiplication_table.py # 九九乘法表生成器
     ├── volume_conversion.py    # 体积单位换算生成器
     └── fraction_comparison.py  # 分数比大小生成器
+```
+
+```
+backend/config/
+└── template_rules.py           # 规则配置文件 ⭐
 ```
 
 ```
@@ -1284,7 +1308,11 @@ backend/db/migrations/
 ├── 002_add_question_templates.sql    # 模板系统
 ├── 004_add_multiplication_table_template.sql  # 乘法表模板
 ├── 005_add_volume_conversion_template.sql     # 体积换算模板
-└── 006_add_fraction_comparison_template.sql   # 分数比大小模板
+├── 006_add_fraction_comparison_template.sql   # 分数比大小模板
+├── 007_add_bainaineishu_comparison_template.sql  # 百以内数比大小模板
+├── 008_add_currency_recognition_template.sql   # 人民币认识模板
+├── 009_add_mixed_addition_subtraction_template.sql  # 连加连减及加减综合模板
+└── 010_unify_arithmetic_generators.sql         # 统一加减法生成器迁移
 ```
 
 ```
