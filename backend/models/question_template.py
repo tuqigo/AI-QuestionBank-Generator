@@ -39,68 +39,6 @@ class TemplateVariablesConfig(BaseModel):
         extra = "allow"  # 允许额外字段（a, b, op 等变量）
 
 
-# ===================== 规则约束 =====================
-
-# 支持的规则列表
-# 按功能分类，便于生成器按需使用
-SUPPORTED_RULES = {
-    # ===================== 数值范围约束 =====================
-    "result_within_10",       # 确保结果 ≤ 10（一年级）
-    "result_within_20",       # 确保结果 ≤ 20（二年级）
-    "result_within_100",      # 确保结果 ≤ 100（三年级）
-    "result_within_1000",     # 确保结果 ≤ 1000（四年级）
-
-    # ===================== 数值属性约束 =====================
-    "ensure_different",       # 确保两个数不同（用于比大小）
-    "ensure_positive",        # 确保减法结果不为负数
-    "ensure_non_zero",        # 确保不为零（用于除法、分母）
-    "ensure_even",            # 确保是偶数
-    "ensure_odd",             # 确保是奇数
-    "ensure_prime",           # 确保是质数
-    "ensure_coprime",         # 确保互质（用于分数约分）
-
-    # ===================== 运算约束 =====================
-    "ensure_divisible",       # 确保除法能整除
-    "ensure_no_remainder",    # 确保除法无余数
-    "ensure_borrowing",       # 确保减法需要借位
-    "ensure_carrying",        # 确保加法需要进位
-
-    # ===================== 分数相关约束 =====================
-    "ensure_proper_fraction",  # 确保是真分数（分子 < 分母）
-    "ensure_simplest_form",   # 确保是最简分数
-    "ensure_common_denominator",  # 确保同分母
-
-    # ===================== 几何/单位约束 =====================
-    "ensure_realistic_value",  # 确保是实际存在的值（如长度为正）
-    "ensure_integer_result",  # 确保计算结果为整数
-
-    # ===================== 去重约束 =====================
-    "ensure_unique_stem",     # 确保题干不重复（默认开启）
-}
-
-
-# ===================== 教材版本 =====================
-
-# 支持的教材版本列表
-SUPPORTED_TEXTBOOK_VERSIONS = [
-    "人教版",
-    "人教版 (新)",
-    "北师大版",
-    "苏教版",
-    "西师版",
-    "沪教版",
-    "北京版",
-    "青岛六三",
-    "青岛五四",
-]
-
-# 支持的学期
-SUPPORTED_SEMESTERS = {
-    "upper": "上学期",
-    "lower": "下学期",
-}
-
-
 # ===================== 模板模型 =====================
 
 class QuestionTemplate(BaseModel):
@@ -110,7 +48,7 @@ class QuestionTemplate(BaseModel):
     subject: str = Field(..., description="学科：math/chinese/english")
     grade: str = Field(..., description="年级：grade1~grade9")
     semester: str = Field(..., description="学期：upper/lower (上学期/下学期)")
-    textbook_version: str = Field(..., description="教材版本：人教版/人教版 (新)/北师大版/苏教版/西师版/沪教版/北京版/青岛六三/青岛五四")
+    textbook_version: str = Field(..., description="教材版本")
     question_type: str = Field(..., description="题型")
     template_pattern: str = Field(..., description="模板模式字符串")
     variables_config: dict = Field(..., description="变量配置")
@@ -128,11 +66,12 @@ class QuestionTemplate(BaseModel):
                 "name": "一年级 10 以内的加减法",
                 "subject": "math",
                 "grade": "grade1",
+                "semester": "lower",
+                "textbook_version": "沪教版",
                 "question_type": "CALCULATION",
                 "template_pattern": "{a} {op} {b} = （ ）",
                 "variables_config": {
-                    "a": {"min": 1, "max": 10},
-                    "b": {"min": 1, "max": 10},
+                    "num": {"min": 1, "max": 10},
                     "op": {"values": ["+", "-"]},
                     "rules": ["ensure_positive"]
                 },
