@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { toast } from '@/hooks'
 import {
   getUserDetail,
   getUserRecords,
@@ -75,7 +76,7 @@ export default function UserDetailPage() {
       await loadUserDetail()
     } catch (error) {
       console.error('更新用户状态失败:', error)
-      alert('操作失败')
+      toast.error('操作失败')
     } finally {
       setActionLoading(false)
     }

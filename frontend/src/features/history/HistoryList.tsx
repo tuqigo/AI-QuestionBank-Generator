@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { toast } from '@/hooks'
 import { getHistoryList, deleteHistory } from '@/core/api/history'
 import type { QuestionRecordListItem } from '@/types'
 
@@ -132,7 +133,7 @@ export default function HistoryDropdown({ isOpen, onClose }: HistoryDropdownProp
       setDeleteConfirm(null)
     } catch (error) {
       console.error('删除失败:', error)
-      alert('删除失败')
+      toast.error('删除失败')
     } finally {
       setDeleting(null)
     }

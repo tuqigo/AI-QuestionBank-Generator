@@ -1,4 +1,5 @@
 import { renderMarkdown } from './markdownProcessor'
+import { toast } from '../hooks'
 import type { StructuredQuestion } from '@/types/question'
 import '@/types/mathjax'
 
@@ -439,7 +440,7 @@ export const handlePrint = async (
   // 验证输入
   if (!markdown && (!questions || questions.length === 0)) {
     console.error('[handlePrint] 没有可打印的内容')
-    alert('没有可打印的内容')
+    toast.error('没有可打印的内容')
     return
   }
 
@@ -482,7 +483,7 @@ export const handlePrint = async (
   if (!printDoc) {
     console.error('[handlePrint] 无法创建打印文档')
     document.body.removeChild(printFrame)
-    alert('打印初始化失败')
+    toast.error('打印初始化失败')
     return
   }
 

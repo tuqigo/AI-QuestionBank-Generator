@@ -5,6 +5,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getToken } from '@/core/auth/userAuth'
+import { toast } from '@/hooks'
 import { handlePrint } from '@/utils/printUtils'
 import QuestionRenderer from '@/components/QuestionRenderer'
 import { generateStructuredQuestions, getHistoryAnswers } from '@/core/api/history'
@@ -101,7 +102,7 @@ export default function StructuredPreview() {
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
-      alert('请输入提示词')
+      toast.warning('请输入提示词')
       return
     }
 
@@ -145,7 +146,7 @@ export default function StructuredPreview() {
     }
 
     if (!shortId) {
-      alert('请先生成题目')
+      toast.warning('请先生成题目')
       return
     }
 
@@ -156,7 +157,7 @@ export default function StructuredPreview() {
       setShowAnswers(true)
     } catch (err: any) {
       console.error('获取答案失败:', err)
-      alert('获取答案失败：' + (err?.message || '未知错误'))
+      toast.error('获取答案失败：' + (err?.message || '未知错误'))
     } finally {
       setAnswersLoading(false)
     }
@@ -164,7 +165,7 @@ export default function StructuredPreview() {
 
   const handlePrintWrapper = async () => {
     if (questions.length === 0) {
-      alert('没有可打印的内容')
+      toast.warning('没有可打印的内容')
       return
     }
     // 使用 printUtils 中的 handlePrint，传入结构化题目数据

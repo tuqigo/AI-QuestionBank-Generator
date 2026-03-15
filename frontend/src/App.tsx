@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect, useCallback } from 'react'
 import { getToken, clearToken } from './core/auth/userAuth'
+import { ToastContainer } from './components/shared'
 import MainContent from './features/question-generator/MainContent'
 import HistoryDetail from './features/history/HistoryDetail'
 import SharePage from './features/history/SharePage'
@@ -91,6 +92,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <AppContent />
+      <ToastContainer position="top-center" duration={3000} maxToasts={3} />
     </BrowserRouter>
   )
 }

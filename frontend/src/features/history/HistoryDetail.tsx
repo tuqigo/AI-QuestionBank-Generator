@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { toast } from '@/hooks'
 import { getToken } from '@/core/auth/userAuth'
 import { getHistoryDetail, createShareUrl, getHistoryQuestions, getHistoryAnswers } from '@/core/api/history'
 import { handlePrint } from '@/utils/printUtils'
@@ -31,11 +32,10 @@ function parseStructuredData(aiResponse: string): {
 
 export default function HistoryDetail() {
   const { id } = useParams<{ id: string }>()
-  const hasLoadedRef = useRef(false) // 跟踪是否已加载数据
+  const hasLoadedRef = useRef(false)
   const [record, setRecord] = useState<QuestionRecord | null>(null)
   const [loading, setLoading] = useState(true)
-  const shareUrlRef = useRef<string | null>(null) // 使用 ref 存储分享链接，避免触发重新渲染
-  const [showCopyToast, setShowCopyToast] = useState(false)
+  const shareUrlRef = useRef<string | null>(null)
   const [structuredData, setStructuredData] = useState<{
     questions: StructuredQuestion[]
     meta: RecordMeta | null
@@ -67,7 +67,7 @@ export default function HistoryDetail() {
       })
       .catch((err: unknown) => {
         console.error('加载失败:', err)
-        alert('加载失败')
+        toast.error('加载失败')
         window.location.href = '/history' // 直接使用 window.location 避免依赖 navigate
       })
       .finally(() => setLoading(false))
@@ -78,7 +78,7 @@ export default function HistoryDetail() {
     try {
       const token = getToken()
       if (!token) {
-        alert('请先登录')
+        toast.warning('请先登录')
         window.location.href = '/'
         return
       }
@@ -90,8 +90,7 @@ export default function HistoryDetail() {
       // 复制到剪贴板
       try {
         await navigator.clipboard.writeText(fullUrl)
-        setShowCopyToast(true)
-        setTimeout(() => setShowCopyToast(false), 2000)
+        toast.success('链接已复制')
       } catch (copyErr) {
         // 复制失败，使用降级方案
         console.warn('剪贴板 API 失败，使用降级方案:', copyErr)
@@ -101,24 +100,23 @@ export default function HistoryDetail() {
         input.select()
         document.execCommand('copy')
         document.body.removeChild(input)
-        setShowCopyToast(true)
-        setTimeout(() => setShowCopyToast(false), 2000)
+        toast.success('链接已复制')
       }
     } catch (err) {
       console.error('生成分享链接失败:', err)
-      alert('生成分享链接失败，请稍后重试')
+      toast.error('生成分享链接失败，请稍后重试')
     }
   }
 
   const handlePrintWrapper = async () => {
     if (!structuredData?.questions || structuredData.questions.length === 0) {
-      alert('没有可打印的内容')
+      toast.warning('没有可打印的内容')
       return
     }
 
     // 等待 MathJax 加载完成
     if (!window.MathJax || !window.MathJax.typesetPromise) {
-      alert('MathJax 加载中，请稍后再试')
+      toast.info('MathJax 加载中，请稍后再试')
       return
     }
 
@@ -145,7 +143,7 @@ export default function HistoryDetail() {
       setShowAnswers(true)
     } catch (err: any) {
       console.error('获取答案失败:', err)
-      alert('获取答案失败：' + (err?.message || '未知错误'))
+      toast.error('获取答案失败：' + (err?.message || '未知错误'))
     } finally {
       setAnswersLoading(false)
     }
@@ -165,20 +163,9 @@ export default function HistoryDetail() {
   }
 
   const hasStructuredData = structuredData?.questions && structuredData.questions.length > 0
-  const hasShareUrl = shareUrlRef.current
 
   return (
     <div className="detail-page">
-      {/* 顶部复制成功提示 */}
-      {showCopyToast && (
-        <div className="copy-toast">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-            <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-          <span>已复制</span>
-        </div>
-      )}
-
       <div className="detail-header">
         <h2>{record.title}</h2>
         <div className="detail-actions">
@@ -191,35 +178,6 @@ export default function HistoryDetail() {
           <Link to="/" className="btn-back">返回首页</Link>
         </div>
       </div>
-
-      {hasShareUrl && (
-        <div className="share-link-display">
-          <span>分享链接：</span>
-          <a href={shareUrlRef.current!} target="_blank" rel="noopener noreferrer">{window.location.origin}{shareUrlRef.current}</a>
-          <button
-            onClick={async () => {
-              try {
-                await navigator.clipboard.writeText(window.location.origin + shareUrlRef.current)
-                setShowCopyToast(true)
-                setTimeout(() => setShowCopyToast(false), 2000)
-              } catch (err) {
-                // 降级方案：使用传统方式复制
-                const input = document.createElement('input')
-                input.value = window.location.origin + shareUrlRef.current
-                document.body.appendChild(input)
-                input.select()
-                document.execCommand('copy')
-                document.body.removeChild(input)
-                setShowCopyToast(true)
-                setTimeout(() => setShowCopyToast(false), 2000)
-              }
-            }}
-            className="btn-copy"
-          >
-            复制链接
-          </button>
-        </div>
-      )}
 
       <div className="detail-meta">
         <span>类型：{record.prompt_type === 'image' ? '图片' : '文字'}</span>

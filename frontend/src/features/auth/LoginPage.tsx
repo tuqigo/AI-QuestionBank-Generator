@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { toast } from '@/hooks'
 import { setToken } from '@/core/auth/userAuth'
 import './LoginPage.css'
 
@@ -177,7 +178,7 @@ export default function LoginPage({ onSuccess }: Props) {
         onSuccess()
       } else {
         // 找回密码成功，提示用户登录
-        alert('密码重置成功，请登录')
+        toast.success('密码重置成功，请登录')
         setPage('login')
       }
     } catch (e) {
