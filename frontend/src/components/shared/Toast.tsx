@@ -47,12 +47,13 @@ const toastIcons: Record<ToastType, React.ReactNode> = {
 const generateId = () => `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
 /**
- * Toast 队列管理 - 使用单例模式
+ * Toast 队列管理 - 单例模式，内置定时器管理
  */
 class ToastQueue {
   private static instance: ToastQueue
   private listeners: Set<(toasts: ToastMessage[]) => void> = new Set()
   private toasts: ToastMessage[] = []
+  private timers: Map<string, ReturnType<typeof setTimeout>> = new Map()
 
   private constructor() {}
 
@@ -72,20 +73,46 @@ class ToastQueue {
     this.listeners.forEach((cb) => cb([...this.toasts]))
   }
 
-  add(toast: Omit<ToastMessage, 'id'>): string {
+  add(type: ToastType, message: string, duration: number): string {
     const id = generateId()
-    const newToast: ToastMessage = { id, ...toast }
+    const newToast: ToastMessage = { id, type, message, duration }
+
+    // 清除旧的定时器
+    const existingTimer = this.timers.get(id)
+    if (existingTimer) {
+      clearTimeout(existingTimer)
+    }
+
+    // 添加新 toast
     this.toasts = [...this.toasts, newToast]
     this.notify()
+
+    // 设置自动消失定时器
+    if (duration > 0) {
+      const timer = setTimeout(() => {
+        this.remove(id)
+      }, duration)
+      this.timers.set(id, timer)
+    }
+
     return id
   }
 
   remove(id: string) {
+    // 清除定时器
+    const timer = this.timers.get(id)
+    if (timer) {
+      clearTimeout(timer)
+      this.timers.delete(id)
+    }
     this.toasts = this.toasts.filter((t) => t.id !== id)
     this.notify()
   }
 
   clear() {
+    // 清除所有定时器
+    this.timers.forEach((timer) => clearTimeout(timer))
+    this.timers.clear()
     this.toasts = []
     this.notify()
   }
@@ -114,41 +141,26 @@ export default function ToastContainer({
 }: ToastContainerProps) {
   const [toasts, setToasts] = useState<ToastMessage[]>([])
   const queueRef = useRef<ToastQueue>(ToastQueue.getInstance())
-  const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
 
-  const removeToast = useCallback((id: string) => {
-    const timer = timersRef.current.get(id)
-    if (timer) {
-      clearTimeout(timer)
-      timersRef.current.delete(id)
-    }
-    queueRef.current.remove(id)
+  // 订阅队列变化
+  useEffect(() => {
+    const unsubscribe = queueRef.current.subscribe(setToasts)
+    setToasts(queueRef.current.getToasts())
+    return unsubscribe
   }, [])
 
-  const addToast = useCallback(
-    (type: ToastType, message: string, options?: ToastOptions): string => {
-      const toastDuration = options?.duration ?? duration
-      const id = queueRef.current.add({ type, message, duration: toastDuration })
-
-      if (toastDuration > 0) {
-        const timer = setTimeout(() => {
-          removeToast(id)
-        }, toastDuration)
-        timersRef.current.set(id, timer)
-      }
-
-      return id
-    },
-    [duration, removeToast]
-  )
-
+  // 暴露全局方法到 window
   useEffect(() => {
     const api = {
-      success: (message: string, options?: ToastOptions) => addToast('success', message, options),
-      error: (message: string, options?: ToastOptions) => addToast('error', message, options),
-      warning: (message: string, options?: ToastOptions) => addToast('warning', message, options),
-      info: (message: string, options?: ToastOptions) => addToast('info', message, options),
-      remove: removeToast,
+      success: (message: string, options?: ToastOptions) =>
+        queueRef.current.add('success', message, options?.duration ?? duration),
+      error: (message: string, options?: ToastOptions) =>
+        queueRef.current.add('error', message, options?.duration ?? duration),
+      warning: (message: string, options?: ToastOptions) =>
+        queueRef.current.add('warning', message, options?.duration ?? duration),
+      info: (message: string, options?: ToastOptions) =>
+        queueRef.current.add('info', message, options?.duration ?? duration),
+      remove: (id: string) => queueRef.current.remove(id),
       clear: () => queueRef.current.clear(),
     }
 
@@ -158,17 +170,11 @@ export default function ToastContainer({
     return () => {
       // @ts-ignore
       delete window.toast
-      timersRef.current.forEach((timer) => clearTimeout(timer))
+      queueRef.current.clear()
     }
-  }, [addToast, removeToast])
+  }, [duration])
 
-  useEffect(() => {
-    const unsubscribe = queueRef.current.subscribe(setToasts)
-    setToasts(queueRef.current.getToasts())
-    return unsubscribe
-  }, [])
-
-  // 只显示最新的 maxToasts 条
+  // 限制显示数量
   const displayToasts = toasts.slice(-maxToasts)
 
   const positionClass = {

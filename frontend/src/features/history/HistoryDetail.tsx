@@ -87,20 +87,51 @@ export default function HistoryDetail() {
       shareUrlRef.current = url
       const fullUrl = window.location.origin + url
 
-      // 复制到剪贴板
+      // 复制到剪贴板 - 优先使用降级方案，兼容性更好
+      const input = document.createElement('input')
+      input.value = fullUrl
+      input.setAttribute('readonly', 'readonly')
+      document.body.appendChild(input)
+      input.select()
+      input.setSelectionRange(0, input.value.length) // 适配 iOS
+      try {
+        const success = document.execCommand('copy')
+        document.body.removeChild(input)
+        if (success) {
+          toast.success('链接已复制')
+          return
+        }
+      } catch (e) {
+        // execCommand 失败，尝试 clipboard API
+      }
+      document.body.removeChild(input)
+
+      // 降级方案：尝试 Clipboard API
       try {
         await navigator.clipboard.writeText(fullUrl)
         toast.success('链接已复制')
-      } catch (copyErr) {
-        // 复制失败，使用降级方案
-        console.warn('剪贴板 API 失败，使用降级方案:', copyErr)
-        const input = document.createElement('input')
-        input.value = fullUrl
-        document.body.appendChild(input)
-        input.select()
-        document.execCommand('copy')
-        document.body.removeChild(input)
-        toast.success('链接已复制')
+      } catch (clipboardErr) {
+        // 两种都失败，提示用户手动复制
+        console.warn('剪贴板 API 失败:', clipboardErr)
+        const textarea = document.createElement('textarea')
+        textarea.value = fullUrl
+        textarea.style.position = 'fixed'
+        textarea.style.left = '-9999px'
+        document.body.appendChild(textarea)
+        textarea.select()
+        textarea.setSelectionRange(0, textarea.value.length)
+        try {
+          const success = document.execCommand('copy')
+          document.body.removeChild(textarea)
+          if (success) {
+            toast.success('链接已复制')
+            return
+          }
+        } catch (e2) {
+          document.body.removeChild(textarea)
+        }
+        // 最终失败，显示链接让用户手动复制
+        toast.error('复制失败，请手动复制链接')
       }
     } catch (err) {
       console.error('生成分享链接失败:', err)

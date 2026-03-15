@@ -14,32 +14,19 @@ export interface ToastApi {
 }
 
 const queue = ToastQueueSingleton.getInstance()
+const DEFAULT_DURATION = 3000
 
 /**
  * 全局 Toast Hook
- *
- * @example
- * ```tsx
- * function MyComponent() {
- *   const toast = useToast()
- *
- *   const handleClick = () => {
- *     toast.success('操作成功!')
- *     toast.error('出错了!')
- *   }
- * }
- * ```
  */
 export function useToast(): ToastApi {
   const [_, setForceUpdate] = useState(0)
 
-  // 强制重新渲染（虽然实际上不需要，为了保持 Hook 模式一致）
   const forceUpdate = useCallback(() => {
     setForceUpdate((n) => n + 1)
   }, [])
 
   useEffect(() => {
-    // 订阅队列变化以触发重新渲染
     const unsubscribe = queue.subscribe(() => {
       forceUpdate()
     })
@@ -48,28 +35,28 @@ export function useToast(): ToastApi {
 
   const success = useCallback(
     (message: string, options?: ToastOptions): string => {
-      return queue.add({ type: 'success', message, duration: options?.duration })
+      return queue.add('success', message, options?.duration ?? DEFAULT_DURATION)
     },
     []
   )
 
   const error = useCallback(
     (message: string, options?: ToastOptions): string => {
-      return queue.add({ type: 'error', message, duration: options?.duration })
+      return queue.add('error', message, options?.duration ?? DEFAULT_DURATION)
     },
     []
   )
 
   const warning = useCallback(
     (message: string, options?: ToastOptions): string => {
-      return queue.add({ type: 'warning', message, duration: options?.duration })
+      return queue.add('warning', message, options?.duration ?? DEFAULT_DURATION)
     },
     []
   )
 
   const info = useCallback(
     (message: string, options?: ToastOptions): string => {
-      return queue.add({ type: 'info', message, duration: options?.duration })
+      return queue.add('info', message, options?.duration ?? DEFAULT_DURATION)
     },
     []
   )
@@ -87,18 +74,12 @@ export function useToast(): ToastApi {
 
 /**
  * 直接使用全局 toast 对象（非组件环境）
- *
- * @example
- * ```ts
- * // 在 API 拦截器中使用
- * toast.error('网络请求失败')
- * ```
  */
 export const toast: ToastApi = {
-  success: (message, options) => queue.add({ type: 'success', message, duration: options?.duration }),
-  error: (message, options) => queue.add({ type: 'error', message, duration: options?.duration }),
-  warning: (message, options) => queue.add({ type: 'warning', message, duration: options?.duration }),
-  info: (message, options) => queue.add({ type: 'info', message, duration: options?.duration }),
+  success: (message, options) => queue.add('success', message, options?.duration ?? DEFAULT_DURATION),
+  error: (message, options) => queue.add('error', message, options?.duration ?? DEFAULT_DURATION),
+  warning: (message, options) => queue.add('warning', message, options?.duration ?? DEFAULT_DURATION),
+  info: (message, options) => queue.add('info', message, options?.duration ?? DEFAULT_DURATION),
   dismiss: (id) => queue.remove(id),
   clear: () => queue.clear(),
 }
