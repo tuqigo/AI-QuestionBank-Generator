@@ -492,12 +492,22 @@
     padding: 10px 8px;
   }
 
-  /* 移动端隐藏部分列 */
+  /* 移动端隐藏部分列 - 隐藏学科、年级 */
   .admin-table th:nth-child(3),
   .admin-table td:nth-child(3),
   .admin-table th:nth-child(4),
   .admin-table td:nth-child(4) {
     display: none;
+  }
+
+  /* 学期和教材版本在较小屏幕上隐藏 */
+  @media (max-width: 1024px) {
+    .admin-table th:nth-child(5),
+    .admin-table td:nth-child(5),
+    .admin-table th:nth-child(6),
+    .admin-table td:nth-child(6) {
+      display: none;
+    }
   }
 
   .action-buttons {

@@ -403,7 +403,7 @@ export default function TemplatesPage() {
                 <input
                   type="number"
                   min="1"
-                  max="50"
+                  max="101"
                   value={testQuantity}
                   onChange={(e) => setTestQuantity(parseInt(e.target.value) || 5)}
                 />
@@ -519,6 +519,8 @@ export default function TemplatesPage() {
                     <th>模板名称</th>
                     <th>学科</th>
                     <th>年级</th>
+                    <th>学期</th>
+                    <th>教材版本</th>
                     <th>状态</th>
                     <th>操作</th>
                   </tr>
@@ -530,6 +532,8 @@ export default function TemplatesPage() {
                       <td className="template-name">{template.name}</td>
                       <td>{getSubjectLabel(template.subject)}</td>
                       <td>{getGradeLabel(template.grade)}</td>
+                      <td>{getSemesterLabel(template.semester)}</td>
+                      <td>{template.textbook_version}</td>
                       <td>
                         <span className={`admin-badge ${template.is_active ? 'admin-badge-success' : 'admin-badge-error'}`}>
                           {template.is_active ? '启用' : '禁用'}

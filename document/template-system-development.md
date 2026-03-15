@@ -25,15 +25,15 @@
 
 ---
 
-## 1.4 快速添加模板指南
+## 1.4 快速添加模板指南（6 步完成）
 
 > **目标**：让任何 AI 助手都能根据本文档准确添加新模板
+>
+> **重要**：按顺序完成以下 6 个步骤，每步都不可跳过
 
-### 添加新模板的 4 个步骤
+### 步骤 1：创建生成器文件
 
-#### 步骤 1：创建生成器文件
-
-在 `backend/services/template/generators/` 目录创建新文件，例如 `multiplication_table.py`：
+在 `backend/services/template/generators/` 目录创建新文件，例如 `volume_conversion.py`：
 
 ```python
 """
@@ -48,14 +48,14 @@ from .base import TemplateGenerator
 
 
 class MyGenerator(TemplateGenerator):
-    """生成器类名"""
+    """生成器类名（建议：功能 +Generator，如 VolumeConversionGenerator）"""
 
     def generate(self, template_config: dict, quantity: int, question_type: str) -> List[Dict[str, Any]]:
         questions = []
         used_stems = set()
 
         # 1. 读取配置参数
-        # param = template_config.get("param_key", default_value)
+        # 示例：param = template_config.get("param_key", default_value)
 
         # 2. 循环生成题目
         for _ in range(quantity):
@@ -86,7 +86,7 @@ class MyGenerator(TemplateGenerator):
         return ["知识点列表"]
 ```
 
-#### 步骤 2：注册生成器
+### 步骤 2：注册生成器
 
 编辑 `backend/services/template/generators/__init__.py`：
 
@@ -94,23 +94,23 @@ class MyGenerator(TemplateGenerator):
 # 1. 导入生成器类
 from .my_file import MyGenerator
 
-# 2. 添加到注册表
+# 2. 添加到注册表（在 GENERATOR_REGISTRY 字典中添加）
 GENERATOR_REGISTRY = {
     # ... 现有生成器
     "my_module_name": MyGenerator,  # key 是模块名，value 是生成器类
 }
 ```
 
-#### 步骤 3：创建数据库迁移
+### 步骤 3：创建数据库迁移
 
-在 `backend/db/migrations/` 目录创建 SQL 文件，例如 `004_add_my_template.sql`：
+在 `backend/db/migrations/` 目录创建 SQL 文件，例如 `005_add_my_template.sql`：
 
 ```sql
 -- 添加我的模板
 INSERT INTO question_templates (
     name,           -- 模板名称
-    subject,        -- 学科：math/chinese
-    grade,          -- 年级：grade1-grade6
+    subject,        -- 学科：math/chinese/english
+    grade,          -- 年级：grade1-grade9
     semester,       -- 学期：upper/lower
     textbook_version, -- 教材版本：人教版/北师大版等
     question_type,  -- 题型：CALCULATION/CHOICE/FILL_BLANK/COMPARE/WORD_PROBLEM
@@ -118,7 +118,7 @@ INSERT INTO question_templates (
     variables_config, -- JSON 配置（见下方配置规范）
     example,        -- 示例题目
     generator_module, -- 生成器模块名（与注册表 key 一致）
-    sort_order,     -- 排序
+    sort_order,     -- 排序（从 1 开始，不要与现有重复）
     is_active       -- 是否启用：1/0
 ) VALUES (
     '我的模板名称',
@@ -136,14 +136,14 @@ INSERT INTO question_templates (
 );
 ```
 
-#### 步骤 4：执行迁移
+### 步骤 4：执行迁移
 
 ```bash
 cd backend
 # 使用 Python 执行 SQL
 python -c "
 import sqlite3
-with open('db/migrations/004_add_my_template.sql', 'r', encoding='utf-8') as f:
+with open('db/migrations/005_add_my_template.sql', 'r', encoding='utf-8') as f:
     conn = sqlite3.connect('data/tixiaobao.db')
     conn.execute(f.read())
     conn.commit()
@@ -151,6 +151,203 @@ with open('db/migrations/004_add_my_template.sql', 'r', encoding='utf-8') as f:
 print('迁移成功')
 "
 ```
+
+### 步骤 5：添加或更新规则（如需要）
+
+**如果你的模板需要新的规则约束**，编辑 `backend/models/question_template.py`：
+
+```python
+# 在 SUPPORTED_RULES 字典中添加新规则
+SUPPORTED_RULES = {
+    # ... 现有规则
+    "my_new_rule",  # 添加新规则名
+}
+```
+
+> **说明**：规则列表用于文档化和验证，生成器代码中可以直接使用任何规则名，无需预先注册。但建议将通用规则添加到列表中供其他生成器复用。
+
+### 步骤 6：验证测试
+
+```bash
+# 启动后端服务后，调用 API 测试
+curl -X POST http://localhost:8000/api/templates/generate \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{"template_id": 你的模板 ID, "quantity": 5}'
+```
+
+---
+
+## 1.5 规则约束完整列表
+
+> **如何添加新规则**：如果现有规则不够用，在 `backend/models/question_template.py` 的 `SUPPORTED_RULES` 中添加即可。规则名建议用 `ensure_` 或 `result_` 前缀，然后在生成器代码中检查并实现对应逻辑。
+
+### 数值范围约束
+
+| 规则名 | 说明 | 适用年级 |
+|--------|------|----------|
+| `result_within_10` | 确保结果 ≤ 10 | 一年级 |
+| `result_within_20` | 确保结果 ≤ 20 | 二年级 |
+| `result_within_100` | 确保结果 ≤ 100 | 三年级 |
+| `result_within_1000` | 确保结果 ≤ 1000 | 四年级 |
+
+### 数值属性约束
+
+| 规则名 | 说明 | 适用场景 |
+|--------|------|----------|
+| `ensure_different` | 确保两个数不同 | 比大小题目 |
+| `ensure_positive` | 确保结果非负（含中间结果） | 减法、连加减 |
+| `ensure_non_zero` | 确保不为零 | 除法、分母 |
+| `ensure_even` | 确保是偶数 | 整除练习 |
+| `ensure_odd` | 确保是奇数 | 特殊数练习 |
+| `ensure_prime` | 确保是质数 | 质数练习 |
+| `ensure_coprime` | 确保互质 | 分数约分 |
+
+### 运算约束
+
+| 规则名 | 说明 | 适用场景 |
+|--------|------|----------|
+| `ensure_divisible` | 确保除法能整除 | 除法练习 |
+| `ensure_no_remainder` | 确保除法无余数 | 除法练习 |
+| `ensure_borrowing` | 确保减法需要借位 | 借位减法 |
+| `ensure_carrying` | 确保加法需要进位 | 进位加法 |
+
+### 分数相关约束
+
+| 规则名 | 说明 | 适用场景 |
+|--------|------|----------|
+| `ensure_proper_fraction` | 确保是真分数（分子 < 分母） | 分数基础 |
+| `ensure_simplest_form` | 确保是最简分数 | 约分练习 |
+| `ensure_common_denominator` | 确保同分母 | 分数比较/加减 |
+
+### 几何/单位约束
+
+| 规则名 | 说明 | 适用场景 |
+|--------|------|----------|
+| `ensure_realistic_value` | 确保是实际存在的值 | 应用题、几何 |
+| `ensure_integer_result` | 确保计算结果为整数 | 单位换算 |
+
+### 去重约束
+
+| 规则名 | 说明 | 适用场景 |
+|--------|------|----------|
+| `ensure_unique_stem` | 确保题干不重复 | 所有题型（默认开启） |
+
+---
+
+## 1.6 未来可扩展方向
+
+> 以下是根据小学数学教学大纲预留的扩展方向，开发新模板时可参考。如需添加新规则，在 `backend/models/question_template.py` 的 `SUPPORTED_RULES` 中添加即可。
+
+### 小数相关规则
+
+```python
+"ensure_one_decimal",         # 确保一位小数
+"ensure_two_decimals",        # 确保两位小数
+"ensure_decimal_sum_within_10",  # 确保小数和≤10
+"ensure_decimal_no_rounding", # 确保小数无需四舍五入
+```
+
+### 百分数相关规则
+
+```python
+"ensure_percentage",          # 确保是百分数
+"ensure_percentage_integer",  # 确保百分数是整数
+"ensure_percentage_convertible",  # 确保可转换为小数
+```
+
+### 负数相关规则（高年级）
+
+```python
+"allow_negative",            # 允许负数
+"ensure_negative_result",    # 确保结果为负数
+"ensure_mixed_signs",        # 确保混合正负数
+```
+
+### 应用题相关规则
+
+```python
+"ensure_word_problem",       # 确保是应用题形式
+"ensure_multi_step",         # 确保是多步计算
+"ensure_realistic_context",  # 确保情境真实合理
+"ensure_no_extraneous_info", # 确保无多余信息
+```
+
+### 图形几何相关规则
+
+```python
+"ensure_integer_area",       # 确保面积是整数
+"ensure_integer_volume",     # 确保体积是整数
+"ensure_triangle_valid",     # 确保能构成三角形
+"ensure_right_angle",        # 确保是直角
+"ensure_integer_side",       # 确保边长是整数
+```
+
+### 统计概率相关规则
+
+```python
+"ensure_integer_mean",       # 确保平均数是整数
+"ensure_probability_valid",  # 确保概率在 0-1 之间
+"ensure_data_consistent",    # 确保数据一致性
+```
+
+### 代数相关规则（高年级）
+
+```python
+"ensure_linear_equation",    # 确保是一元一次方程
+"ensure_integer_solution",   # 确保解是整数
+"ensure_positive_coefficient",  # 确保系数为正
+"ensure_single_variable",    # 确保单变量
+```
+
+### 比和比例相关规则
+
+```python
+"ensure_ratio_simplifiable", # 确保比可化简
+"ensure_proportion_valid",   # 确保比例成立
+"ensure_integer_ratio",      # 确保比值为整数
+```
+
+---
+
+## 1.7 教材版本和年级
+
+### 支持的教材版本
+
+| 版本 | 说明 |
+|------|------|
+| 人教版 | 人民教育出版社 |
+| 人教版 (新) | 人教版新教材 |
+| 北师大版 | 北京师范大学出版社 |
+| 苏教版 | 江苏教育出版社 |
+| 西师版 | 西南师范大学出版社 |
+| 沪教版 | 上海教育出版社 |
+| 北京版 | 北京出版社 |
+| 青岛六三 | 青岛出版社（六三学制） |
+| 青岛五四 | 青岛出版社（五四学制） |
+
+### 支持的学期
+
+| 学期 | 说明 |
+|------|------|
+| upper | 上学期 |
+| lower | 下学期 |
+
+### 年级代码
+
+| 代码 | 年级 |
+|------|------|
+| grade1 | 一年级 |
+| grade2 | 二年级 |
+| grade3 | 三年级 |
+| grade4 | 四年级 |
+| grade5 | 五年级 |
+| grade6 | 六年级 |
+| grade7 | 初一 |
+| grade8 | 初二 |
+| grade9 | 初三 |
+
+---
 
 ### 配置规范速查
 
@@ -166,25 +363,15 @@ print('迁移成功')
 }
 ```
 
-#### 支持的规则约束
-
-| 规则名 | 说明 |
-|--------|------|
-| `ensure_different` | 确保两个数不同 |
-| `ensure_positive` | 确保结果非负（含中间结果） |
-| `result_within_10` | 确保结果 ≤ 10 |
-| `result_within_20` | 确保结果 ≤ 20 |
-| `result_within_100` | 确保结果 ≤ 100 |
-
 #### 支持的题型
 
-| 题型值 | 说明 |
-|--------|------|
-| `CALCULATION` | 计算题 |
-| `CHOICE` | 选择题 |
-| `FILL_BLANK` | 填空题 |
-| `COMPARE` | 比较大小 |
-| `WORD_PROBLEM` | 应用题 |
+| 题型值 | 说明 | 适用场景 |
+|--------|------|----------|
+| `CALCULATION` | 计算题 | 加减乘除、混合运算 |
+| `CHOICE` | 选择题 | 单选/多选 |
+| `FILL_BLANK` | 填空题 | 填空、比大小 |
+| `COMPARE` | 比较大小 | 数值/分数/单位比较 |
+| `WORD_PROBLEM` | 应用题 | 文字应用题 |
 
 ---
 
@@ -729,6 +916,96 @@ stem = f"{a} × {b} = （    ）"
 
 ---
 
+### 5.6 VolumeConversionGenerator - 体积单位换算
+
+**文件**: `services/template/generators/volume_conversion.py`
+
+**适用**: 五年级 长方体和正方体体积单位的换算
+
+**例题**:
+- 5 立方米 = （ ）立方分米
+- 3000 立方厘米 = （ ）立方分米
+- 8 升 = （ ）毫升
+
+**配置示例**:
+```json
+{
+    "volume": {"min": 1, "max": 100},
+    "convert_types": [
+        "m3_to_dm3", "dm3_to_cm3", "cm3_to_dm3", "dm3_to_m3",
+        "l_to_ml", "ml_to_l", "dm3_to_l", "l_to_dm3"
+    ]
+}
+```
+
+**支持的换算类型**:
+
+| 类型 | 说明 | 例题 |
+|------|------|------|
+| `m3_to_dm3` | 立方米→立方分米 | 5 立方米 = （ ）立方分米 |
+| `dm3_to_m3` | 立方分米→立方米 | 1000 立方分米 = （ ）立方米 |
+| `dm3_to_cm3` | 立方分米→立方厘米 | 3 立方分米 = （ ）立方厘米 |
+| `cm3_to_dm3` | 立方厘米→立方分米 | 2000 立方厘米 = （ ）立方分米 |
+| `l_to_ml` | 升→毫升 | 5 升 = （ ）毫升 |
+| `ml_to_l` | 毫升→升 | 3000 毫升 = （ ）升 |
+| `dm3_to_l` | 立方分米→升 | 8 立方分米 = （ ）升 |
+| `l_to_dm3` | 升→立方分米 | 10 升 = （ ）立方分米 |
+| `cm3_to_ml` | 立方厘米→毫升 | 25 立方厘米 = （ ）毫升 |
+| `ml_to_cm3` | 毫升→立方厘米 | 50 毫升 = （ ）立方厘米 |
+| `m3_to_l` | 立方米→升 | 2 立方米 = （ ）升 |
+| `l_to_m3` | 升→立方米 | 5000 升 = （ ）立方米 |
+
+**进率关系**:
+- 1 立方米 = 1000 立方分米
+- 1 立方分米 = 1000 立方厘米
+- 1 升 = 1000 毫升
+- 1 立方分米 = 1 升
+- 1 立方厘米 = 1 毫升
+
+---
+
+### 5.7 FractionComparisonGenerator - 分数比大小
+
+**文件**: `services/template/generators/fraction_comparison.py`
+
+**适用**: 五年级 下学期 分数比大小
+
+**例题**:
+- $\frac{3}{4}$ （ ） $\frac{2}{3}$
+- $\frac{2}{5}$ （ ） $\frac{3}{5}$
+- $\frac{2}{3}$ （ ） $\frac{2}{5}$
+
+**配置示例**:
+```json
+{
+    "denominator": {"min": 2, "max": 12},
+    "numerator": {"min": 1},
+    "compare_types": ["common_denominator", "common_numerator", "different"],
+    "rules": ["ensure_different", "ensure_proper_fraction"]
+}
+```
+
+**支持的比较类型**:
+
+| 类型 | 说明 | 例题 |
+|------|------|------|
+| `common_denominator` | 同分母比较 | $\frac{2}{5}$ （ ） $\frac{3}{5}$ |
+| `common_numerator` | 同分子比较 | $\frac{2}{3}$ （ ） $\frac{2}{5}$ |
+| `different` | 异分母比较 | $\frac{3}{4}$ （ ） $\frac{2}{3}$ |
+
+**支持的规则**:
+- `ensure_different`: 确保两个分数不相等
+- `ensure_proper_fraction`: 确保是真分数（分子 < 分母）
+
+**核心逻辑**:
+```python
+# 异分母比较：交叉相乘判断大小
+if numerator1 * denominator2 > numerator2 * denominator1:
+    # 第一个分数大
+```
+
+---
+
 ## 6. API 使用
 
 ### 6.1 获取模板列表
@@ -986,7 +1263,9 @@ backend/services/template/
     ├── addition_subtraction.py # 加减法生成器
     ├── consecutive_addition_subtraction.py  # 连加减生成器
     ├── currency_conversion.py  # 人民币换算生成器
-    └── multiplication_table.py # 九九乘法表生成器
+    ├── multiplication_table.py # 九九乘法表生成器
+    ├── volume_conversion.py    # 体积单位换算生成器
+    └── fraction_comparison.py  # 分数比大小生成器
 ```
 
 ```
@@ -1001,5 +1280,16 @@ backend/models/
 
 ```
 backend/db/migrations/
-└── 002_add_question_templates.sql  # 数据库迁移
+├── 001_add_questions_table.sql       # 题目表
+├── 002_add_question_templates.sql    # 模板系统
+├── 004_add_multiplication_table_template.sql  # 乘法表模板
+├── 005_add_volume_conversion_template.sql     # 体积换算模板
+└── 006_add_fraction_comparison_template.sql   # 分数比大小模板
+```
+
+```
+提示词示例：
+添加一个一年级 下学期 沪教版  题目类型为填空 `百以内数的大小比较` 的后台模板  生成的题目数字都要大于20  
+
+线上执行sql :  sqlite3 /path/to/your/tixiaobao.db < backend/db/migrations/007_ad  d_bainaineishu_comparison_template.sql
 ```
