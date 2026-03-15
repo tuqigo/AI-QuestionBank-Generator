@@ -4,6 +4,13 @@
 
 import './mathjax'
 
+// ===================== 用户相关类型 =====================
+
+export interface User {
+  email: string
+  grade?: string | null
+}
+
 // ===================== 历史记录相关类型 =====================
 
 export interface GenerateResponse {

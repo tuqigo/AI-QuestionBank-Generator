@@ -25,7 +25,7 @@ interface Props {
   fetchUser: () => void
 }
 
-export default function MainContent({ email, onLogout }: Props) {
+export default function MainContent({ email, onLogout, fetchUser }: Props) {
   const [prompt, setPrompt] = useState('小学六年级 数学综合练习（分数运算、百分数、圆、比例、统计）')
   // 结构化数据
   const [questions, setQuestions] = useState<StructuredQuestion[]>([])

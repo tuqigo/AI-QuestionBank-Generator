@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect, useCallback } from 'react'
 import { getToken, clearToken } from './core/auth/userAuth'
 import { ToastContainer } from './components/shared'
+import GradeSelectorModal from './components/GradeSelectorModal'
 import MainContent from './features/question-generator/MainContent'
 import HistoryDetail from './features/history/HistoryDetail'
 import SharePage from './features/history/SharePage'
@@ -12,8 +13,9 @@ import LandingPage from './features/landing/LandingPage'
 const API_BASE = '/api'
 
 function AppContent() {
-  const [user, setUser] = useState<string | null>(null)
+  const [user, setUser] = useState<{ email: string; grade?: string | null } | null>(null)
   const [checking, setChecking] = useState(true)
+  const [showGradeSelector, setShowGradeSelector] = useState(false)
 
   const fetchUser = useCallback(() => {
     setChecking(true)
@@ -32,7 +34,13 @@ function AppContent() {
         setUser(null)
       })
       .then((data) => {
-        if (data?.email) setUser(data.email)
+        if (data?.email) {
+          setUser(data)
+          // 如果用户没有填写年级，弹出选择器
+          if (data.grade === null || data.grade === undefined) {
+            setShowGradeSelector(true)
+          }
+        }
       })
       .catch(() => setUser(null))
       .finally(() => setChecking(false))
@@ -45,6 +53,32 @@ function AppContent() {
   const handleLogout = () => {
     clearToken()
     setUser(null)
+  }
+
+  // 更新用户年级
+  const updateGrade = async (grade: string) => {
+    const token = getToken()
+    if (!token) {
+      throw new Error('未登录')
+    }
+
+    const res = await fetch(`${API_BASE}/users/grade`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ grade }),
+    })
+
+    const data = await res.json()
+    if (!res.ok) {
+      throw new Error((data as { detail?: string }).detail || '更新失败')
+    }
+
+    // 更新本地用户状态
+    setUser((prev) => prev ? { ...prev, grade } : null)
+    setShowGradeSelector(false)
   }
 
   if (checking) {
@@ -66,25 +100,34 @@ function AppContent() {
   }
 
   return (
-    <Routes>
-      {/* 管理后台 */}
-      <Route path="/admin/*" element={<AdminApp />} />
+    <>
+      <Routes>
+        {/* 管理后台 */}
+        <Route path="/admin/*" element={<AdminApp />} />
 
-      {/* 公开分享页面 - 无需登录 */}
-      <Route path="/share/h/:id" element={<SharePage />} />
+        {/* 公开分享页面 - 无需登录 */}
+        <Route path="/share/h/:id" element={<SharePage />} />
 
-      {/* 【新增】首页 Landing Page - 公开访问 */}
-      <Route path="/" element={<LandingPage />} />
+        {/* 【新增】首页 Landing Page - 公开访问 */}
+        <Route path="/" element={<LandingPage />} />
 
-      {/* 需要登录的页面 - 主内容 */}
-      <Route path="/workbench" element={user ? <MainContent email={user} onLogout={handleLogout} fetchUser={fetchUser} /> : <Navigate to="/" />} />
+        {/* 需要登录的页面 - 主内容 */}
+        <Route path="/workbench" element={user ? <MainContent email={user.email} onLogout={handleLogout} fetchUser={fetchUser} /> : <Navigate to="/" />} />
 
-      {/* 历史详情页 */}
-      <Route path="/history/:id" element={user ? <HistoryDetail /> : <Navigate to="/" />} />
+        {/* 历史详情页 */}
+        <Route path="/history/:id" element={user ? <HistoryDetail /> : <Navigate to="/" />} />
 
-      {/* 【测试】结构化题目预览页 */}
-      <Route path="/structured" element={user ? <StructuredPreview /> : <Navigate to="/" />} />
-    </Routes>
+        {/* 【测试】结构化题目预览页 */}
+        <Route path="/structured" element={user ? <StructuredPreview /> : <Navigate to="/" />} />
+      </Routes>
+
+      {/* 年级选择器弹窗 */}
+      <GradeSelectorModal
+        isOpen={showGradeSelector}
+        onClose={() => setShowGradeSelector(false)}
+        onSelect={updateGrade}
+      />
+    </>
   )
 }
 

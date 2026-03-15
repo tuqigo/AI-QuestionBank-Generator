@@ -218,7 +218,8 @@ def get_current_user_email(
 async def me(email: str = Depends(get_current_user_email)):
     """获取当前用户信息"""
     api_logger.debug(f"获取当前用户信息：{email}")
-    return {"email": email}
+    user = get_user(email)
+    return {"email": email, "grade": user.grade if user else None}
 
 
 @router.post("/logout")

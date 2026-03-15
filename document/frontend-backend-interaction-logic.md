@@ -137,7 +137,70 @@ const response = await fetchWithAuth('/api/history', { method: 'GET' })
 
 ---
 
-## 3. 题目生成交互
+## 3. 年级选择交互流程
+
+### 3.1 新用户注册后选择年级
+
+```
+前端                                     后端
+ │                                         │
+ │  1. 用户注册成功，弹出年级选择器          │
+ │                                         │
+ │  2. 用户选择年级（如"三年级"）           │
+ ├────────────────────────────────────────▶│
+ │     PUT /api/users/grade                │
+ │     Authorization: Bearer <token>       │
+ │     { "grade": "grade3" }               │
+ │                                         │
+ │  3. 验证年级格式（grade1~grade9）        │
+ │     更新数据库 users.grade 字段          │
+ │                                         │
+ │  4. 返回成功                            │
+ │◀────────────────────────────────────────┤
+ │     { "success": true }                 │
+ │                                         │
+ │  5. 关闭弹窗，更新本地用户状态           │
+ │                                         │
+```
+
+### 3.2 老用户未填写年级时提示
+
+```
+前端                                     后端
+ │                                         │
+ │  1. 用户登录/刷新页面                    │
+ ├────────────────────────────────────────▶│
+ │     GET /api/auth/me                    │
+ │     Authorization: Bearer <token>       │
+ │                                         │
+ │  2. 查询用户信息（含 grade 字段）         │
+ │                                         │
+ │  3. 返回用户信息                         │
+ │◀────────────────────────────────────────┤
+ │     { "email": "user@example.com",      │
+ │       "grade": null }                   │
+ │                                         │
+ │  4. 检测到 grade 为 null，弹出年级选择器  │
+ │                                         │
+```
+
+### 3.3 年级选项说明
+
+| 年级值 | 显示文本 | 阶段 |
+|--------|---------|------|
+| grade1 | 一年级 | 小学 |
+| grade2 | 二年级 | 小学 |
+| grade3 | 三年级 | 小学 |
+| grade4 | 四年级 | 小学 |
+| grade5 | 五年级 | 小学 |
+| grade6 | 六年级 | 小学 |
+| grade7 | 初一 | 初中 |
+| grade8 | 初二 | 初中 |
+| grade9 | 初三 | 初中 |
+
+---
+
+## 5. 题目生成交互
 
 ### 3.1 结构化题目生成
 
@@ -410,6 +473,21 @@ interface TokenResponse {
 }
 ```
 
+#### 用户年级更新请求
+```typescript
+interface UserGradeUpdateRequest {
+  grade: 'grade1' | 'grade2' | 'grade3' | 'grade4' | 'grade5' | 'grade6' | 'grade7' | 'grade8' | 'grade9'
+}
+```
+
+#### 用户信息响应
+```typescript
+interface UserResponse {
+  email: string
+  grade: string | null
+}
+```
+
 #### 结构化题目生成响应
 ```typescript
 interface StructuredGenerateResponse {
@@ -613,7 +691,13 @@ async def generate_questions_async(user_prompt, user_id):
 | GET | /api/share/history/{short_id}/questions | 否 | 分享题目 |
 | GET | /api/share/history/{short_id}/answers | 否 | 分享答案 |
 
-### 10.5 管理后台
+### 10.5 用户信息
+
+| 方法 | 端点 | 认证 | 说明 |
+|------|------|------|------|
+| PUT | /api/users/grade | 是 | 更新用户年级（grade1~grade9） |
+
+### 10.6 管理后台
 
 | 方法 | 端点 | 认证 | 说明 |
 |------|------|------|------|

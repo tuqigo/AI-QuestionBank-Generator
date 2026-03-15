@@ -67,7 +67,8 @@ frontend/
 │   │   │   ├── Modal.tsx      # 模态框
 │   │   │   └── index.ts       # 统一导出
 │   │   ├── QuestionRenderer.tsx    # 题目渲染器（路由分发）
-│   │   └── StructuredPreviewShared.tsx  # 结构化预览共享组件
+│   │   ├── StructuredPreviewShared.tsx  # 结构化预览共享组件
+│   │   └── GradeSelectorModal.tsx   # 年级选择器弹窗（新增）
 │   │
 │   ├── config/                # 配置文件
 │   │   └── questionConfig.ts  # 题目配置常量
@@ -228,7 +229,7 @@ C 端用户认证工具函数（使用工厂模式）：
 
 #### features/auth/
 认证相关功能：
-- `LoginPage.tsx`: 登录/注册页面
+- `LoginPage.tsx`: 登录/注册页面（含注册后年级选择）
 - `LoginModal.tsx`: 登录弹窗组件
 
 #### features/question-generator/
@@ -246,6 +247,10 @@ C 端用户认证工具函数（使用工厂模式）：
 - `HistoryList.tsx`: 历史记录下拉列表
 - `HistoryDetail.tsx`: 历史记录详情页
 - `SharePage.tsx`: 公开分享页（无需登录）
+
+#### features/landing/
+落地页功能：
+- `LandingPage.tsx`: 首页落地页
 
 ### 3.4 组件模块 (components/)
 
@@ -277,6 +282,28 @@ C 端用户认证工具函数（使用工厂模式）：
 - `Button`: primary, secondary, success, danger, ghost
 - `LoadingSpinner`: small, medium, large
 - `Modal`: small, medium, large
+
+#### components/GradeSelectorModal.tsx
+年级选择器弹窗组件 - 用户注册后或老用户未填写年级时弹出：
+
+```typescript
+// 年级选项
+const PRIMARY_GRADES = [
+  { value: 'grade1', label: '一年级' },
+  // ... grade2~grade6
+]
+const JUNIOR_GRADES = [
+  { value: 'grade7', label: '初一' },
+  // ... grade8, grade9
+]
+
+// Props
+interface GradeSelectorModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onSelect: (grade: string) => Promise<void>
+}
+```
 
 #### components/QuestionRenderer.tsx
 题目渲染器 - 根据题型动态选择对应组件：
@@ -358,6 +385,9 @@ useMathJaxSimple(containerRef, [questions])
 通用类型定义：
 
 ```typescript
+// 用户相关
+interface User  // 用户信息（含 grade 字段）
+
 // 历史记录相关
 interface GenerateResponse
 interface QuestionRecord

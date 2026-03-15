@@ -164,8 +164,14 @@ FastAPI 应用入口：
 | `/api/auth/register` | POST | 用户注册 |
 | `/api/auth/login` | POST | 用户登录 |
 | `/api/auth/reset-password` | POST | 重置密码 |
-| `/api/auth/me` | GET | 获取当前用户 |
+| `/api/auth/me` | GET | 获取当前用户（含 grade 年级字段） |
 | `/api/auth/logout` | POST | 登出 |
+
+#### users.py - 用户信息
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/api/users/grade` | PUT | 更新用户年级（grade1~grade9） |
 
 #### questions.py - 题目生成
 
@@ -266,6 +272,7 @@ def create_user(email, password) -> UserInDB
 def update_password(email, new_password) -> bool
 def get_all_users(page, page_size) -> Tuple[List, int, bool]
 def set_user_disabled(user_id, is_disabled) -> bool
+def update_user_grade(user_id, grade) -> bool  # 更新用户年级
 ```
 
 #### 题目服务 (services/question/)
@@ -332,7 +339,8 @@ class QuestionDataCleaner:
 ```python
 class UserCreate(BaseModel)      # 注册请求
 class UserLogin(BaseModel)       # 登录请求
-class UserInDB(BaseModel)        # 数据库用户
+class UserInDB(BaseModel)        # 数据库用户（含 grade 字段）
+class UserGradeUpdate(BaseModel) # 年级更新请求（grade1~grade9）
 class TokenResponse(BaseModel)   # Token 响应
 class EmailOtpRequest(BaseModel) # OTP 请求
 class ResetPasswordRequest(BaseModel)
@@ -436,7 +444,13 @@ def init_database():
 
 ```
 db/migrations/
-└── 001_add_questions_table.sql  # 添加 questions 表
+└── add_grade_column.py  # 添加 users.grade 字段
+```
+
+**迁移脚本使用**:
+```bash
+cd backend
+python migrations/add_grade_column.py
 ```
 
 ---

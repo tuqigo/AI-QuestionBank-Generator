@@ -16,6 +16,7 @@ class UserInDB(BaseModel):
     id: int
     email: str
     hashed_password: str
+    grade: str | None = None
 
 
 class TokenResponse(BaseModel):
@@ -37,3 +38,7 @@ class ResetPasswordRequest(BaseModel):
     email: str
     code: str
     new_password: str
+
+
+class UserGradeUpdate(BaseModel):
+    grade: str  # grade1~grade9

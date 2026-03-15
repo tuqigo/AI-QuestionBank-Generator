@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT UNIQUE NOT NULL,
     hashed_password TEXT NOT NULL,
+    grade TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     is_disabled INTEGER DEFAULT 0
 );

@@ -11,7 +11,7 @@ from utils.logger import api_logger
 # 初始化数据库
 init_database()
 
-from api.v1 import questions, auth, extend, history, admin
+from api.v1 import questions, auth, extend, history, admin, users
 
 app = FastAPI(title="题小宝 API")
 
@@ -28,6 +28,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(questions.router)
+app.include_router(users.router)
 
 # 注册结构化题目路由（独立导入以避免循环依赖）
 from api.v1.questions_structured import router as structured_router

@@ -406,6 +406,16 @@ user_question_records (题目记录表)
 
 ### 4.2 表结构说明
 
+#### users - 用户表
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | INTEGER | 主键，自增 |
+| email | TEXT | 邮箱，唯一 |
+| hashed_password | TEXT | bcrypt 密码哈希 |
+| grade | TEXT | 用户年级（grade1~grade9） |
+| created_at | TIMESTAMP | 创建时间 |
+| is_disabled | INTEGER | 禁用标记 |
+
 详见 [数据库表结构](#附录 - 数据库表结构)
 
 ### 4.3 数据库路径配置（重构后）

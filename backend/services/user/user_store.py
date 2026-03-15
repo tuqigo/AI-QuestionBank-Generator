@@ -27,14 +27,15 @@ def get_user(email: str) -> Optional[UserInDB]:
     user_logger.info(f"查询用户：{email}")
     conn = _get_connection()
     try:
-        cursor = conn.execute("SELECT id, email, hashed_password FROM users WHERE email = ?", (email,))
+        cursor = conn.execute("SELECT id, email, hashed_password, grade FROM users WHERE email = ?", (email,))
         row = cursor.fetchone()
         if row:
             user_logger.info(f"用户存在：{email}")
             return UserInDB(
                 id=row["id"],
                 email=row["email"],
-                hashed_password=row["hashed_password"]
+                hashed_password=row["hashed_password"],
+                grade=row["grade"]
             )
         else:
             user_logger.warning(f"用户不存在：{email}")
@@ -103,14 +104,15 @@ def get_user_by_id(user_id: int) -> Optional[UserInDB]:
     user_logger.info(f"根据 ID 查询用户：{user_id}")
     conn = _get_connection()
     try:
-        cursor = conn.execute("SELECT id, email, hashed_password FROM users WHERE id = ?", (user_id,))
+        cursor = conn.execute("SELECT id, email, hashed_password, grade FROM users WHERE id = ?", (user_id,))
         row = cursor.fetchone()
         if row:
             user_logger.info(f"用户存在：ID={user_id}")
             return UserInDB(
                 id=row["id"],
                 email=row["email"],
-                hashed_password=row["hashed_password"]
+                hashed_password=row["hashed_password"],
+                grade=row["grade"]
             )
         else:
             user_logger.warning(f"用户不存在：ID={user_id}")
@@ -209,6 +211,29 @@ def set_user_disabled(user_id: int, is_disabled: bool) -> bool:
             return False
     except Exception as e:
         user_logger.error(f"更新用户状态失败：{e}")
+        return False
+    finally:
+        conn.close()
+
+
+def update_user_grade(user_id: int, grade: str) -> bool:
+    """更新用户年级"""
+    user_logger.info(f"更新用户年级：user_id={user_id}, grade={grade}")
+    conn = _get_connection()
+    try:
+        cursor = conn.execute(
+            "UPDATE users SET grade = ? WHERE id = ?",
+            (grade, user_id)
+        )
+        conn.commit()
+        if cursor.rowcount > 0:
+            user_logger.info(f"用户年级更新成功：user_id={user_id}, grade={grade}")
+            return True
+        else:
+            user_logger.warning(f"用户不存在：user_id={user_id}")
+            return False
+    except Exception as e:
+        user_logger.error(f"更新用户年级失败：{e}")
         return False
     finally:
         conn.close()

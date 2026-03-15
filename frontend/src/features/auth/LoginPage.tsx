@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { toast } from '@/hooks'
-import { setToken } from '@/core/auth/userAuth'
+import { setToken, getToken } from '@/core/auth/userAuth'
+import GradeSelectorModal from '@/components/GradeSelectorModal'
 import './LoginPage.css'
 
 const API_BASE = '/api'
@@ -20,6 +21,7 @@ export default function LoginPage({ onSuccess }: Props) {
   const [loading, setLoading] = useState(false)
   const [sendingOtp, setSendingOtp] = useState(false)
   const [countdown, setCountdown] = useState(0)
+  const [showGradeSelector, setShowGradeSelector] = useState(false)
   const timerRef = useRef<number | null>(null)
 
   // 倒计时逻辑
@@ -175,7 +177,12 @@ export default function LoginPage({ onSuccess }: Props) {
       // 登录和注册成功后设置 token
       if (page === 'login' || page === 'register') {
         setToken((data as { access_token: string }).access_token)
-        onSuccess()
+        if (page === 'login') {
+          onSuccess()
+        } else {
+          // 注册成功，显示年级选择器
+          setShowGradeSelector(true)
+        }
       } else {
         // 找回密码成功，提示用户登录
         toast.success('密码重置成功，请登录')
@@ -195,6 +202,32 @@ export default function LoginPage({ onSuccess }: Props) {
     setCode('')
     setPassword('')
     setCountdown(0)
+  }
+
+  // 更新用户年级
+  const updateGrade = async (grade: string) => {
+    const token = getToken()
+    if (!token) {
+      throw new Error('未登录')
+    }
+
+    const res = await fetch(`${API_BASE}/users/grade`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ grade }),
+    })
+
+    const data = await res.json()
+    if (!res.ok) {
+      throw new Error((data as { detail?: string }).detail || '更新失败')
+    }
+
+    toast.success('年级设置成功')
+    setShowGradeSelector(false)
+    onSuccess()
   }
 
   return (
@@ -373,6 +406,12 @@ export default function LoginPage({ onSuccess }: Props) {
           )}
         </div>
       </div>
+
+      <GradeSelectorModal
+        isOpen={showGradeSelector}
+        onClose={() => setShowGradeSelector(false)}
+        onSelect={updateGrade}
+      />
     </div>
   )
 }
