@@ -10,7 +10,7 @@ import sqlite3
 from pathlib import Path
 
 # 数据库文件路径
-DB_PATH = Path(__file__).parent.parent / "data" / "tixiaobao.db"
+DB_PATH = Path(__file__) / "data" / "tixiaobao.db"
 
 
 def migrate():
