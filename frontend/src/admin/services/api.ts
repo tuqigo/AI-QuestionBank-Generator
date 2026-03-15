@@ -226,3 +226,169 @@ export async function getAiRecordDetail(record_id: number): Promise<AiGeneration
   }
   return response.json()
 }
+
+// ========== 模板管理 ==========
+
+export interface QuestionTemplate {
+  id: number
+  name: string
+  subject: string
+  grade: string
+  semester: string
+  textbook_version: string
+  question_type: string
+  template_pattern: string
+  variables_config: string
+  example: string | null
+  generator_module: string | null
+  sort_order: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface TemplateListResponse {
+  templates: TemplateListItem[]
+}
+
+export interface TemplateListItem {
+  id: number
+  name: string
+  subject: string
+  grade: string
+  semester: string
+  textbook_version: string
+  example: string | null
+}
+
+export interface TemplateCreateInput {
+  name: string
+  subject: string
+  grade: string
+  semester: string
+  textbook_version: string
+  question_type: string
+  template_pattern: string
+  variables_config: string
+  example?: string
+  sort_order?: number
+  is_active?: boolean
+  generator_module?: string
+}
+
+export interface TemplateUpdateInput {
+  name?: string
+  template_pattern?: string
+  variables_config?: string
+  example?: string
+  sort_order?: number
+  is_active?: boolean
+}
+
+export interface TemplateGenerateInput {
+  template_id: number
+  quantity: number
+}
+
+export async function getTemplates(): Promise<TemplateListResponse> {
+  const response = await fetchWithAdminAuth('/api/templates/list')
+  if (!response.ok) {
+    throw new Error('获取模板列表失败')
+  }
+  return response.json()
+}
+
+export async function getAllTemplates(): Promise<{ templates: QuestionTemplate[] }> {
+  const response = await fetchWithAdminAuth('/api/templates/admin/all')
+  if (!response.ok) {
+    throw new Error('获取所有模板失败')
+  }
+  return response.json()
+}
+
+export async function createTemplate(input: TemplateCreateInput): Promise<{ id: number }> {
+  const response = await fetchWithAdminAuth('/api/templates/admin/create', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(input),
+  })
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: '创建失败' }))
+    throw new Error(error.detail || '创建失败')
+  }
+  return response.json()
+}
+
+export async function updateTemplate(template_id: number, input: TemplateUpdateInput): Promise<{ message: string }> {
+  const response = await fetchWithAdminAuth(`/api/templates/admin/${template_id}/update`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(input),
+  })
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: '更新失败' }))
+    throw new Error(error.detail || '更新失败')
+  }
+  return response.json()
+}
+
+export async function deleteTemplate(template_id: number): Promise<{ message: string }> {
+  const response = await fetchWithAdminAuth(`/api/templates/admin/${template_id}/delete`, {
+    method: 'DELETE',
+  })
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: '删除失败' }))
+    throw new Error(error.detail || '删除失败')
+  }
+  return response.json()
+}
+
+export async function toggleTemplate(template_id: number, is_active: boolean): Promise<{ message: string }> {
+  const response = await fetchWithAdminAuth(`/api/templates/admin/${template_id}/toggle?is_active=${is_active}`, {
+    method: 'POST',
+  })
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: '操作失败' }))
+    throw new Error(error.detail || '操作失败')
+  }
+  return response.json()
+}
+
+export async function testTemplate(
+  template_id: number,
+  quantity: number
+): Promise<{ meta: { subject: string; grade: string; title: string }; questions: any[] }> {
+  const response = await fetchWithAdminAuth(`/api/templates/admin/${template_id}/test`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ template_id, quantity }),
+  })
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: '测试失败' }))
+    throw new Error(error.detail || '测试失败')
+  }
+  return response.json()
+}
+
+export async function generateFromTemplate(
+  input: TemplateGenerateInput
+): Promise<{ meta: { subject: string; grade: string; title: string }; questions: any[] }> {
+  const response = await fetchWithAdminAuth('/api/templates/generate', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(input),
+  })
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: '生成失败' }))
+    throw new Error(error.detail || '生成失败')
+  }
+  return response.json()
+}

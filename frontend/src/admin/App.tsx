@@ -9,6 +9,7 @@ import OperationLogsPage from './pages/OperationLogsPage'
 import AiRecordsPage from './pages/AiRecordsPage'
 import AiRecordDetailPage from './pages/AiRecordDetailPage'
 import UserRecordDetailPage from './pages/UserRecordDetailPage'
+import TemplatesPage from './pages/TemplatesPage'
 import './App.css'
 
 // 受保护的路由组件
@@ -56,6 +57,7 @@ function ProtectedRoute() {
 function AdminLayout() {
   const location = useLocation()
   const navigate = useNavigate()
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 768)
 
   const handleLogout = () => {
     clearAdminToken()
@@ -66,9 +68,40 @@ function AdminLayout() {
     return location.pathname.startsWith(path)
   }
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen)
+  }
+
+  // 移动端点击菜单项后自动关闭侧边栏
+  const handleNavClick = (path: string) => {
+    if (window.innerWidth <= 768) {
+      setSidebarOpen(false)
+    }
+    navigate(path)
+  }
+
+  // 监听窗口大小变化
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 768) {
+        setSidebarOpen(true)
+      } else {
+        setSidebarOpen(false)
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   return (
     <div className="admin-layout">
-      <aside className="admin-sidebar">
+      {/* 侧边栏切换按钮 - 移动端显示 */}
+      <button className="sidebar-toggle" onClick={toggleSidebar} title={sidebarOpen ? '收起侧边栏' : '展开侧边栏'}>
+        {sidebarOpen ? '✕' : '☰'}
+      </button>
+
+      <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="admin-logo">
           <h2>好学生 AI 题库</h2>
           <span>管理后台</span>
@@ -77,25 +110,33 @@ function AdminLayout() {
           <a
             href="/admin/users"
             className={isActive('/admin/users') ? 'active' : ''}
-            onClick={(e) => { e.preventDefault(); navigate('/admin/users') }}
+            onClick={(e) => { e.preventDefault(); handleNavClick('/admin/users') }}
           >
             <span className="nav-icon">👥</span>
             用户管理
           </a>
           <a
-            href="/admin/ai-records"
-            className={isActive('/admin/ai-records') ? 'active' : ''}
-            onClick={(e) => { e.preventDefault(); navigate('/admin/ai-records') }}
+            href="/admin/templates"
+            className={isActive('/admin/templates') ? 'active' : ''}
+            onClick={(e) => { e.preventDefault(); handleNavClick('/admin/templates') }}
           >
             <span className="nav-icon">📝</span>
+            模板管理
+          </a>
+          <a
+            href="/admin/ai-records"
+            className={isActive('/admin/ai-records') ? 'active' : ''}
+            onClick={(e) => { e.preventDefault(); handleNavClick('/admin/ai-records') }}
+          >
+            <span className="nav-icon">📋</span>
             AI 生成记录
           </a>
           <a
             href="/admin/logs"
             className={isActive('/admin/logs') ? 'active' : ''}
-            onClick={(e) => { e.preventDefault(); navigate('/admin/logs') }}
+            onClick={(e) => { e.preventDefault(); handleNavClick('/admin/logs') }}
           >
-            <span className="nav-icon">📋</span>
+            <span className="nav-icon">📜</span>
             操作日志
           </a>
         </nav>
@@ -126,6 +167,7 @@ export default function AdminApp() {
           <Route path="" element={<Navigate to="users" replace />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="users/:id" element={<UserDetailPage />} />
+          <Route path="templates" element={<TemplatesPage />} />
           <Route path="ai-records" element={<AiRecordsPage />} />
           <Route path="ai-records/:id" element={<AiRecordDetailPage />} />
           <Route path="user-records/:id" element={<UserRecordDetailPage />} />

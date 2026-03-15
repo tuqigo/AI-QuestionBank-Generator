@@ -43,6 +43,14 @@
   height: 100vh;
   overflow-y: auto;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, width 0.3s ease;
+  z-index: 1000;
+}
+
+.admin-sidebar.collapsed {
+  width: 0;
+  transform: translateX(-260px);
+  overflow: hidden;
 }
 
 .admin-logo {
@@ -129,6 +137,111 @@
   padding: 30px;
   min-height: 100vh;
   overflow-y: auto;
+  transition: margin-left 0.3s ease;
+}
+
+.admin-main.expanded {
+  margin-left: 0;
+}
+
+/* 侧边栏切换按钮 */
+.sidebar-toggle {
+  display: none;
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 999;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  box-shadow: 0 2px 12px rgba(102, 126, 234, 0.4);
+  transition: all 0.3s ease;
+}
+
+.sidebar-toggle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.6);
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .sidebar-toggle {
+    display: flex;
+  }
+
+  .admin-sidebar {
+    transform: translateX(-260px);
+  }
+
+  .admin-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .admin-main {
+    margin-left: 0;
+    padding: 60px 16px 16px;
+  }
+
+  .admin-main.expanded {
+    margin-left: 0;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .page-header h1 {
+    font-size: 22px;
+  }
+
+  .admin-table {
+    font-size: 13px;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    padding: 10px 8px;
+  }
+
+  /* 移动端表格优化 - 隐藏次要列 */
+  .admin-table th:nth-child(4),
+  .admin-table td:nth-child(4),
+  .admin-table th:nth-child(5),
+  .admin-table td:nth-child(5),
+  .admin-table th:nth-child(6),
+  .admin-table td:nth-child(6) {
+    display: none;
+  }
+
+  .admin-card-body {
+    padding: 16px;
+  }
+
+  .generate-settings {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-table th:nth-child(3),
+  .admin-table td:nth-child(3) {
+    display: none;
+  }
+
+  .admin-btn-sm {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
 }
 
 /* 通用卡片样式 */
