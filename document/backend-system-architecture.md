@@ -85,6 +85,8 @@
 │  - otp_codes            - questions                             │
 │  - otp_rate_limit       - admin_operation_logs                  │
 │  - user_question_records                                        │
+│  - question_templates   (2026-03 新增)                          │
+│  - template_usage_logs  (2026-03 新增)                          │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -105,6 +107,7 @@
 - `history.py`: 历史记录管理（含分享接口）
 - `extend.py`: 图片扩展题
 - `admin.py`: 管理后台
+- `templates.py`: 模板题目生成（2026-03 新增）
 
 #### 2.2.3 服务层 (services/)
 按领域分组的业务逻辑：
@@ -122,6 +125,8 @@
 | | `ai_generation_record_store` | AI 生成记录 |
 | `services/admin/` | `admin_auth` | 管理员认证（bcrypt 加密） |
 | | `admin_operation_log` | 操作日志记录 |
+| `services/template/` | `template_store` | 模板数据访问（2026-03 新增） |
+| | `generators/` | 模板生成器（按模板类型分组） |
 
 #### 2.2.4 核心层 (core/)
 - `security.py`: JWT、密码加密等安全功能
@@ -345,6 +350,209 @@ user_question_records (题目记录表)
 }
 ```
 
+### 3.5 模板题目模块（2026-03 新增）
+
+模板题目系统是一种不依赖 AI 服务的题目生成方式，通过预定义的模板规则和生成器自主生成题目。
+
+#### 3.5.1 系统特点
+
+- **无需 AI 调用**: 完全基于规则的生成，零成本
+- **可预测**: 题目格式和内容完全可控
+- **高性能**: 毫秒级响应，适合高频使用
+- **易扩展**: 每个模板对应独立生成器，符合开闭原则
+
+#### 3.5.2 架构设计
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    API 层 (/api/templates)                    │
+├─────────────────────────────────────────────────────────────┤
+│  templates.py                                                │
+│  - GET /list     - 获取所有启用的模板列表                     │
+│  - POST /generate - 根据模板 ID 生成题目                       │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   服务层 (services/template/)                 │
+├─────────────────────────────────────────────────────────────┤
+│  template_store.py                                           │
+│  - get_template_by_id()    - 查询模板                         │
+│  - get_template_list_items() - 模板列表                       │
+│  - create_template()       - 创建模板                         │
+│  - update_template()       - 更新模板                         │
+│  - delete_template()       - 删除模板                         │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                 生成器层 (generators/)                       │
+├─────────────────────────────────────────────────────────────┤
+│  base.py          - 抽象基类 TemplateGenerator               │
+│  __init__.py      - 生成器注册表 GENERATOR_REGISTRY          │
+│  compare_number.py          - 比大小生成器                    │
+│  addition_subtraction.py    - 加减法生成器                    │
+│  consecutive_addition_subtraction.py - 连加减生成器          │
+│  currency_conversion.py     - 人民币换算生成器               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### 3.5.3 生成器接口规范
+
+```python
+from abc import ABC, abstractmethod
+
+class TemplateGenerator(ABC):
+    @abstractmethod
+    def generate(self, template_config: dict, quantity: int, question_type: str) -> List[Dict[str, Any]]:
+        """
+        生成题目
+
+        Args:
+            template_config: 模板配置（来自数据库 variables_config 字段）
+            quantity: 生成数量
+            question_type: 题目类型（来自模板 question_type 字段）
+
+        Returns:
+            题目列表，每项包含 type, stem, knowledge_points, rows_to_answer
+        """
+        pass
+
+    @abstractmethod
+    def get_knowledge_points(self, template_config: dict) -> List[str]:
+        """获取知识点列表"""
+        pass
+```
+
+#### 3.5.4 生成器注册表
+
+```python
+# generators/__init__.py
+GENERATOR_REGISTRY = {
+    "compare_number": CompareNumberGenerator,
+    "addition_subtraction": AdditionSubtractionGenerator,
+    "consecutive_addition_subtraction": ConsecutiveAdditionSubtractionGenerator,
+    "currency_conversion": CurrencyConversionGenerator,
+}
+
+def get_generator(generator_name: str) -> TemplateGenerator:
+    if generator_name not in GENERATOR_REGISTRY:
+        raise ValueError(f"未知的生成器：{generator_name}")
+    return GENERATOR_REGISTRY[generator_name]()
+```
+
+#### 3.5.5 规则约束系统
+
+生成器支持通过规则配置约束题目生成：
+
+| 规则名 | 说明 | 适用生成器 |
+|--------|------|----------|
+| `ensure_different` | 确保两个数不同 | compare_number |
+| `ensure_positive` | 确保减法结果非负（含中间结果） | addition_subtraction, consecutive_addition_subtraction |
+| `result_within_10` | 确保结果 ≤ 10 | 所有 |
+| `result_within_20` | 确保结果 ≤ 20 | 所有 |
+| `result_within_100` | 确保结果 ≤ 100 | 所有 |
+
+#### 3.5.6 题目生成流程
+
+```
+POST /api/templates/generate
+    │
+    ▼
+┌─────────────────┐
+│  解析模板 ID     │
+└─────────────────┘
+    │
+    ▼
+┌─────────────────┐
+│  查询数据库     │
+│  获取模板配置    │
+└─────────────────┘
+    │
+    ▼
+┌─────────────────┐
+│  获取生成器实例  │
+│  get_generator()│
+└─────────────────┘
+    │
+    ▼
+┌─────────────────┐
+│  调用生成器      │
+│  generator.     │
+│  generate()     │
+└─────────────────┘
+    │
+    ▼
+┌─────────────────┐
+│  返回题目列表    │
+│  （不保存记录）  │
+└─────────────────┘
+```
+
+#### 3.5.7 已实现的生成器
+
+**1. CompareNumberGenerator - 比大小**
+- 适用：一年级 10 以内数比一比
+- 例题：4（）5
+- 配置：`a.min`, `a.max`, `b.min`, `b.max`, `rules`
+
+**2. AdditionSubtractionGenerator - 加减法**
+- 适用：一年级 10 以内加减法
+- 例题：2 + 2 = （ ）
+- 配置：`a.min`, `a.max`, `b.min`, `b.max`, `op.values`, `rules`
+
+**3. ConsecutiveAdditionSubtractionGenerator - 连加减**
+- 适用：一年级 10 以内连加减
+- 例题：2 + 3 + 4 = （ ）
+- 特点：检查中间结果非负
+
+**4. CurrencyConversionGenerator - 人民币换算**
+- 适用：认识人民币 - 元角分换算
+- 例题：50 分 = （ ）角、6 元 = （ ）角、54 元 50 分 = （ ）分
+- 换算类型：
+  - `yuan_to_jiao` - 元→角
+  - `jiao_to_fen` - 角→分
+  - `fen_to_jiao` - 分→角
+  - `yuan_to_fen` - 元→分
+  - `fen_to_yuan` - 分→元
+  - `yuan_jiao_to_jiao` - 元 + 角→角
+  - `yuan_fen_to_fen` - 元 + 分→分
+  - `yuan_jiao_fen_to_fen` - 元 + 角 + 分→分
+
+#### 3.5.8 数据库设计
+
+**question_templates 表**:
+```sql
+CREATE TABLE question_templates (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,           -- 模板名称
+    subject TEXT NOT NULL,        -- 学科：math/chinese/english
+    grade TEXT NOT NULL,          -- 年级：grade1~grade9
+    question_type TEXT NOT NULL,  -- 题型：CALCULATION/FILL_BLANK
+    template_pattern TEXT NOT NULL, -- 模板模式字符串
+    variables_config TEXT NOT NULL, -- 变量配置（JSON）
+    example TEXT,                 -- 示例
+    generator_module TEXT,        -- 生成器模块名
+    sort_order INTEGER DEFAULT 0, -- 排序序号
+    is_active INTEGER DEFAULT 1,  -- 是否启用
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+**template_usage_logs 表**:
+```sql
+CREATE TABLE template_usage_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    template_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    generated_params TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (template_id) REFERENCES question_templates(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+```
+
 ---
 
 ## 4. 数据库设计
@@ -519,6 +727,7 @@ POST /api/history/{short_id}/share
 | 数据库索引 | 关键字段建立索引 |
 | 分页查询 | 游标分页，避免全表扫描 |
 | 并发处理 | 历史记录保存异步化 |
+| 模板题目 | 不依赖 AI，毫秒级响应（2026-03） |
 
 ### 6.2 安全设计
 
@@ -690,7 +899,14 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 - `services/question/` - 题目服务
 - `services/admin/` - 管理员服务
 
+**模板题目系统** (2026-03 新增):
+- 新增 `services/template/` 模块
+- 生成器模式 + 注册表模式
+- 支持规则约束（ensure_positive, result_within_10 等）
+- 已实现 4 个生成器：比大小、加减法、连加减、人民币换算
+
 ### D. 相关文档
 - [后端代码结构](./backend-code-structure.md)
 - [前后端交互逻辑](./frontend-backend-interaction-logic.md)
 - [前端系统架构](./frontend-system-architecture.md)
+- [模板系统开发指南](./template-system-development.md) (2026-03)

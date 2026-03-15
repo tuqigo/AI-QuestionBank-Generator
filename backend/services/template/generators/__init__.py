@@ -5,6 +5,7 @@ from .base import TemplateGenerator
 from .compare_number import CompareNumberGenerator
 from .addition_subtraction import AdditionSubtractionGenerator
 from .consecutive_addition_subtraction import ConsecutiveAdditionSubtractionGenerator
+from .currency_conversion import CurrencyConversionGenerator
 
 
 # 生成器注册表
@@ -13,6 +14,7 @@ GENERATOR_REGISTRY = {
     "compare_number": CompareNumberGenerator,
     "addition_subtraction": AdditionSubtractionGenerator,
     "consecutive_addition_subtraction": ConsecutiveAdditionSubtractionGenerator,
+    "currency_conversion": CurrencyConversionGenerator,
 }
 
 

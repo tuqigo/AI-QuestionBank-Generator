@@ -41,7 +41,8 @@ backend/
 │   ├── structured_question.py  # 结构化题目模型（QuestionBank, Question, MetaData）
 │   ├── question_record.py      # 题目记录模型
 │   ├── ai_generation_record.py # AI 生成记录模型
-│   └── admin_operation_log.py  # 管理员操作日志模型
+│   ├── admin_operation_log.py  # 管理员操作日志模型
+│   └── question_template.py    # 题目模板模型（2026-03 新增）
 │
 ├── api/                        # API 路由层（原 routers/）
 │   ├── __init__.py
@@ -52,7 +53,8 @@ backend/
 │       ├── questions_structured.py  # 结构化题目生成路由
 │       ├── history.py          # 历史记录路由（含分享接口）
 │       ├── extend.py           # 图片扩展题路由
-│       └── admin.py            # 管理后台路由
+│       ├── admin.py            # 管理后台路由
+│       └── templates.py        # 模板题目路由（2026-03 新增）
 │
 ├── services/                   # 业务逻辑层（按领域分组）
 │   ├── __init__.py
@@ -68,15 +70,26 @@ backend/
 │   │   ├── question_store.py   # 题目数据访问
 │   │   ├── question_record_store.py  # 题目记录存储
 │   │   └── ai_generation_record_store.py  # AI 生成记录存储
-│   └── admin/                  # 管理员服务
-│       ├── admin_auth.py       # 管理员认证（bcrypt 加密）
-│       └── admin_operation_log.py  # 管理员操作日志
+│   ├── admin/                  # 管理员服务
+│   │   ├── admin_auth.py       # 管理员认证（bcrypt 加密）
+│   │   └── admin_operation_log.py  # 管理员操作日志
+│   └── template/               # 模板题目服务（2026-03 新增）
+│       ├── __init__.py
+│       ├── template_store.py   # 模板数据访问
+│       └── generators/         # 模板生成器（按模板类型分组）
+│           ├── __init__.py     # 生成器注册表
+│           ├── base.py         # 生成器抽象基类
+│           ├── compare_number.py           # 比大小生成器
+│           ├── addition_subtraction.py     # 加减法生成器
+│           ├── consecutive_addition_subtraction.py  # 连加减生成器
+│           └── currency_conversion.py      # 人民币换算生成器
 │
 ├── db/                         # 数据层（原 sql/）
 │   ├── __init__.py             # 数据库初始化入口
 │   ├── schema.sql              # 表结构定义
 │   └── migrations/             # 数据库迁移脚本
-│       └── 001_add_questions_table.sql
+│       ├── 001_add_questions_table.sql
+│       └── 002_add_question_templates.sql  # 模板系统表（2026-03 新增）
 │
 ├── utils/                      # 工具函数层
 │   ├── __init__.py
@@ -215,6 +228,18 @@ FastAPI 应用入口：
 | `/api/admin/operation-logs` | GET | 操作日志列表 |
 | `/api/admin/ai-records` | GET | AI 生成记录列表 |
 
+#### templates.py - 模板题目（2026-03 新增）
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/api/templates/list` | GET | 获取所有启用的模板列表 |
+| `/api/templates/generate` | POST | 根据模板 ID 生成题目（无需 AI） |
+
+**特点**:
+- 不依赖 AI 服务，后台自主生成题目
+- 题目不保存历史记录，一次性使用
+- 每个模板对应独立生成器，便于扩展
+
 ### 3.3 服务模块 (services/)
 
 服务层按领域分组为四个子目录：
@@ -328,9 +353,38 @@ def log_operation(operator, action, target_type, target_id, ip, details) -> int
 def get_operation_logs(page, page_size) -> Tuple[List[dict], int, bool]
 def get_logs_by_target(target_type, target_id) -> List[dict]
 ```
-class QuestionDataCleaner:
-    @staticmethod
-    def parse_ai_response(content) -> Tuple[MetaData, List[dict]]
+
+#### 模板服务 (services/template/)（2026-03 新增）
+
+**template_store.py** - 模板数据访问：
+```python
+def get_template_by_id(template_id: int) -> Optional[QuestionTemplate]
+def get_template_list_items() -> List[QuestionTemplateListItem]
+def create_template(...) -> int
+def update_template(template_id: int, ...) -> bool
+def delete_template(template_id: int) -> bool
+```
+
+**generators/** - 模板生成器目录：
+- `base.py` - 抽象基类 `TemplateGenerator`
+- `__init__.py` - 生成器注册表 `GENERATOR_REGISTRY`
+- `compare_number.py` - 比大小生成器（一年级 10 以内）
+- `addition_subtraction.py` - 加减法生成器（一年级 10 以内）
+- `consecutive_addition_subtraction.py` - 连加减生成器（一年级 10 以内）
+- `currency_conversion.py` - 人民币换算生成器（元角分换算）
+
+**生成器接口**：
+```python
+class TemplateGenerator(ABC):
+    @abstractmethod
+    def generate(self, template_config: dict, quantity: int, question_type: str) -> List[Dict[str, Any]]:
+        """生成题目，返回结构化数据"""
+        pass
+
+    @abstractmethod
+    def get_knowledge_points(self, template_config: dict) -> List[str]:
+        """获取知识点列表"""
+        pass
 ```
 
 ### 3.4 模型模块 (models/)
@@ -359,6 +413,25 @@ class QuestionRecordCreate(BaseModel)   # 创建记录
 class QuestionRecordResponse(BaseModel) # 记录响应
 class QuestionRecordListResponse(BaseModel)
 class ShareTokenResponse(BaseModel)
+```
+
+#### question_template.py（2026-03 新增）
+```python
+class QuestionTemplate(BaseModel)        # 题目模板（含 generator_module 字段）
+class QuestionTemplateListItem(BaseModel) # 模板列表项
+class QuestionTemplateListResponse(BaseModel)
+class TemplateGenerateRequest(BaseModel)  # 模板生成请求
+class TemplateGenerateResponse(BaseModel) # 模板生成响应
+
+# 支持的规则约束
+SUPPORTED_RULES = {
+    "ensure_different",    # 确保两个数不同
+    "ensure_positive",     # 确保减法结果不为负数
+    "ensure_divisible",    # 确保除法能整除
+    "result_within_10",    # 确保结果 ≤ 10
+    "result_within_20",    # 确保结果 ≤ 20
+    "result_within_100",   # 确保结果 ≤ 100
+}
 ```
 
 ### 3.5 工具模块 (utils/)
@@ -444,13 +517,55 @@ def init_database():
 
 ```
 db/migrations/
-└── add_grade_column.py  # 添加 users.grade 字段
+├── 001_add_questions_table.sql       # 题目表结构
+└── 002_add_question_templates.sql    # 模板系统表（2026-03 新增）
 ```
 
 **迁移脚本使用**:
 ```bash
 cd backend
-python migrations/add_grade_column.py
+python -c "
+import sqlite3
+with open('db/migrations/002_add_question_templates.sql', 'r') as f:
+    conn = sqlite3.connect('data/users.db')
+    conn.executescript(f.read())
+    conn.commit()
+    conn.close()
+"
+```
+
+### 4.4 模板系统数据库（2026-03 新增）
+
+**question_templates** - 题目模板表：
+```sql
+CREATE TABLE question_templates (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,           -- 模板名称
+    subject TEXT NOT NULL,        -- 学科：math/chinese/english
+    grade TEXT NOT NULL,          -- 年级：grade1~grade9
+    question_type TEXT NOT NULL,  -- 题型：CALCULATION/FILL_BLANK
+    template_pattern TEXT NOT NULL, -- 模板模式字符串
+    variables_config TEXT NOT NULL, -- 变量配置（JSON）
+    example TEXT,                 -- 示例
+    generator_module TEXT,        -- 生成器模块名
+    sort_order INTEGER DEFAULT 0, -- 排序序号
+    is_active INTEGER DEFAULT 1,  -- 是否启用
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+**template_usage_logs** - 模板使用记录表：
+```sql
+CREATE TABLE template_usage_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    template_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    generated_params TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (template_id) REFERENCES question_templates(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
 ```
 
 ---
@@ -605,6 +720,21 @@ pytest tests/
 - 原目录：`sql/`
 - 新目录：`db/`
 - 优势：更准确的语义
+
+### C. 新增模块（2026-03）
+
+**模板题目系统**:
+- 新增 `services/template/` 模块
+- 新增 `models/question_template.py` 模型
+- 新增 `api/v1/templates.py` 路由
+- 新增数据库迁移 `002_add_question_templates.sql`
+- 新增生成器架构 `services/template/generators/`
+
+**生成器架构特点**:
+- 抽象基类 `TemplateGenerator`
+- 每个模板对应独立生成器文件
+- 注册表模式管理生成器
+- 支持规则约束（ensure_positive, result_within_10 等）
 
 ### C. 相关文档
 - [后端系统架构](./backend-system-architecture.md)
