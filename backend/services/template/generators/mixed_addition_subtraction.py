@@ -29,6 +29,7 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
             "mixed_operation",
             "missing_operand",
             "compare_with_result",
+            "compare_mixed_operation",
         ])
         ensure_positive = "ensure_positive" in template_config.get("rules", [])
         result_within_100 = "result_within_100" in template_config.get("rules", [])
@@ -97,14 +98,38 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
                     stem = f"{a}-（    ）={result}"
 
                 elif q_type == "compare_with_result":
-                    # 比较大小：54+6+16（）74
-                    a = random.randint(10, 30)
-                    b = random.randint(10, 30)
-                    c = random.randint(10, 30)
-                    if result_within_100 and (a + b + c) > 100:
+                    # 比较大小：54+6+16（）74  或  74-28+22（）75
+                    # 随机选择运算符组合
+                    op1 = random.choice(["+", "-"])
+                    op2 = random.choice(["+", "-"])
+
+                    # 根据运算符生成数字
+                    a = random.randint(20, 80)
+                    b = random.randint(10, 50)
+                    c = random.randint(10, 50)
+
+                    # 计算中间结果
+                    if op1 == "+":
+                        temp = a + b
+                    else:
+                        temp = a - b
+                        if ensure_positive and temp < 0:
+                            continue
+
+                    # 计算最终结果
+                    if op2 == "+":
+                        result = temp + c
+                    else:
+                        result = temp - c
+                        if ensure_positive and result < 0:
+                            continue
+
+                    if result_within_100 and result > 100:
                         continue
+                    if result < 0:
+                        continue
+
                     # 随机生成比较的数（可能等于、大于或小于结果）
-                    result = a + b + c
                     compare_type = random.choice(["equal", "greater", "less"])
                     if compare_type == "equal":
                         compare_num = result
@@ -114,7 +139,56 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
                         compare_num = result - random.randint(1, 20)
                         if compare_num < 0:
                             compare_num = result + random.randint(1, 20)
-                    stem = f"{a}+{b}+{c}（    ）{compare_num}"
+
+                    stem = f"{a}{op1}{b}{op2}{c}（    ）{compare_num}"
+
+                elif q_type == "compare_mixed_operation":
+                    # 混合运算比较：74-28+22（）75  或  74-28-22（）40
+                    op1 = random.choice(["+", "-"])
+                    op2 = random.choice(["+", "-"])
+
+                    # 确保至少有一个加法和一个减法，形成混合运算
+                    if op1 == op2:
+                        op1 = "-"
+                        op2 = "+"
+
+                    a = random.randint(30, 90)
+                    b = random.randint(10, 50)
+                    c = random.randint(10, 40)
+
+                    # 计算中间结果
+                    if op1 == "+":
+                        temp = a + b
+                    else:
+                        temp = a - b
+                        if ensure_positive and temp < 0:
+                            continue
+
+                    # 计算最终结果
+                    if op2 == "+":
+                        result = temp + c
+                    else:
+                        result = temp - c
+                        if ensure_positive and result < 0:
+                            continue
+
+                    if result_within_100 and result > 100:
+                        continue
+                    if result < 0:
+                        continue
+
+                    # 随机生成比较的数
+                    compare_type = random.choice(["equal", "greater", "less"])
+                    if compare_type == "equal":
+                        compare_num = result
+                    elif compare_type == "greater":
+                        compare_num = result + random.randint(1, 20)
+                    else:
+                        compare_num = result - random.randint(1, 20)
+                        if compare_num < 0:
+                            compare_num = result + random.randint(1, 20)
+
+                    stem = f"{a}{op1}{b}{op2}{c}（    ）{compare_num}"
 
                 else:
                     # 默认：简单加减法

@@ -19,9 +19,9 @@ INSERT INTO question_templates (
     'lower',
     '沪教版',
     'FILL_BLANK',
-    '百以内连加减法综合练习',
-    '{"num": {"min": 1, "max": 100}, "question_types": ["consecutive_add", "consecutive_subtract", "mixed_operation", "missing_operand", "compare_with_result"], "rules": ["ensure_positive", "result_within_100"]}',
-    '1+6+19=（）、17-（）=2、96-23-45=（）、54+6+16（）74',
+    '百以内连加减法综合练习（含混合运算比较）',
+    '{"num": {"min": 1, "max": 100}, "question_types": ["consecutive_add", "consecutive_subtract", "mixed_operation", "missing_operand", "compare_with_result", "compare_mixed_operation"], "rules": ["ensure_positive", "result_within_100"]}',
+    '1+6+19=（）、17-（）=2、96-23-45=（）、54+6+16（）74、74-28+22（）75',
     'mixed_addition_subtraction',
     10,
     1
