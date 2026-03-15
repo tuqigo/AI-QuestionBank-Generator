@@ -7,6 +7,8 @@ from .addition_subtraction import AdditionSubtractionGenerator
 from .consecutive_addition_subtraction import ConsecutiveAdditionSubtractionGenerator
 from .currency_conversion import CurrencyConversionGenerator
 from .multiplication_table import MultiplicationTableGenerator
+from .volume_conversion import VolumeConversionGenerator
+from .fraction_comparison import FractionComparisonGenerator
 
 
 # 生成器注册表
@@ -17,6 +19,8 @@ GENERATOR_REGISTRY = {
     "consecutive_addition_subtraction": ConsecutiveAdditionSubtractionGenerator,
     "currency_conversion": CurrencyConversionGenerator,
     "multiplication_table": MultiplicationTableGenerator,
+    "volume_conversion": VolumeConversionGenerator,
+    "fraction_comparison": FractionComparisonGenerator,
 }
 
 
