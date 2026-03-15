@@ -166,7 +166,7 @@ class QuestionTemplateListResponse(BaseModel):
 class TemplateGenerateRequest(BaseModel):
     """根据模板生成题目请求"""
     template_id: int = Field(..., description="模板 ID")
-    quantity: int = Field(15, description="题目数量", ge=5, le=50)
+    quantity: int = Field(15, description="题目数量", ge=5, le=100)
 
 
 class TemplateGenerateResponse(BaseModel):

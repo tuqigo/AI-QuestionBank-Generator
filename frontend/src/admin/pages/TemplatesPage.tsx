@@ -403,7 +403,7 @@ export default function TemplatesPage() {
                 <input
                   type="number"
                   min="1"
-                  max="101"
+                  max="100"
                   value={testQuantity}
                   onChange={(e) => setTestQuantity(parseInt(e.target.value) || 5)}
                 />

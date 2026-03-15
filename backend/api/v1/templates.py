@@ -91,7 +91,7 @@ class TemplateMessageResponse(BaseModel):
 class TemplateTestRequest(BaseModel):
     """测试模板请求"""
     template_id: int
-    quantity: int = Field(default=5, ge=1, le=50)
+    quantity: int = Field(default=5, ge=1, le=100)
 
 
 class TemplateTestResponse(BaseModel):
@@ -371,7 +371,7 @@ async def generate_from_template(
 
     请求参数：
     - template_id: 模板 ID
-    - quantity: 题目数量（默认 15，范围 5-50）
+    - quantity: 题目数量（默认 15，范围 5-100）
 
     返回：
     - meta: 元数据（subject, grade, title）
