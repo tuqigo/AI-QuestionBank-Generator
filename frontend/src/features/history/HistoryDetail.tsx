@@ -82,16 +82,31 @@ export default function HistoryDetail() {
         window.location.href = '/'
         return
       }
+      // 生成分享链接
       const url = await createShareUrl(id)
       shareUrlRef.current = url
-      // 复制到剪贴板
       const fullUrl = window.location.origin + url
-      await navigator.clipboard.writeText(fullUrl)
-      setShowCopyToast(true)
-      setTimeout(() => setShowCopyToast(false), 2000)
+
+      // 复制到剪贴板
+      try {
+        await navigator.clipboard.writeText(fullUrl)
+        setShowCopyToast(true)
+        setTimeout(() => setShowCopyToast(false), 2000)
+      } catch (copyErr) {
+        // 复制失败，使用降级方案
+        console.warn('剪贴板 API 失败，使用降级方案:', copyErr)
+        const input = document.createElement('input')
+        input.value = fullUrl
+        document.body.appendChild(input)
+        input.select()
+        document.execCommand('copy')
+        document.body.removeChild(input)
+        setShowCopyToast(true)
+        setTimeout(() => setShowCopyToast(false), 2000)
+      }
     } catch (err) {
-      console.error('分享失败:', err)
-      alert('生成分享链接失败')
+      console.error('生成分享链接失败:', err)
+      alert('生成分享链接失败，请稍后重试')
     }
   }
 
@@ -168,9 +183,10 @@ export default function HistoryDetail() {
         <h2>{record.title}</h2>
         <div className="detail-actions">
           <button onClick={handlePrintWrapper} className="btn-action">打印</button>
-          <button onClick={handleToggleAnswers} className="btn-action" disabled={answersLoading}>
+          {/* 暂时不要查看答案 后期有时间再做 接口没有返回答案 */}
+          {/* <button onClick={handleToggleAnswers} className="btn-action" disabled={answersLoading}>
             {showAnswers ? '收起答案' : (answersLoading ? '加载中...' : '查看答案')}
-          </button>
+          </button> */}
           <button onClick={handleShare} className="btn-action">分享</button>
           <Link to="/" className="btn-back">返回首页</Link>
         </div>
