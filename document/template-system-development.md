@@ -25,6 +25,169 @@
 
 ---
 
+## 1.4 快速添加模板指南
+
+> **目标**：让任何 AI 助手都能根据本文档准确添加新模板
+
+### 添加新模板的 4 个步骤
+
+#### 步骤 1：创建生成器文件
+
+在 `backend/services/template/generators/` 目录创建新文件，例如 `multiplication_table.py`：
+
+```python
+"""
+模板：模板名称说明
+生成逻辑：简要描述生成规则
+例题：示例题目
+"""
+import random
+from typing import List, Dict, Any
+
+from .base import TemplateGenerator
+
+
+class MyGenerator(TemplateGenerator):
+    """生成器类名"""
+
+    def generate(self, template_config: dict, quantity: int, question_type: str) -> List[Dict[str, Any]]:
+        questions = []
+        used_stems = set()
+
+        # 1. 读取配置参数
+        # param = template_config.get("param_key", default_value)
+
+        # 2. 循环生成题目
+        for _ in range(quantity):
+            max_attempts = 50
+            for attempt in range(max_attempts):
+                # 生成题目内容
+                stem = f"题目内容"
+
+                # 检查是否重复
+                if stem in used_stems:
+                    continue
+
+                used_stems.add(stem)
+                break
+            else:
+                continue  # 50 次尝试失败，跳过
+
+            questions.append({
+                "type": question_type,
+                "stem": stem,
+                "knowledge_points": self.get_knowledge_points(template_config),
+                "rows_to_answer": 1,
+            })
+
+        return questions
+
+    def get_knowledge_points(self, template_config: dict) -> List[str]:
+        return ["知识点列表"]
+```
+
+#### 步骤 2：注册生成器
+
+编辑 `backend/services/template/generators/__init__.py`：
+
+```python
+# 1. 导入生成器类
+from .my_file import MyGenerator
+
+# 2. 添加到注册表
+GENERATOR_REGISTRY = {
+    # ... 现有生成器
+    "my_module_name": MyGenerator,  # key 是模块名，value 是生成器类
+}
+```
+
+#### 步骤 3：创建数据库迁移
+
+在 `backend/db/migrations/` 目录创建 SQL 文件，例如 `004_add_my_template.sql`：
+
+```sql
+-- 添加我的模板
+INSERT INTO question_templates (
+    name,           -- 模板名称
+    subject,        -- 学科：math/chinese
+    grade,          -- 年级：grade1-grade6
+    semester,       -- 学期：upper/lower
+    textbook_version, -- 教材版本：人教版/北师大版等
+    question_type,  -- 题型：CALCULATION/CHOICE/FILL_BLANK/COMPARE/WORD_PROBLEM
+    template_pattern, -- 模板模式描述
+    variables_config, -- JSON 配置（见下方配置规范）
+    example,        -- 示例题目
+    generator_module, -- 生成器模块名（与注册表 key 一致）
+    sort_order,     -- 排序
+    is_active       -- 是否启用：1/0
+) VALUES (
+    '我的模板名称',
+    'math',
+    'grade3',
+    'upper',
+    '人教版',
+    'CALCULATION',
+    '模板模式描述',
+    '{"key": "value"}',
+    '示例：3 + 4 = （ ）',
+    'my_module_name',
+    10,
+    1
+);
+```
+
+#### 步骤 4：执行迁移
+
+```bash
+cd backend
+# 使用 Python 执行 SQL
+python -c "
+import sqlite3
+with open('db/migrations/004_add_my_template.sql', 'r', encoding='utf-8') as f:
+    conn = sqlite3.connect('data/tixiaobao.db')
+    conn.execute(f.read())
+    conn.commit()
+    conn.close()
+print('迁移成功')
+"
+```
+
+### 配置规范速查
+
+#### variables_config JSON 结构
+
+```json
+{
+    "param_name": {
+        "min": 1,
+        "max": 10
+    },
+    "rules": ["ensure_positive", "ensure_different"]
+}
+```
+
+#### 支持的规则约束
+
+| 规则名 | 说明 |
+|--------|------|
+| `ensure_different` | 确保两个数不同 |
+| `ensure_positive` | 确保结果非负（含中间结果） |
+| `result_within_10` | 确保结果 ≤ 10 |
+| `result_within_20` | 确保结果 ≤ 20 |
+| `result_within_100` | 确保结果 ≤ 100 |
+
+#### 支持的题型
+
+| 题型值 | 说明 |
+|--------|------|
+| `CALCULATION` | 计算题 |
+| `CHOICE` | 选择题 |
+| `FILL_BLANK` | 填空题 |
+| `COMPARE` | 比较大小 |
+| `WORD_PROBLEM` | 应用题 |
+
+---
+
 ## 2. 需求分析
 
 ### 2.1 功能需求
@@ -132,6 +295,7 @@ GENERATOR_REGISTRY = {
     "addition_subtraction": AdditionSubtractionGenerator,
     "consecutive_addition_subtraction": ConsecutiveAdditionSubtractionGenerator,
     "currency_conversion": CurrencyConversionGenerator,
+    "multiplication_table": MultiplicationTableGenerator,
 }
 
 
@@ -501,6 +665,70 @@ elif convert_type == "yuan_jiao_to_jiao":
 
 ---
 
+### 5.5 MultiplicationTableGenerator - 九九乘法表
+
+**文件**: `services/template/generators/multiplication_table.py`
+
+**适用**: 三年级乘法口诀表练习
+
+**例题**:
+- 3 × 4 = （ ）
+- 7 × 8 = （ ）
+- 9 × 9 = （ ）
+
+**配置示例**:
+```json
+{
+    "min_factor": 1,
+    "max_factor": 9,
+    "fixed_first": null,
+    "allow_commute": false
+}
+```
+
+**配置参数说明**:
+
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `min_factor` | int | 1 | 最小因子 |
+| `max_factor` | int | 9 | 最大因子 |
+| `fixed_first` | int/null | null | 固定第一个因子（例如设为 3 则只生成 3 的乘法） |
+| `allow_commute` | bool | false | 是否允许交换因子位置（3×4 和 4×3 都出现） |
+
+**核心逻辑**:
+```python
+# 读取配置
+min_factor = template_config.get("min_factor", 1)
+max_factor = template_config.get("max_factor", 9)
+fixed_first = template_config.get("fixed_first", None)
+allow_commute = template_config.get("allow_commute", False)
+
+# 生成因子
+if fixed_first is not None:
+    a = fixed_first
+else:
+    a = random.randint(min_factor, max_factor)
+
+b = random.randint(min_factor, max_factor)
+
+# 如果不允许交换，确保 a <= b 避免重复
+if not allow_commute and a > b:
+    a, b = b, a
+
+stem = f"{a} × {b} = （    ）"
+```
+
+**使用场景**:
+
+| 场景 | 配置示例 |
+|------|----------|
+| 完整九九乘法表 | `{"min_factor": 1, "max_factor": 9}` |
+| 只练习 5 的乘法 | `{"min_factor": 1, "max_factor": 9, "fixed_first": 5}` |
+| 练习 1-5 的乘法 | `{"min_factor": 1, "max_factor": 5}` |
+| 包含交换律练习 | `{"min_factor": 1, "max_factor": 9, "allow_commute": true}` |
+
+---
+
 ## 6. API 使用
 
 ### 6.1 获取模板列表
@@ -684,7 +912,8 @@ INSERT INTO question_templates (name, subject, grade, semester, textbook_version
 ('比一比大小', 'math', 'grade1', 'upper', '人教版', 'COMPARE', '{a}（）{b}', '{"a": {"min": 1, "max": 10}, "b": {"min": 1, "max": 10}, "rules": ["ensure_different"]}', '4（）5', 'compare_number', 1),
 ('10 以内加减法', 'math', 'grade1', 'upper', '人教版', 'CALCULATION', '{a}+{b}=( )', '{"a": {"min": 1, "max": 10}, "b": {"min": 1, "max": 10}, "op": {"values": ["+", "-"]}, "rules": ["ensure_positive"]}', '2+3=( )', 'addition_subtraction', 2),
 ('连加减法', 'math', 'grade1', 'upper', '人教版', 'CALCULATION', '{a}+{b}+{c}=( )', '{"a": {"min": 1, "max": 10}, "b": {"min": 1, "max": 10}, "c": {"min": 1, "max": 10}, "op1_values": ["+", "-"], "op2_values": ["+", "-"], "rules": ["ensure_positive"]}', '2+3+4=( )', 'consecutive_addition_subtraction', 3),
-('认识人民币 - 元角分换算', 'math', 'grade1', 'lower', '人教版', 'CALCULATION', '换算题', '{"yuan": {"max": 50}, "jiao": {"max": 50}, "fen": {"max": 50}, "convert_types": ["yuan_to_jiao", "jiao_to_fen", "fen_to_jiao", "yuan_to_fen", "fen_to_yuan", "yuan_jiao_to_jiao", "yuan_fen_to_fen", "yuan_jiao_fen_to_fen"]}', '50 分=（）角', 'currency_conversion', 4);
+('认识人民币 - 元角分换算', 'math', 'grade1', 'lower', '人教版', 'CALCULATION', '换算题', '{"yuan": {"max": 50}, "jiao": {"max": 50}, "fen": {"max": 50}, "convert_types": ["yuan_to_jiao", "jiao_to_fen", "fen_to_jiao", "yuan_to_fen", "fen_to_yuan", "yuan_jiao_to_jiao", "yuan_fen_to_fen", "yuan_jiao_fen_to_fen"]}', '50 分=（）角', 'currency_conversion', 4),
+('九九乘法表练习', 'math', 'grade3', 'upper', '人教版', 'CALCULATION', '生成 1-9 的乘法算式', '{"min_factor": 1, "max_factor": 9, "allow_commute": false}', '3 × 4 = （ ）', 'multiplication_table', 5);
 ```
 
 ### 8.2 执行迁移
@@ -756,7 +985,8 @@ backend/services/template/
     ├── compare_number.py       # 比大小生成器
     ├── addition_subtraction.py # 加减法生成器
     ├── consecutive_addition_subtraction.py  # 连加减生成器
-    └── currency_conversion.py  # 人民币换算生成器
+    ├── currency_conversion.py  # 人民币换算生成器
+    └── multiplication_table.py # 九九乘法表生成器
 ```
 
 ```
