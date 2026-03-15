@@ -3,8 +3,6 @@
 """
 from .base import TemplateGenerator
 from .compare_number import CompareNumberGenerator
-from .addition_subtraction import AdditionSubtractionGenerator
-from .consecutive_addition_subtraction import ConsecutiveAdditionSubtractionGenerator
 from .currency_conversion import CurrencyConversionGenerator
 from .multiplication_table import MultiplicationTableGenerator
 from .volume_conversion import VolumeConversionGenerator
@@ -16,8 +14,6 @@ from .mixed_addition_subtraction import MixedAdditionSubtractionGenerator
 # key: generator_module 值，value: 生成器类
 GENERATOR_REGISTRY = {
     "compare_number": CompareNumberGenerator,
-    "addition_subtraction": AdditionSubtractionGenerator,
-    "consecutive_addition_subtraction": ConsecutiveAdditionSubtractionGenerator,
     "currency_conversion": CurrencyConversionGenerator,
     "multiplication_table": MultiplicationTableGenerator,
     "volume_conversion": VolumeConversionGenerator,
