@@ -48,6 +48,8 @@ export default function HistoryDetail() {
   }>>([])
   const [showAnswers, setShowAnswers] = useState(false)
   const [answersLoading, setAnswersLoading] = useState(false)
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [shareFullUrl, setShareFullUrl] = useState('')
 
   useEffect(() => {
     if (!id || hasLoadedRef.current) return
@@ -84,58 +86,59 @@ export default function HistoryDetail() {
       }
       // 生成分享链接
       const url = await createShareUrl(id)
-      shareUrlRef.current = url
       const fullUrl = window.location.origin + url
+      setShareFullUrl(fullUrl)
+      shareUrlRef.current = url
 
-      // 复制到剪贴板 - 优先使用降级方案，兼容性更好
-      const input = document.createElement('input')
-      input.value = fullUrl
-      input.setAttribute('readonly', 'readonly')
-      document.body.appendChild(input)
-      input.select()
-      input.setSelectionRange(0, input.value.length) // 适配 iOS
-      try {
-        const success = document.execCommand('copy')
-        document.body.removeChild(input)
-        if (success) {
-          toast.success('链接已复制')
-          return
-        }
-      } catch (e) {
-        // execCommand 失败，尝试 clipboard API
-      }
-      document.body.removeChild(input)
+      // 检测是否为移动浏览器（微信、Safari 等）
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      const isWeChat = /MicroMessenger/i.test(navigator.userAgent)
 
-      // 降级方案：尝试 Clipboard API
-      try {
-        await navigator.clipboard.writeText(fullUrl)
-        toast.success('链接已复制')
-      } catch (clipboardErr) {
-        // 两种都失败，提示用户手动复制
-        console.warn('剪贴板 API 失败:', clipboardErr)
-        const textarea = document.createElement('textarea')
-        textarea.value = fullUrl
-        textarea.style.position = 'fixed'
-        textarea.style.left = '-9999px'
-        document.body.appendChild(textarea)
-        textarea.select()
-        textarea.setSelectionRange(0, textarea.value.length)
-        try {
-          const success = document.execCommand('copy')
-          document.body.removeChild(textarea)
-          if (success) {
-            toast.success('链接已复制')
-            return
-          }
-        } catch (e2) {
-          document.body.removeChild(textarea)
-        }
-        // 最终失败，显示链接让用户手动复制
-        toast.error('复制失败，请手动复制链接')
+      // 移动端直接显示模态框，不尝试自动复制
+      if (isMobile || isWeChat) {
+        setShowShareModal(true)
+        return
       }
+
+      // PC 端尝试自动复制
+      await copyToClipboard(fullUrl)
+      toast.success('链接已复制')
     } catch (err) {
       console.error('生成分享链接失败:', err)
       toast.error('生成分享链接失败，请稍后重试')
+    }
+  }
+
+  // 复制到剪贴板（PC 端使用）
+  const copyToClipboard = async (text: string) => {
+    // 优先使用 Clipboard API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      try {
+        await navigator.clipboard.writeText(text)
+        return
+      } catch (e) {
+        // Clipboard API 失败，降级到 execCommand
+      }
+    }
+
+    // 降级方案：execCommand
+    try {
+      const textarea = document.createElement('textarea')
+      textarea.value = text
+      textarea.style.position = 'fixed'
+      textarea.style.left = '-9999px'
+      textarea.style.top = '-9999px'
+      document.body.appendChild(textarea)
+      textarea.select()
+      textarea.setSelectionRange(0, textarea.value.length)
+      const success = document.execCommand('copy')
+      document.body.removeChild(textarea)
+      if (!success) {
+        throw new Error('execCommand failed')
+      }
+    } catch (e) {
+      // 两种方法都失败，显示模态框让用户手动复制
+      setShowShareModal(true)
     }
   }
 
@@ -209,6 +212,76 @@ export default function HistoryDetail() {
           <Link to="/" className="btn-back">返回首页</Link>
         </div>
       </div>
+
+      {/* 分享模态框 */}
+      {showShareModal && (
+        <div className="share-modal-overlay" onClick={() => setShowShareModal(false)}>
+          <div className="share-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="share-modal-header">
+              <h3>分享链接</h3>
+              <button className="share-modal-close" onClick={() => setShowShareModal(false)}>×</button>
+            </div>
+            <div className="share-modal-body">
+              <div className="share-link-box">
+                <input
+                  type="text"
+                  className="share-link-input"
+                  value={shareFullUrl}
+                  readOnly
+                  onClick={(e) => e.currentTarget.select()}
+                />
+                <button
+                  className="share-link-copy-btn"
+                  onClick={async () => {
+                    try {
+                      if (navigator.clipboard) {
+                        await navigator.clipboard.writeText(shareFullUrl)
+                      } else {
+                        const textarea = document.createElement('textarea')
+                        textarea.value = shareFullUrl
+                        textarea.style.position = 'fixed'
+                        textarea.style.left = '-9999px'
+                        document.body.appendChild(textarea)
+                        textarea.select()
+                        document.execCommand('copy')
+                        document.body.removeChild(textarea)
+                      }
+                      toast.success('链接已复制')
+                    } catch (e) {
+                      toast.error('复制失败，请长按链接手动复制')
+                    }
+                  }}
+                >
+                  复制
+                </button>
+              </div>
+              {/* 微信浏览器提示 */}
+              {/MicroMessenger/i.test(navigator.userAgent) && (
+                <div className="wechat-hint">
+                  <p>微信内无法直接复制，您可以：</p>
+                  <ol>
+                    <li>长按上方链接手动复制</li>
+                    <li>点击右上角 <span className="icon-dots">⋮</span> 选择「在浏览器打开」</li>
+                  </ol>
+                </div>
+              )}
+              {/* Safari 提示 */}
+              {/iPhone|iPad|iPod/i.test(navigator.userAgent) && !/Android/i.test(navigator.userAgent) && (
+                <div className="safari-hint">
+                  <p>Safari 浏览器提示：</p>
+                  <ol>
+                    <li>点击下方链接打开</li>
+                    <li>或使用 Safari 的「分享」按钮分享给他人</li>
+                  </ol>
+                </div>
+              )}
+              <a href={shareFullUrl} target="_blank" rel="noopener noreferrer" className="share-link-direct">
+                直接打开链接
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="detail-meta">
         <span>类型：{record.prompt_type === 'image' ? '图片' : '文字'}</span>
