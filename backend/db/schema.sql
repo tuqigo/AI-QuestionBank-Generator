@@ -201,6 +201,64 @@ CREATE TABLE IF NOT EXISTS admin_operation_logs (
 );
 
 -- ============================================
+-- 8. 题目模板表 (question_templates)
+-- ============================================
+-- 用途：存储题目模板配置，用于快速生成题目
+-- 功能：
+--   - 模板化管理题目生成
+--   - 支持前端下拉选择
+--   - 支持后台动态配置
+-- 字段说明：
+--   - name: 模板名称（如"一年级 10 以内的加减法"）
+--   - subject: 学科（math/chinese/english）
+--   - grade: 年级（grade1~grade9）
+--   - question_type: 题型（CALCULATION/FILL_BLANK 等）
+--   - template_pattern: 模板模式字符串（如"{a} {op} {b} = （ ）"）
+--   - variables_config: 变量配置（JSON 格式）
+--   - example: 示例题目
+--   - generator_module: 生成器模块名（可选，用于特殊逻辑）
+--   - sort_order: 排序序号
+--   - is_active: 是否启用
+-- ============================================
+CREATE TABLE IF NOT EXISTS question_templates (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    grade TEXT NOT NULL,
+    question_type TEXT NOT NULL,
+    template_pattern TEXT NOT NULL,
+    variables_config TEXT NOT NULL,
+    example TEXT,
+    generator_module TEXT,  -- 可选，指定特殊生成逻辑的模块名
+    sort_order INTEGER DEFAULT 0,
+    is_active INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================
+-- 9. 模板使用记录表 (template_usage_logs)
+-- ============================================
+-- 用途：记录模板使用情况，用于统计分析
+-- 功能：
+--   - 追踪模板使用频率
+--   - 分析用户偏好
+-- 字段说明：
+--   - template_id: 关联模板 ID
+--   - user_id: 用户 ID
+--   - generated_params: 生成时使用的参数（JSON）
+-- ============================================
+CREATE TABLE IF NOT EXISTS template_usage_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    template_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    generated_params TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (template_id) REFERENCES question_templates(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- ============================================
 -- 索引定义
 -- ============================================
 
