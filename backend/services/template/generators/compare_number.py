@@ -25,7 +25,7 @@ class CompareNumberGenerator(TemplateGenerator):
         for _ in range(quantity):
             # 生成不重复的数对
             max_attempts = 50
-            for _ in range(max_attempts):
+            for attempt in range(max_attempts):
                 a = random.randint(a_min, a_max)
                 b = random.randint(b_min, b_max)
 
@@ -38,6 +38,9 @@ class CompareNumberGenerator(TemplateGenerator):
 
                 used_pairs.add(pair)
                 break
+            else:
+                # 50 次尝试后仍未生成有效题目，跳过
+                continue
 
             # 构建题干
             stem = f"{a}（    ）{b}"

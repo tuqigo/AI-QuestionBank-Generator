@@ -29,7 +29,7 @@ class ConsecutiveAdditionSubtractionGenerator(TemplateGenerator):
 
         for _ in range(quantity):
             max_attempts = 100
-            for _ in range(max_attempts):
+            for attempt in range(max_attempts):
                 a = random.randint(a_min, a_max)
                 b = random.randint(b_min, b_max)
                 c = random.randint(c_min, c_max)
@@ -67,6 +67,9 @@ class ConsecutiveAdditionSubtractionGenerator(TemplateGenerator):
 
                 used_stems.add(stem)
                 break
+            else:
+                # 100 次尝试后仍未生成有效题目，跳过
+                continue
 
             questions.append({
                 "type": question_type,
