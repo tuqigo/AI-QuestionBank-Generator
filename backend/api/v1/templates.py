@@ -31,6 +31,8 @@ class TemplateListItem(BaseModel):
     name: str
     subject: str
     grade: str
+    semester: str
+    textbook_version: str
     example: Optional[str]
 
 
@@ -63,6 +65,8 @@ async def get_templates():
                     name=t.name,
                     subject=t.subject,
                     grade=t.grade,
+                    semester=t.semester,
+                    textbook_version=t.textbook_version,
                     example=t.example,
                 )
                 for t in templates

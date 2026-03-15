@@ -432,6 +432,18 @@ SUPPORTED_RULES = {
     "result_within_20",    # 确保结果 ≤ 20
     "result_within_100",   # 确保结果 ≤ 100
 }
+
+# 支持的教材版本
+SUPPORTED_TEXTBOOK_VERSIONS = [
+    "人教版", "人教版 (新)", "北师大版", "苏教版",
+    "西师版", "沪教版", "北京版", "青岛六三", "青岛五四",
+]
+
+# 支持的学期
+SUPPORTED_SEMESTERS = {
+    "upper": "上学期",
+    "lower": "下学期",
+}
 ```
 
 ### 3.5 工具模块 (utils/)
@@ -543,6 +555,8 @@ CREATE TABLE question_templates (
     name TEXT NOT NULL,           -- 模板名称
     subject TEXT NOT NULL,        -- 学科：math/chinese/english
     grade TEXT NOT NULL,          -- 年级：grade1~grade9
+    semester TEXT NOT NULL,       -- 学期：upper/lower (上学期/下学期)
+    textbook_version TEXT NOT NULL, -- 教材版本：人教版/人教版 (新)/北师大版/苏教版/西师版/沪教版/北京版/青岛六三/青岛五四
     question_type TEXT NOT NULL,  -- 题型：CALCULATION/FILL_BLANK
     template_pattern TEXT NOT NULL, -- 模板模式字符串
     variables_config TEXT NOT NULL, -- 变量配置（JSON）

@@ -33,6 +33,8 @@ def create_template(
     name: str,
     subject: str,
     grade: str,
+    semester: str,
+    textbook_version: str,
     question_type: str,
     template_pattern: str,
     variables_config: dict,
@@ -49,11 +51,11 @@ def create_template(
         cursor = conn.execute(
             """
             INSERT INTO question_templates
-            (name, subject, grade, question_type, template_pattern,
+            (name, subject, grade, semester, textbook_version, question_type, template_pattern,
              variables_config, example, sort_order, is_active)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (name, subject, grade, question_type, template_pattern,
+            (name, subject, grade, semester, textbook_version, question_type, template_pattern,
              json.dumps(variables_config, ensure_ascii=False), example, sort_order, 1 if is_active else 0)
         )
         conn.commit()
@@ -163,7 +165,7 @@ def get_template_by_id(template_id: int) -> Optional[QuestionTemplate]:
     try:
         cursor = conn.execute(
             """
-            SELECT id, name, subject, grade, question_type, template_pattern,
+            SELECT id, name, subject, grade, semester, textbook_version, question_type, template_pattern,
                    variables_config, example, generator_module, sort_order, is_active,
                    created_at, updated_at
             FROM question_templates
@@ -191,7 +193,7 @@ def get_all_templates() -> List[QuestionTemplate]:
     try:
         cursor = conn.execute(
             """
-            SELECT id, name, subject, grade, question_type, template_pattern,
+            SELECT id, name, subject, grade, semester, textbook_version, question_type, template_pattern,
                    variables_config, example, generator_module, sort_order, is_active,
                    created_at, updated_at
             FROM question_templates
@@ -216,7 +218,7 @@ def get_templates_by_grade(subject: str, grade: str) -> List[QuestionTemplate]:
     try:
         cursor = conn.execute(
             """
-            SELECT id, name, subject, grade, question_type, template_pattern,
+            SELECT id, name, subject, grade, semester, textbook_version, question_type, template_pattern,
                    variables_config, example, generator_module, sort_order, is_active,
                    created_at, updated_at
             FROM question_templates
@@ -242,7 +244,7 @@ def get_template_list_items() -> List[QuestionTemplateListItem]:
     try:
         cursor = conn.execute(
             """
-            SELECT id, name, subject, grade, question_type, example, sort_order
+            SELECT id, name, subject, grade, semester, textbook_version, question_type, example, sort_order
             FROM question_templates
             WHERE is_active = 1
             ORDER BY sort_order ASC, id ASC
@@ -300,6 +302,8 @@ def _row_to_template(row: sqlite3.Row) -> QuestionTemplate:
         name=row["name"],
         subject=row["subject"],
         grade=row["grade"],
+        semester=row["semester"],
+        textbook_version=row["textbook_version"],
         question_type=row["question_type"],
         template_pattern=row["template_pattern"],
         variables_config=json.loads(row["variables_config"]),
@@ -319,6 +323,8 @@ def _row_to_list_item(row: sqlite3.Row) -> QuestionTemplateListItem:
         name=row["name"],
         subject=row["subject"],
         grade=row["grade"],
+        semester=row["semester"],
+        textbook_version=row["textbook_version"],
         question_type=row["question_type"],
         example=row["example"],
         sort_order=row["sort_order"]

@@ -52,6 +52,28 @@ SUPPORTED_RULES = {
 }
 
 
+# ===================== 教材版本 =====================
+
+# 支持的教材版本列表
+SUPPORTED_TEXTBOOK_VERSIONS = [
+    "人教版",
+    "人教版 (新)",
+    "北师大版",
+    "苏教版",
+    "西师版",
+    "沪教版",
+    "北京版",
+    "青岛六三",
+    "青岛五四",
+]
+
+# 支持的学期
+SUPPORTED_SEMESTERS = {
+    "upper": "上学期",
+    "lower": "下学期",
+}
+
+
 # ===================== 模板模型 =====================
 
 class QuestionTemplate(BaseModel):
@@ -60,6 +82,8 @@ class QuestionTemplate(BaseModel):
     name: str = Field(..., description="模板名称")
     subject: str = Field(..., description="学科：math/chinese/english")
     grade: str = Field(..., description="年级：grade1~grade9")
+    semester: str = Field(..., description="学期：upper/lower (上学期/下学期)")
+    textbook_version: str = Field(..., description="教材版本：人教版/人教版 (新)/北师大版/苏教版/西师版/沪教版/北京版/青岛六三/青岛五四")
     question_type: str = Field(..., description="题型")
     template_pattern: str = Field(..., description="模板模式字符串")
     variables_config: dict = Field(..., description="变量配置")
@@ -98,6 +122,8 @@ class QuestionTemplateListItem(BaseModel):
     name: str
     subject: str
     grade: str
+    semester: str
+    textbook_version: str
     question_type: str
     example: Optional[str]
     sort_order: int

@@ -212,6 +212,8 @@ CREATE TABLE IF NOT EXISTS admin_operation_logs (
 --   - name: 模板名称（如"一年级 10 以内的加减法"）
 --   - subject: 学科（math/chinese/english）
 --   - grade: 年级（grade1~grade9）
+--   - semester: 学期（upper/lower，上学期/下学期）
+--   - textbook_version: 教材版本（人教版/人教版 (新)/北师大版/苏教版/西师版/沪教版/北京版/青岛六三/青岛五四）
 --   - question_type: 题型（CALCULATION/FILL_BLANK 等）
 --   - template_pattern: 模板模式字符串（如"{a} {op} {b} = （ ）"）
 --   - variables_config: 变量配置（JSON 格式）
@@ -225,6 +227,8 @@ CREATE TABLE IF NOT EXISTS question_templates (
     name TEXT NOT NULL,
     subject TEXT NOT NULL,
     grade TEXT NOT NULL,
+    semester TEXT NOT NULL,
+    textbook_version TEXT NOT NULL,
     question_type TEXT NOT NULL,
     template_pattern TEXT NOT NULL,
     variables_config TEXT NOT NULL,

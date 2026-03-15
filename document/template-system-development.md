@@ -233,13 +233,15 @@ GENERATOR_REGISTRY = {
 
 ```sql
 INSERT INTO question_templates (
-    name, subject, grade, question_type,
+    name, subject, grade, semester, textbook_version, question_type,
     template_pattern, variables_config, example,
     generator_module, sort_order, is_active
 ) VALUES (
     '我的自定义模板',
     'math',
     'grade1',
+    'upper',
+    '人教版',
     'CALCULATION',
     '{a} + {b} = ( )',
     '{"a": {"min": 1, "max": 10}, "b": {"min": 1, "max": 10}, "rules": []}',
@@ -281,6 +283,27 @@ INSERT INTO question_templates (
 | `result_within_10` | 确保结果 ≤ 10 | 一年级题目 |
 | `result_within_20` | 确保结果 ≤ 20 | 二年级题目 |
 | `result_within_100` | 确保结果 ≤ 100 | 三年级题目 |
+
+#### 支持的教材版本
+
+| 版本 | 说明 |
+|------|------|
+| 人教版 | 人民教育出版社 |
+| 人教版 (新) | 人教版新教材 |
+| 北师大版 | 北京师范大学出版社 |
+| 苏教版 | 江苏教育出版社 |
+| 西师版 | 西南师范大学出版社 |
+| 沪教版 | 上海教育出版社 |
+| 北京版 | 北京出版社 |
+| 青岛六三 | 青岛出版社（六三学制） |
+| 青岛五四 | 青岛出版社（五四学制） |
+
+#### 支持的学期
+
+| 学期 | 说明 |
+|------|------|
+| upper | 上学期 |
+| lower | 下学期 |
 
 ### 4.3 边界情况处理
 
@@ -626,6 +649,8 @@ CREATE TABLE question_templates (
     name TEXT NOT NULL,
     subject TEXT NOT NULL,
     grade TEXT NOT NULL,
+    semester TEXT NOT NULL,       -- 学期：upper/lower
+    textbook_version TEXT NOT NULL, -- 教材版本：人教版/人教版 (新)/北师大版/苏教版/西师版/沪教版/北京版/青岛六三/青岛五四
     question_type TEXT NOT NULL,
     template_pattern TEXT NOT NULL,
     variables_config TEXT NOT NULL,
@@ -650,15 +675,16 @@ CREATE TABLE template_usage_logs (
 
 -- 索引
 CREATE INDEX idx_templates_active ON question_templates(is_active);
+CREATE INDEX idx_templates_semester_version ON question_templates(semester, textbook_version, is_active);
 CREATE INDEX idx_logs_template_id ON template_usage_logs(template_id);
 CREATE INDEX idx_logs_user_id ON template_usage_logs(user_id);
 
 -- 初始化数据
-INSERT INTO question_templates (name, subject, grade, question_type, template_pattern, variables_config, example, generator_module, sort_order) VALUES
-('比一比大小', 'math', 'grade1', 'COMPARE', '{a}（）{b}', '{"a": {"min": 1, "max": 10}, "b": {"min": 1, "max": 10}, "rules": ["ensure_different"]}', '4（）5', 'compare_number', 1),
-('10 以内加减法', 'math', 'grade1', 'CALCULATION', '{a}+{b}=( )', '{"a": {"min": 1, "max": 10}, "b": {"min": 1, "max": 10}, "op": {"values": ["+", "-"]}, "rules": ["ensure_positive"]}', '2+3=( )', 'addition_subtraction', 2),
-('连加减法', 'math', 'grade1', 'CALCULATION', '{a}+{b}+{c}=( )', '{"a": {"min": 1, "max": 10}, "b": {"min": 1, "max": 10}, "c": {"min": 1, "max": 10}, "op1_values": ["+", "-"], "op2_values": ["+", "-"], "rules": ["ensure_positive"]}', '2+3+4=( )', 'consecutive_addition_subtraction', 3),
-('认识人民币', 'math', 'grade1', 'CALCULATION', '换算题', '{"yuan": {"max": 50}, "jiao": {"max": 50}, "fen": {"max": 50}, "convert_types": ["yuan_to_jiao", "jiao_to_fen", "yuan_fen_to_fen"]}', '50 分=（）角', 'currency_conversion', 4);
+INSERT INTO question_templates (name, subject, grade, semester, textbook_version, question_type, template_pattern, variables_config, example, generator_module, sort_order) VALUES
+('比一比大小', 'math', 'grade1', 'upper', '人教版', 'COMPARE', '{a}（）{b}', '{"a": {"min": 1, "max": 10}, "b": {"min": 1, "max": 10}, "rules": ["ensure_different"]}', '4（）5', 'compare_number', 1),
+('10 以内加减法', 'math', 'grade1', 'upper', '人教版', 'CALCULATION', '{a}+{b}=( )', '{"a": {"min": 1, "max": 10}, "b": {"min": 1, "max": 10}, "op": {"values": ["+", "-"]}, "rules": ["ensure_positive"]}', '2+3=( )', 'addition_subtraction', 2),
+('连加减法', 'math', 'grade1', 'upper', '人教版', 'CALCULATION', '{a}+{b}+{c}=( )', '{"a": {"min": 1, "max": 10}, "b": {"min": 1, "max": 10}, "c": {"min": 1, "max": 10}, "op1_values": ["+", "-"], "op2_values": ["+", "-"], "rules": ["ensure_positive"]}', '2+3+4=( )', 'consecutive_addition_subtraction', 3),
+('认识人民币 - 元角分换算', 'math', 'grade1', 'lower', '人教版', 'CALCULATION', '换算题', '{"yuan": {"max": 50}, "jiao": {"max": 50}, "fen": {"max": 50}, "convert_types": ["yuan_to_jiao", "jiao_to_fen", "fen_to_jiao", "yuan_to_fen", "fen_to_yuan", "yuan_jiao_to_jiao", "yuan_fen_to_fen", "yuan_jiao_fen_to_fen"]}', '50 分=（）角', 'currency_conversion', 4);
 ```
 
 ### 8.2 执行迁移
