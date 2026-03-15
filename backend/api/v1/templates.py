@@ -4,7 +4,7 @@
 import traceback
 import json
 import sqlite3
-from typing import Optional
+from typing import Optional, List, Dict
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 
@@ -43,13 +43,13 @@ class TemplateListItem(BaseModel):
 
 class TemplateListResponse(BaseModel):
     """模板列表响应"""
-    templates: list[TemplateListItem]
+    templates: List[TemplateListItem]
 
 
 class TemplateGenerateResponse(BaseModel):
     """模板生成题目响应"""
-    meta: dict = Field(..., description="元数据")
-    questions: list[dict] = Field(..., description="题目列表")
+    meta: Dict = Field(..., description="元数据")
+    questions: List[Dict] = Field(..., description="题目列表")
 
 
 class TemplateCreateInput(BaseModel):
@@ -96,8 +96,8 @@ class TemplateTestRequest(BaseModel):
 
 class TemplateTestResponse(BaseModel):
     """测试模板响应"""
-    meta: dict = Field(..., description="元数据")
-    questions: list[dict] = Field(..., description="题目列表")
+    meta: Dict = Field(..., description="元数据")
+    questions: List[Dict] = Field(..., description="题目列表")
 
 
 class TemplateFull(BaseModel):
@@ -121,7 +121,7 @@ class TemplateFull(BaseModel):
 
 class TemplateAllResponse(BaseModel):
     """所有模板响应（含未启用）"""
-    templates: list[TemplateFull]
+    templates: List[TemplateFull]
 
 
 @router.get("/list", response_model=TemplateListResponse)
