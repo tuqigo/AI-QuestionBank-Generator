@@ -273,50 +273,30 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                   </>
                 )}
               </button>
+
+              {/* 打印按钮 - 仅在生成成功后显示 */}
+              {questions.length > 0 && meta && (
+                <button
+                  type="button"
+                  className="btn-print-sidebar"
+                  onClick={handlePrintWrapper}
+                  title="打印题目（可另存为 PDF）"
+                  aria-label="打印题目"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <polyline points="6,9 6,2 18,2 18,9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M6 18H4C3.46957 18 2.96086 17.7893 2.58579 17.4142C2.21071 17.0391 2 16.5304 2 16V10C2 9.46957 2.21071 8.96086 2.58579 8.58579C2.96086 8.21071 3.46957 8 4 8H20C20.5304 8 21.0391 8.21071 21.4142 8.58579C21.7893 8.96086 22 9.46957 22 10V16C22 16.5304 21.7893 17.0391 21.4142 17.4142C21.0391 17.7893 20.5304 18 20 18H18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <rect x="6" y="14" width="12" height="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  打印题目
+                </button>
+              )}
             </div>
           </div>
         </aside>
 
         {/* 右侧预览区 */}
         <section className="preview" ref={previewRef}>
-          <div className="preview-header">
-            {questions.length > 0 && (
-              <>
-                <span className="question-count">
-                  {questions.length} 道题
-                </span>
-                <div className="preview-header-actions">
-                  <button
-                    type="button"
-                    className="btn-icon-action"
-                    onClick={generate}
-                    disabled={loading}
-                    title="重新生成"
-                    aria-label="重新生成"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M23 4V10H17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M1 20V14H7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M3.51 9.00001C4.01717 7.56678 4.87913 6.2854 6.01547 5.27542C7.1518 4.26543 8.52547 3.55977 10.0083 3.22426C11.4911 2.88875 13.0348 2.93434 14.4952 3.35677C15.9556 3.77921 17.2853 4.56506 18.36 5.64001L23 10.0001M1 14.0001L5.64 18.3601C6.71475 19.435 8.04437 20.2209 9.5048 20.6433C10.9652 21.0658 12.5089 21.1114 13.9917 20.7758C15.4745 20.4403 16.8482 19.7347 17.9845 18.7247C19.1209 17.7147 19.9828 16.4333 20.49 15.0001" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-icon-action"
-                    onClick={handlePrintWrapper}
-                    title="打印题目（可另存为 PDF）"
-                    aria-label="打印题目"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <polyline points="6,9 6,2 18,2 18,9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M6 18H4C3.46957 18 2.96086 17.7893 2.58579 17.4142C2.21071 17.0391 2 16.5304 2 16V10C2 9.46957 2.21071 8.96086 2.58579 8.58579C2.96086 8.21071 3.46957 8 4 8H20C20.5304 8 21.0391 8.21071 21.4142 8.58579C21.7893 8.96086 22 9.46957 22 10V16C22 16.5304 21.7893 17.0391 21.4142 17.4142C21.0391 17.7893 20.5304 18 20 18H18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <rect x="6" y="14" width="12" height="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
           <div className="preview-card">
             {questions.length > 0 ? (
               <div className="preview-body">
