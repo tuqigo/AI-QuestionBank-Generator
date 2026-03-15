@@ -6,6 +6,7 @@ from .compare_number import CompareNumberGenerator
 from .addition_subtraction import AdditionSubtractionGenerator
 from .consecutive_addition_subtraction import ConsecutiveAdditionSubtractionGenerator
 from .currency_conversion import CurrencyConversionGenerator
+from .multiplication_table import MultiplicationTableGenerator
 
 
 # 生成器注册表
@@ -15,6 +16,7 @@ GENERATOR_REGISTRY = {
     "addition_subtraction": AdditionSubtractionGenerator,
     "consecutive_addition_subtraction": ConsecutiveAdditionSubtractionGenerator,
     "currency_conversion": CurrencyConversionGenerator,
+    "multiplication_table": MultiplicationTableGenerator,
 }
 
 
