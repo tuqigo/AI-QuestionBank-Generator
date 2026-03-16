@@ -20,6 +20,7 @@ export interface ConfigData {
   semesters: ConfigOption[]
   textbook_versions: string[]
   question_types: QuestionTypeOption[]
+  generator_modules: ConfigOption[]
 }
 
 /**

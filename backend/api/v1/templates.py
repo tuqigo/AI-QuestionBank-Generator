@@ -81,6 +81,7 @@ class TemplateUpdateInput(BaseModel):
     sort_order: Optional[int] = None
     is_active: Optional[bool] = None
     question_type: Optional[str] = None
+    generator_module: Optional[str] = None
 
 
 class TemplateCreateResponse(BaseModel):
@@ -287,6 +288,7 @@ async def update_template_api(template_id: int, input: TemplateUpdateInput):
             sort_order=input.sort_order,
             is_active=input.is_active,
             question_type=input.question_type,
+            generator_module=input.generator_module,
         )
         if not success:
             raise HTTPException(status_code=404, detail="模板不存在")

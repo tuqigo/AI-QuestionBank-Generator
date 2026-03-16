@@ -82,6 +82,7 @@ def update_template(
     sort_order: Optional[int] = None,
     is_active: Optional[bool] = None,
     question_type: Optional[str] = None,
+    generator_module: Optional[str] = None,
 ) -> bool:
     """
     更新模板
@@ -125,6 +126,9 @@ def update_template(
         if question_type is not None:
             updates.append("question_type = ?")
             values.append(question_type)
+        if generator_module is not None:
+            updates.append("generator_module = ?")
+            values.append(generator_module)
 
         if not updates:
             return False

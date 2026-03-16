@@ -62,3 +62,15 @@ SUPPORTED_QUESTION_TYPES: Dict[str, tuple] = {
     "ESSAY": ("作文/书面表达", ["chinese", "english"]),
     "CLOZE": ("完形填空", ["english"]),
 }
+
+# ==================== 生成器模块配置 ====================
+# key 为生成器模块名，value 为中文名称
+SUPPORTED_GENERATOR_MODULES: Dict[str, str] = {
+    "compare_number": "数字比较",
+    "currency_conversion": "货币转换",
+    "volume_conversion": "体积转换",
+    "fraction_comparison": "分数比较",
+    "mixed_addition_subtraction": "加减混合运算",
+    "length_comparison": "长度比较",
+    "multiplication_division_comprehensive": "乘除综合",
+}

@@ -6,6 +6,7 @@ from core.constants import (
     SUPPORTED_SEMESTERS,
     SUPPORTED_TEXTBOOK_VERSIONS,
     SUPPORTED_QUESTION_TYPES,
+    SUPPORTED_GENERATOR_MODULES,
 )
 
 router = APIRouter()
@@ -23,10 +24,17 @@ def get_all_configs():
             "subjects": subjects
         })
 
+    # 构建生成器模块列表
+    generator_modules = [
+        {"value": k, "label": v}
+        for k, v in SUPPORTED_GENERATOR_MODULES.items()
+    ]
+
     return {
         "subjects": [{"value": k, "label": v} for k, v in SUPPORTED_SUBJECTS.items()],
         "grades": [{"value": k, "label": v} for k, v in SUPPORTED_GRADES.items()],
         "semesters": [{"value": k, "label": v} for k, v in SUPPORTED_SEMESTERS.items()],
         "textbook_versions": SUPPORTED_TEXTBOOK_VERSIONS,
         "question_types": question_types,
+        "generator_modules": generator_modules,
     }

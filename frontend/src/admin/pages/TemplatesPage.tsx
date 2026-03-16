@@ -41,6 +41,7 @@ export default function TemplatesPage() {
   const [semesters, setSemesters] = useState<ConfigOption[]>([])
   const [textbookVersions, setTextbookVersions] = useState<string[]>([])
   const [questionTypes, setQuestionTypes] = useState<QuestionTypeOption[]>([])
+  const [generatorModules, setGeneratorModules] = useState<ConfigOption[]>([])
 
   useEffect(() => {
     loadConfigs()
@@ -55,6 +56,7 @@ export default function TemplatesPage() {
       setSemesters(configs.semesters)
       setTextbookVersions(configs.textbook_versions)
       setQuestionTypes(configs.question_types)
+      setGeneratorModules(configs.generator_modules)
     } catch (error) {
       console.error('加载配置失败:', error)
       alert('加载配置失败')
@@ -174,6 +176,7 @@ export default function TemplatesPage() {
           sort_order: formData.sort_order,
           is_active: formData.is_active,
           question_type: formData.question_type,
+          generator_module: formData.generator_module,
         })
         alert('更新成功')
       }
@@ -251,12 +254,15 @@ export default function TemplatesPage() {
             </div>
             <div className="form-group">
               <label>生成器模块</label>
-              <input
-                type="text"
+              <select
                 value={formData.generator_module}
                 onChange={(e) => setFormData({ ...formData, generator_module: e.target.value })}
-                placeholder="例如：basic_arithmetic"
-              />
+              >
+                <option value="">请选择</option>
+                {generatorModules.map(m => (
+                  <option key={m.value} value={m.value}>{m.label}</option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -505,6 +511,7 @@ export default function TemplatesPage() {
                     <th>年级</th>
                     <th>学期</th>
                     <th>教材版本</th>
+                    <th>题型</th>
                     <th>状态</th>
                     <th>操作</th>
                   </tr>
@@ -518,6 +525,7 @@ export default function TemplatesPage() {
                       <td>{getGradeLabel(template.grade)}</td>
                       <td>{getSemesterLabel(template.semester)}</td>
                       <td>{template.textbook_version}</td>
+                      <td>{getQuestionTypeLabel(template.question_type)}</td>
                       <td>
                         <span className={`admin-badge ${template.is_active ? 'admin-badge-success' : 'admin-badge-error'}`}>
                           {template.is_active ? '启用' : '禁用'}
