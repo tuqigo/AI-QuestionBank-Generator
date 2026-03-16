@@ -12,6 +12,9 @@ export type Subject = 'math' | 'chinese' | 'english'
 export type Grade = 'grade1' | 'grade2' | 'grade3' | 'grade4' | 'grade5'
   | 'grade6' | 'grade7' | 'grade8' | 'grade9'
 
+/** 学期类型 */
+export type Semester = 'upper' | 'lower'
+
 /** 题型枚举 */
 export type QuestionType =
   | 'SINGLE_CHOICE'    // 单选题
@@ -135,3 +138,30 @@ export interface ClozeProps extends QuestionRendererProps {
 }
 
 export interface EssayProps extends QuestionRendererProps {}
+
+// ===================== 模板相关类型 =====================
+
+/** 模板筛选条件 */
+export interface TemplateFilter {
+  grade?: Grade
+  subject?: Subject
+  semester?: Semester
+  textbook_version?: string
+}
+
+/** 模板列表项 */
+export interface TemplateItem {
+  id: number
+  name: string
+  subject: string
+  grade: string
+  semester: string
+  textbook_version: string
+  example: string | null
+}
+
+/** 模板生成题目响应 */
+export interface TemplateGenerateResponse {
+  meta: MetaData
+  questions: StructuredQuestion[]
+}

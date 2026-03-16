@@ -395,3 +395,222 @@
   transform: translateY(0);
 }
 
+/* ===== 模式切换 Tab ===== */
+.mode-tabs {
+  display: flex;
+  gap: var(--space-2);
+  background: var(--gray-100);
+  padding: var(--space-1);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-3);
+}
+
+.mode-tab {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-600);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.mode-tab:hover {
+  color: var(--gray-800);
+  background: var(--gray-200);
+}
+
+.mode-tab.active {
+  color: white;
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+}
+
+/* ===== 模板筛选 ===== */
+.template-filter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.filter-select {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  background: white;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.filter-select:hover {
+  border-color: var(--gray-300);
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+}
+
+.btn-search-template {
+  width: 100%;
+  padding: var(--space-3);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+}
+
+.btn-search-template:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+}
+
+.btn-search-template:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-search-template:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ===== 模板列表 ===== */
+.template-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: var(--space-1);
+}
+
+.template-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.template-list::-webkit-scrollbar-track {
+  background: var(--gray-100);
+  border-radius: 3px;
+}
+
+.template-list::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 3px;
+}
+
+.template-list::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
+}
+
+.template-loading,
+.template-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  color: var(--gray-500);
+  font-size: 0.875rem;
+  background: var(--gray-50);
+  border-radius: var(--radius-lg);
+}
+
+.template-loading {
+  gap: var(--space-2);
+}
+
+.template-item {
+  padding: var(--space-3);
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.template-item:hover {
+  border-color: var(--primary-300);
+  background: var(--primary-50);
+  box-shadow: var(--shadow-sm);
+}
+
+.template-item.selected {
+  border-color: var(--primary-500);
+  background: linear-gradient(135deg, var(--primary-50) 0%, white 100%);
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.1);
+}
+
+.template-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin-bottom: var(--space-1);
+}
+
+.template-meta {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  margin-bottom: var(--space-2);
+}
+
+.template-example {
+  font-size: 0.8125rem;
+  color: var(--gray-600);
+  background: var(--gray-50);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  line-height: 1.5;
+}
+
+/* ===== 数量选择器 ===== */
+.quantity-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
+.quantity-btn {
+  width: 36px;
+  height: 36px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--primary-600);
+  background: white;
+  border: 2px solid var(--primary-200);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quantity-btn:hover {
+  border-color: var(--primary-400);
+  background: var(--primary-50);
+}
+
+.quantity-btn:active {
+  transform: scale(0.95);
+}
+
+.quantity-value {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  min-width: 80px;
+  text-align: center;
+}
+

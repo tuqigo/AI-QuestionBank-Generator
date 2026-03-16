@@ -6,8 +6,8 @@ import { handlePrint } from '@/utils/printUtils'
 import HistoryDropdown from '../history/HistoryList'
 import ProgressModal from './ProgressModal'
 import StructuredPreviewShared from '@/components/StructuredPreviewShared'
-import { generateStructuredQuestions } from '@/core/api/history'
-import type { StructuredQuestion, MetaData } from '@/types/question'
+import { generateStructuredQuestions, getTemplates, generateFromTemplate } from '@/core/api/history'
+import type { StructuredQuestion, MetaData, TemplateItem, TemplateFilter } from '@/types/question'
 import './MainContent.css'
 
 const SHORTCUTS = [
@@ -34,12 +34,124 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
   const [error, setError] = useState('')
   const [historyOpen, setHistoryOpen] = useState(false)
 
+  // 出题模式
+  const [mode, setMode] = useState<'prompt' | 'template'>('prompt')
+
+  // 模板相关状态
+  const [templates, setTemplates] = useState<TemplateItem[]>([])
+  const [templateFilter, setTemplateFilter] = useState<TemplateFilter>({})
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateItem | null>(null)
+  const [templateLoading, setTemplateLoading] = useState(false)
+  const [templateQuantity, setTemplateQuantity] = useState(15)
+
   // 进度条状态
   const [progressStage, setProgressStage] = useState<'preparing' | 'connecting' | 'generating' | 'processing' | 'complete'>('preparing')
   const [showProgress, setShowProgress] = useState(false)
 
   // 预览区 ref，用于自动滚动
   const previewRef = useRef<HTMLDivElement>(null)
+
+  // 加载模板列表
+  const loadTemplates = async () => {
+    setTemplateLoading(true)
+    setError('')
+    try {
+      const data = await getTemplates(templateFilter)
+      setTemplates(data)
+      if (data.length === 0) {
+        setError('没有找到符合条件的模板')
+      }
+    } catch (e) {
+      if (e instanceof Error) {
+        setError(e.message || '加载模板失败')
+      } else {
+        setError('加载模板失败')
+      }
+      setTemplates([])
+    } finally {
+      setTemplateLoading(false)
+    }
+  }
+
+  // 处理模板选择
+  const handleTemplateSelect = (template: TemplateItem) => {
+    setSelectedTemplate(template)
+  }
+
+  // 确认出题（模板模式）
+  const generateFromTemplateWrapper = async () => {
+    if (!selectedTemplate) {
+      setError('请先选择一个模板')
+      return
+    }
+
+    setError('')
+    setLoading(true)
+    setShowProgress(true)
+    setProgressStage('preparing')
+    setQuestions([])
+    setMeta(null)
+
+    const stageTimers: ReturnType<typeof setTimeout>[] = []
+
+    stageTimers.push(setTimeout(() => {
+      setProgressStage('connecting')
+    }, 200))
+
+    stageTimers.push(setTimeout(() => {
+      setProgressStage('generating')
+    }, 800))
+
+    stageTimers.push(setTimeout(() => {
+      if (progressStage === 'generating') {
+        setProgressStage('processing')
+      }
+    }, 8000))
+
+    try {
+      const data = await generateFromTemplate(selectedTemplate.id, templateQuantity)
+
+      if (data.meta) {
+        setMeta({
+          subject: data.meta.subject as any,
+          grade: data.meta.grade as any,
+          title: data.meta.title
+        })
+      }
+
+      if (data.questions) {
+        setQuestions(data.questions)
+      }
+
+      setProgressStage('complete')
+
+      setTimeout(() => {
+        setShowProgress(false)
+        if (previewRef.current) {
+          previewRef.current.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          })
+        }
+      }, 500)
+    } catch (e) {
+      let errorMessage = '生成失败，请稍后重试'
+      if (e instanceof Error) {
+        if (e.message.includes('超时')) {
+          errorMessage = '题目生成时间过长，请减少题目数量或简化要求后重试'
+        } else if (e.message.includes('网络')) {
+          errorMessage = '网络连接失败，请检查网络后重试'
+        } else {
+          errorMessage = e.message || '系统内部错误，稍后再试！'
+        }
+      }
+      setError(errorMessage)
+      setShowProgress(false)
+    } finally {
+      setLoading(false)
+      stageTimers.forEach(clearTimeout)
+    }
+  }
 
   const generate = async () => {
     const p = prompt.trim()
@@ -191,88 +303,289 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
         {/* 左侧控制面板 */}
         <aside className="sidebar">
           <div className="sidebar-content">
-            {/* 快捷按钮 */}
+            {/* 模式切换 Tab */}
             <section className="panel-section">
-              <div className="section-header">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                <label>快捷模板</label>
-              </div>
-              <div className="shortcuts">
-                {SHORTCUTS.map((s) => (
-                  <button
-                    key={s.label}
-                    type="button"
-                    className="btn-shortcut"
-                    onClick={() => setPrompt(s.prompt)}
-                  >
-                    <span className="shortcut-icon">{s.icon}</span>
-                    {s.label}
-                  </button>
-                ))}
+              <div className="mode-tabs">
+                <button
+                  type="button"
+                  className={`mode-tab ${mode === 'prompt' ? 'active' : ''}`}
+                  onClick={() => {
+                    setMode('prompt')
+                    setError('')
+                  }}
+                >
+                  提示词出题
+                </button>
+                <button
+                  type="button"
+                  className={`mode-tab ${mode === 'template' ? 'active' : ''}`}
+                  onClick={() => {
+                    setMode('template')
+                    setError('')
+                  }}
+                >
+                  模板出题
+                </button>
               </div>
             </section>
 
-            {/* 提示词输入 */}
-            <section className="panel-section">
-              <div className="section-header">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M18.5 2.5C18.8978 2.10217 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10217 21.4999 2.5C21.8977 2.89782 22.1212 3.43739 22.1212 4C22.1212 4.56261 21.8977 5.10217 21.4999 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                <label>自定义提示词</label>
-              </div>
-              <textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="例如：小学六年级数学 分数小数混合运算 15 道"
-                rows={4}
-                className="prompt-input"
-              />
-              {/* 错误提示 - 输入框下方 */}
-              {error && (
-                <div className="error-message-inline" role="alert">
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-                    <path d="M12 8V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                    <circle cx="12" cy="16" r="1" fill="currentColor" />
-                  </svg>
-                  {error}
-                </div>
-              )}
-            </section>
+            {/* 提示词出题模式 */}
+            {mode === 'prompt' && (
+              <>
+                {/* 快捷按钮 */}
+                <section className="panel-section">
+                  <div className="section-header">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <label>快捷模板</label>
+                  </div>
+                  <div className="shortcuts">
+                    {SHORTCUTS.map((s) => (
+                      <button
+                        key={s.label}
+                        type="button"
+                        className="btn-shortcut"
+                        onClick={() => setPrompt(s.prompt)}
+                      >
+                        <span className="shortcut-icon">{s.icon}</span>
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                </section>
+
+                {/* 提示词输入 */}
+                <section className="panel-section">
+                  <div className="section-header">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M11 4H4C3.46957 4 2.96086 4.21071 2.58579 4.58579C2.21071 4.96086 2 5.46957 2 6V20C2 20.5304 2.21071 21.0391 2.58579 21.4142C2.96086 21.7893 3.46957 22 4 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M18.5 2.5C18.8978 2.10217 19.4374 1.87868 20 1.87868C20.5626 1.87868 21.1022 2.10217 21.4999 2.5C21.8977 2.89782 22.1212 3.43739 22.1212 4C22.1212 4.56261 21.8977 5.10217 21.4999 5.5L12 15L8 16L9 12L18.5 2.5Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <label>自定义提示词</label>
+                  </div>
+                  <textarea
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    placeholder="例如：小学六年级数学 分数小数混合运算 15 道"
+                    rows={4}
+                    className="prompt-input"
+                  />
+                  {error && (
+                    <div className="error-message-inline" role="alert">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+                        <path d="M12 8V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                        <circle cx="12" cy="16" r="1" fill="currentColor" />
+                      </svg>
+                      {error}
+                    </div>
+                  )}
+                </section>
+              </>
+            )}
+
+            {/* 模板出题模式 */}
+            {mode === 'template' && (
+              <>
+                {/* 模板筛选 */}
+                <section className="panel-section">
+                  <div className="section-header">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M22 3H2L8 10.46V19L10 21H14V10.46L22 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <label>筛选条件</label>
+                  </div>
+                  <div className="template-filter">
+                    <select
+                      value={templateFilter.grade || ''}
+                      onChange={(e) => setTemplateFilter({ ...templateFilter, grade: e.target.value as any })}
+                      className="filter-select"
+                    >
+                      <option value="">全部年级</option>
+                      <option value="grade1">一年级</option>
+                      <option value="grade2">二年级</option>
+                      <option value="grade3">三年级</option>
+                      <option value="grade4">四年级</option>
+                      <option value="grade5">五年级</option>
+                      <option value="grade6">六年级</option>
+                      <option value="grade7">七年级</option>
+                      <option value="grade8">八年级</option>
+                      <option value="grade9">九年级</option>
+                    </select>
+                    <select
+                      value={templateFilter.subject || ''}
+                      onChange={(e) => setTemplateFilter({ ...templateFilter, subject: e.target.value as any })}
+                      className="filter-select"
+                    >
+                      <option value="">全部学科</option>
+                      <option value="math">数学</option>
+                      <option value="chinese">语文</option>
+                      <option value="english">英语</option>
+                    </select>
+                    <select
+                      value={templateFilter.semester || ''}
+                      onChange={(e) => setTemplateFilter({ ...templateFilter, semester: e.target.value as any })}
+                      className="filter-select"
+                    >
+                      <option value="">全部学期</option>
+                      <option value="upper">上学期</option>
+                      <option value="lower">下学期</option>
+                    </select>
+                    <select
+                      value={templateFilter.textbook_version || ''}
+                      onChange={(e) => setTemplateFilter({ ...templateFilter, textbook_version: e.target.value })}
+                      className="filter-select"
+                    >
+                      <option value="">全部版本</option>
+                      <option value="人教版">人教版</option>
+                      <option value="北师大版">北师大版</option>
+                      <option value="苏教版">苏教版</option>
+                      <option value="沪教版">沪教版</option>
+                    </select>
+                    <button
+                      type="button"
+                      className="btn-search-template"
+                      onClick={loadTemplates}
+                      disabled={templateLoading}
+                    >
+                      {templateLoading ? '加载中...' : '查找模板'}
+                    </button>
+                  </div>
+                </section>
+
+                {/* 模板列表 */}
+                <section className="panel-section">
+                  <div className="section-header">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M9 5H7C6.46957 5 5.96086 5.21071 5.58579 5.58579C5.21071 5.96086 5 6.46957 5 7V19C5 19.5304 5.21071 20.0391 5.58579 20.4142C5.96086 20.7893 6.46957 21 7 21H17C17.5304 21 18.0391 20.7893 18.4142 20.4142C18.7893 20.0391 19 19.5304 19 19V7C19 6.46957 18.7893 5.96086 18.4142 5.58579C18.0391 5.21071 17.5304 5 17 5H15C14.4696 5 14 5.44772 14 6V8C14 8.55228 14.4696 9 15 9H17V19H7V7H9C9.53043 7 10 6.55228 10 6V4C10 3.44772 9.53043 3 9 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <label>模板列表</label>
+                  </div>
+                  <div className="template-list">
+                    {templateLoading && (
+                      <div className="template-loading">
+                        <span className="spinner-small"></span>
+                        加载中...
+                      </div>
+                    )}
+                    {!templateLoading && templates.length === 0 && (
+                      <div className="template-empty">
+                        点击"查找模板"加载模板列表
+                      </div>
+                    )}
+                    {!templateLoading && templates.map((template) => (
+                      <div
+                        key={template.id}
+                        className={`template-item ${selectedTemplate?.id === template.id ? 'selected' : ''}`}
+                        onClick={() => handleTemplateSelect(template)}
+                      >
+                        <div className="template-name">{template.name}</div>
+                        <div className="template-meta">
+                          {template.grade} · {template.subject} · {template.semester}
+                        </div>
+                        {template.example && (
+                          <div className="template-example">{template.example}</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                {/* 数量选择 */}
+                {selectedTemplate && (
+                  <section className="panel-section">
+                    <div className="section-header">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 20V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M16 20V8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M8 20V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <label>题目数量</label>
+                    </div>
+                    <div className="quantity-selector">
+                      <button
+                        type="button"
+                        className="quantity-btn"
+                        onClick={() => setTemplateQuantity(Math.max(5, templateQuantity - 5))}
+                      >
+                        -
+                      </button>
+                      <span className="quantity-value">{templateQuantity} 道</span>
+                      <button
+                        type="button"
+                        className="quantity-btn"
+                        onClick={() => setTemplateQuantity(Math.min(100, templateQuantity + 5))}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </section>
+                )}
+              </>
+            )}
 
             {/* 生成按钮 */}
             <div className="action-buttons">
-              <button
-                type="button"
-                className="btn-generate"
-                onClick={generate}
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <span className="spinner"></span>
-                    生成中...
-                  </>
-                ) : (
-                  <>
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 2V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M12 20V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M4.92999 4.92999L6.33999 6.33999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M17.66 17.66L19.07 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M2 12H4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M20 12H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M6.33999 17.66L4.92999 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M19.07 4.92999L17.66 6.33999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
-                    </svg>
-                    生成题目
-                  </>
-                )}
-              </button>
+              {mode === 'prompt' ? (
+                <button
+                  type="button"
+                  className="btn-generate"
+                  onClick={generate}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <span className="spinner"></span>
+                      生成中...
+                    </>
+                  ) : (
+                    <>
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M12 20V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M4.92999 4.92999L6.33999 6.33999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M17.66 17.66L19.07 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M2 12H4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M20 12H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M6.33999 17.66L4.92999 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M19.07 4.92999L17.66 6.33999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+                      </svg>
+                      生成题目
+                    </>
+                  )}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btn-generate"
+                  onClick={generateFromTemplateWrapper}
+                  disabled={loading || !selectedTemplate}
+                >
+                  {loading ? (
+                    <>
+                      <span className="spinner"></span>
+                      生成中...
+                    </>
+                  ) : (
+                    <>
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M12 20V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M4.92999 4.92999L6.33999 6.33999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M17.66 17.66L19.07 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M2 12H4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M20 12H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M6.33999 17.66L4.92999 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M19.07 4.92999L17.66 6.33999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+                      </svg>
+                      {selectedTemplate ? '生成题目' : '请选择模板'}
+                    </>
+                  )}
+                </button>
+              )}
 
               {/* 打印按钮 - 仅在生成成功后显示 */}
               {questions.length > 0 && meta && (

@@ -5,7 +5,7 @@ import type {
   ShareUrlResponse,
 } from '@/types'
 
-import type { StructuredGenerateResponse, StructuredQuestion } from '@/types/question'
+import type { StructuredGenerateResponse, StructuredQuestion, TemplateFilter, TemplateItem, TemplateGenerateResponse } from '@/types/question'
 
 const API_BASE = '/api'
 
@@ -168,6 +168,50 @@ export async function getSharedAnswers(shortId: string, token: string): Promise<
   if (!res.ok) {
     const error = await res.text()
     throw new Error(error || '分享答案不存在或链接无效')
+  }
+
+  return res.json()
+}
+
+/** 获取模板列表 */
+export async function getTemplates(filter?: TemplateFilter): Promise<TemplateItem[]> {
+  const params = new URLSearchParams()
+  if (filter?.grade) params.set('grade', filter.grade)
+  if (filter?.subject) params.set('subject', filter.subject)
+  if (filter?.semester) params.set('semester', filter.semester)
+  if (filter?.textbook_version) params.set('textbook_version', filter.textbook_version)
+
+  const url = `${API_BASE}/templates/list${params.toString() ? `?${params.toString()}` : ''}`
+  const res = await fetchWithAuth(url)
+
+  if (!res.ok) {
+    const error = await res.text()
+    throw new Error(error || '获取模板列表失败')
+  }
+
+  const data = await res.json()
+  return data.templates || []
+}
+
+/** 根据模板生成题目 */
+export async function generateFromTemplate(
+  templateId: number,
+  quantity: number = 15
+): Promise<TemplateGenerateResponse> {
+  const res = await fetchWithAuth(`${API_BASE}/templates/generate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      template_id: templateId,
+      quantity: quantity,
+    }),
+  })
+
+  if (!res.ok) {
+    const error = await res.text()
+    throw new Error(error || '生成题目失败')
   }
 
   return res.json()
