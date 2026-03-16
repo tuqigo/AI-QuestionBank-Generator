@@ -7,7 +7,7 @@ import { handlePrint } from '@/utils/printUtils'
 import { renderMarkdown } from '@/utils/markdownProcessor'
 import type { QuestionRecord } from '@/types'
 import type { StructuredQuestion, RecordMeta } from '@/types/question'
-import StructuredPreviewShared from '@/components/StructuredPreviewShared'
+import PrintPreview from '@/components/PrintPreview'
 import './HistoryDetail.css'
 
 // 解析结构化数据
@@ -299,7 +299,7 @@ export default function HistoryDetail() {
       <div className="detail-content">
         {hasStructuredData ? (
           <>
-            <StructuredPreviewShared
+            <PrintPreview
               questions={structuredData.questions}
               meta={structuredData.meta}
               recordTitle={record.title}

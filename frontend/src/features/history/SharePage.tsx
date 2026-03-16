@@ -4,7 +4,7 @@ import { getToken } from '@/core/auth/userAuth'
 import { getSharedRecord, getSharedQuestions } from '@/core/api/history'
 import type { QuestionRecord } from '@/types'
 import type { StructuredQuestion, RecordMeta } from '@/types/question'
-import StructuredPreviewShared from '@/components/StructuredPreviewShared'
+import PrintPreview from '@/components/PrintPreview'
 import './SharePage.css'
 
 export default function SharePage() {
@@ -98,7 +98,7 @@ export default function SharePage() {
 
       <div className="share-content">
         {hasStructuredData ? (
-          <StructuredPreviewShared
+          <PrintPreview
             questions={structuredData.questions}
             meta={structuredData.meta}
             recordTitle={record.title}
