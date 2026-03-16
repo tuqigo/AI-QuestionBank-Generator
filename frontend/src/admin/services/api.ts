@@ -288,6 +288,7 @@ export interface TemplateUpdateInput {
   sort_order?: number
   is_active?: boolean
   question_type?: string
+  generator_module?: string
 }
 
 export interface TemplateGenerateInput {
