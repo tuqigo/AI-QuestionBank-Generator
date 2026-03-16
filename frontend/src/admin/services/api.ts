@@ -278,11 +278,16 @@ export interface TemplateCreateInput {
 
 export interface TemplateUpdateInput {
   name?: string
+  subject?: string
+  grade?: string
+  semester?: string
+  textbook_version?: string
   template_pattern?: string
   variables_config?: string
   example?: string
   sort_order?: number
   is_active?: boolean
+  question_type?: string
 }
 
 export interface TemplateGenerateInput {
