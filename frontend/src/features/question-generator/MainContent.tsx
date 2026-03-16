@@ -209,7 +209,39 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
     try {
       const data = await getTemplates({})
       setAllTemplates(data)
-      setFilteredTemplates(data) // 初始显示全部模板
+
+      // 检查是否有保存的筛选配置，有的话应用过滤
+      const savedFilter = localStorage.getItem('question-generator-filter')
+      if (savedFilter) {
+        const parsed = JSON.parse(savedFilter)
+        if (parsed.grade || parsed.subject || parsed.semester || parsed.textbook_version) {
+          setTemplateFilter(parsed)
+          // 等状态更新后应用过滤
+          setTimeout(() => {
+            let result = data
+            if (parsed.grade) {
+              result = result.filter(t => t.grade === parsed.grade)
+            }
+            if (parsed.subject) {
+              result = result.filter(t => t.subject === parsed.subject)
+            }
+            if (parsed.semester) {
+              result = result.filter(t => t.semester === parsed.semester)
+            }
+            if (parsed.textbook_version) {
+              result = result.filter(t => t.textbook_version === parsed.textbook_version)
+            }
+            setFilteredTemplates(result)
+            if (result.length === 0) {
+              setError('没有找到符合条件的模板')
+            }
+          }, 0)
+          return
+        }
+      }
+
+      // 没有筛选配置或筛选条件为空，显示全部模板
+      setFilteredTemplates(data)
     } catch (e) {
       if (e instanceof Error) {
         setError(e.message || '加载模板失败')
@@ -223,19 +255,9 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
     }
   }
 
-  // 页面加载时，自动加载全部模板并恢复筛选条件
+  // 页面加载时，自动加载全部模板
   useEffect(() => {
     if (allTemplates.length === 0 && !templateLoading) {
-      // 恢复之前保存的筛选条件
-      const savedFilter = localStorage.getItem('question-generator-filter')
-      if (savedFilter) {
-        const parsed = JSON.parse(savedFilter)
-        if (parsed.grade || parsed.subject || parsed.semester || parsed.textbook_version) {
-          setTemplateFilter(parsed)
-          // 恢复筛选条件后，应用过滤
-          setTimeout(() => applyFilter(), 0)
-        }
-      }
       loadAllTemplates()
     }
   }, [])
