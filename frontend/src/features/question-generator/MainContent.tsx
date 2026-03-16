@@ -34,15 +34,63 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
   const [error, setError] = useState('')
   const [historyOpen, setHistoryOpen] = useState(false)
 
-  // 出题模式
-  const [mode, setMode] = useState<'prompt' | 'template'>('prompt')
+  // 出题模式 - 从 localStorage 读取，默认为 'template'
+  const [mode, setMode] = useState<'prompt' | 'template'>(() => {
+    const saved = localStorage.getItem('question-generator-mode')
+    return (saved === 'prompt' || saved === 'template') ? saved : 'template'
+  })
 
   // 模板相关状态
   const [templates, setTemplates] = useState<TemplateItem[]>([])
-  const [templateFilter, setTemplateFilter] = useState<TemplateFilter>({})
+  // 筛选条件 - 从 localStorage 读取
+  const [templateFilter, setTemplateFilter] = useState<TemplateFilter>(() => {
+    const saved = localStorage.getItem('question-generator-filter')
+    return saved ? JSON.parse(saved) : {}
+  })
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateItem | null>(null)
   const [templateLoading, setTemplateLoading] = useState(false)
   const [templateQuantity, setTemplateQuantity] = useState(15)
+  const [filterOpen, setFilterOpen] = useState(false)
+
+  // 模式切换时保存到 localStorage
+  useEffect(() => {
+    localStorage.setItem('question-generator-mode', mode)
+  }, [mode])
+
+  // 筛选条件变化时保存到 localStorage
+  useEffect(() => {
+    localStorage.setItem('question-generator-filter', JSON.stringify(templateFilter))
+  }, [templateFilter])
+
+  // 监听窗口大小变化，动态更新移动端状态
+  useEffect(() => {
+    const handleResize = () => {
+      // 触发重新渲染，更新 isMobile 状态
+      setIsMobileWidth(window.innerWidth <= 768)
+    }
+
+    handleResize() // 初始化
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  // 使用状态来跟踪是否为移动端宽度
+  const [isMobileWidth, setIsMobileWidth] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth <= 768 : false
+  )
+  const isMobile = isMobileWidth
+
+  // 页面加载时，如果有缓存的筛选条件，自动加载模板
+  useEffect(() => {
+    const savedFilter = localStorage.getItem('question-generator-filter')
+    if (savedFilter) {
+      const parsed = JSON.parse(savedFilter)
+      // 如果有有效的筛选条件，自动加载
+      if (parsed.grade || parsed.subject || parsed.semester || parsed.textbook_version) {
+        loadTemplates()
+      }
+    }
+  }, [])
 
   // 进度条状态
   const [progressStage, setProgressStage] = useState<'preparing' | 'connecting' | 'generating' | 'processing' | 'complete'>('preparing')
@@ -60,6 +108,9 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
       setTemplates(data)
       if (data.length === 0) {
         setError('没有找到符合条件的模板')
+      } else {
+        // 加载成功后自动折叠筛选条件
+        setFilterOpen(false)
       }
     } catch (e) {
       if (e instanceof Error) {
@@ -127,7 +178,8 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
 
       setTimeout(() => {
         setShowProgress(false)
-        if (previewRef.current) {
+        // 滚动到预览区（仅移动端）
+        if (isMobile && previewRef.current) {
           previewRef.current.scrollIntoView({
             behavior: 'smooth',
             block: 'start'
@@ -209,11 +261,10 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
       // 完成后显示完成状态
       setProgressStage('complete')
 
-      // 500ms 后关闭进度条并滚动到预览区
+      // 500ms 后关闭进度条并滚动到预览区（仅移动端）
       setTimeout(() => {
         setShowProgress(false)
-        // 滚动到预览区（移动端）
-        if (previewRef.current) {
+        if (isMobile && previewRef.current) {
           previewRef.current.scrollIntoView({
             behavior: 'smooth',
             block: 'start'
@@ -308,16 +359,6 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
               <div className="mode-tabs">
                 <button
                   type="button"
-                  className={`mode-tab ${mode === 'prompt' ? 'active' : ''}`}
-                  onClick={() => {
-                    setMode('prompt')
-                    setError('')
-                  }}
-                >
-                  提示词出题
-                </button>
-                <button
-                  type="button"
                   className={`mode-tab ${mode === 'template' ? 'active' : ''}`}
                   onClick={() => {
                     setMode('template')
@@ -326,8 +367,176 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                 >
                   模板出题
                 </button>
+                <button
+                  type="button"
+                  className={`mode-tab ${mode === 'prompt' ? 'active' : ''}`}
+                  onClick={() => {
+                    setMode('prompt')
+                    setError('')
+                  }}
+                >
+                  提示词出题
+                </button>
               </div>
             </section>
+
+            {/* 模板出题模式 */}
+            {mode === 'template' && (
+              <>
+                {/* 筛选条件标题栏（可点击展开/收起） */}
+                <section className="panel-section">
+                  <div
+                    className="section-header filter-header"
+                    onClick={() => setFilterOpen(!filterOpen)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        setFilterOpen(!filterOpen)
+                      }
+                    }}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M22 3H2L8 10.46V19L10 21H14V10.46L22 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <label>筛选条件</label>
+                    <svg
+                      className={`filter-toggle-icon ${filterOpen ? 'open' : ''}`}
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  {/* 筛选表单 */}
+                  {filterOpen && (
+                    <div className="template-filter">
+                      <select
+                        value={templateFilter.grade || ''}
+                        onChange={(e) => setTemplateFilter({ ...templateFilter, grade: e.target.value as any })}
+                        className="filter-select"
+                      >
+                        <option value="">全部年级</option>
+                        <option value="grade1">一年级</option>
+                        <option value="grade2">二年级</option>
+                        <option value="grade3">三年级</option>
+                        <option value="grade4">四年级</option>
+                        <option value="grade5">五年级</option>
+                        <option value="grade6">六年级</option>
+                        <option value="grade7">七年级</option>
+                        <option value="grade8">八年级</option>
+                        <option value="grade9">九年级</option>
+                      </select>
+                      <select
+                        value={templateFilter.subject || ''}
+                        onChange={(e) => setTemplateFilter({ ...templateFilter, subject: e.target.value as any })}
+                        className="filter-select"
+                      >
+                        <option value="">全部学科</option>
+                        <option value="math">数学</option>
+                        <option value="chinese">语文</option>
+                        <option value="english">英语</option>
+                      </select>
+                      <select
+                        value={templateFilter.semester || ''}
+                        onChange={(e) => setTemplateFilter({ ...templateFilter, semester: e.target.value as any })}
+                        className="filter-select"
+                      >
+                        <option value="">全部学期</option>
+                        <option value="upper">上学期</option>
+                        <option value="lower">下学期</option>
+                      </select>
+                      <select
+                        value={templateFilter.textbook_version || ''}
+                        onChange={(e) => setTemplateFilter({ ...templateFilter, textbook_version: e.target.value })}
+                        className="filter-select"
+                      >
+                        <option value="">全部版本</option>
+                        <option value="人教版">人教版</option>
+                        <option value="北师大版">北师大版</option>
+                        <option value="苏教版">苏教版</option>
+                        <option value="沪教版">沪教版</option>
+                      </select>
+                      <button
+                        type="button"
+                        className="btn-search-template"
+                        onClick={loadTemplates}
+                        disabled={templateLoading}
+                      >
+                        {templateLoading ? '加载中...' : '查找模板'}
+                      </button>
+                    </div>
+                  )}
+                </section>
+
+                {/* 模板列表 */}
+                <section className="panel-section">
+                  <div className="section-header">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M9 5H7C6.46957 5 5.96086 5.21071 5.58579 5.58579C5.21071 5.96086 5 6.46957 5 7V19C5 19.5304 5.21071 20.0391 5.58579 20.4142C5.96086 20.7893 6.46957 21 7 21H17C17.5304 21 18.0391 20.7893 18.4142 20.4142C18.7893 20.0391 19 19.5304 19 19V7C19 6.46957 18.7893 5.96086 18.4142 5.58579C18.0391 5.21071 17.5304 5 17 5H15C14.4696 5 14 5.44772 14 6V8C14 8.55228 14.4696 9 15 9H17V19H7V7H9C9.53043 7 10 6.55228 10 6V4C10 3.44772 9.53043 3 9 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <label>模板列表</label>
+                  </div>
+                  <div className="template-list">
+                    {templateLoading && (
+                      <div className="template-loading">
+                        <span className="spinner-small"></span>
+                        加载中...
+                      </div>
+                    )}
+                    {!templateLoading && templates.length === 0 && (
+                      <div className="template-empty">
+                        点击"查找模板"加载模板列表
+                      </div>
+                    )}
+                    {!templateLoading && templates.map((template) => (
+                      <div
+                        key={template.id}
+                        className={`template-item ${selectedTemplate?.id === template.id ? 'selected' : ''}`}
+                        onClick={() => handleTemplateSelect(template)}
+                      >
+                        <div className="template-name">{template.name}</div>
+                        {template.example && (
+                          <div className="template-example">{template.example}</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                {/* 数量选择 */}
+                {selectedTemplate && (
+                  <section className="panel-section">
+                    <div className="section-header">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 20V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M16 20V8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M8 20V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <label>题目数量</label>
+                    </div>
+                    <div className="quantity-selector">
+                      <button
+                        type="button"
+                        className="quantity-btn"
+                        onClick={() => setTemplateQuantity(Math.max(5, templateQuantity - 5))}
+                      >
+                        -
+                      </button>
+                      <span className="quantity-value">{templateQuantity} 道</span>
+                      <button
+                        type="button"
+                        className="quantity-btn"
+                        onClick={() => setTemplateQuantity(Math.min(100, templateQuantity + 5))}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </section>
+                )}
+              </>
+            )}
 
             {/* 提示词出题模式 */}
             {mode === 'prompt' && (
@@ -385,148 +594,28 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
               </>
             )}
 
-            {/* 模板出题模式 */}
-            {mode === 'template' && (
-              <>
-                {/* 模板筛选 */}
-                <section className="panel-section">
-                  <div className="section-header">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M22 3H2L8 10.46V19L10 21H14V10.46L22 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <label>筛选条件</label>
-                  </div>
-                  <div className="template-filter">
-                    <select
-                      value={templateFilter.grade || ''}
-                      onChange={(e) => setTemplateFilter({ ...templateFilter, grade: e.target.value as any })}
-                      className="filter-select"
-                    >
-                      <option value="">全部年级</option>
-                      <option value="grade1">一年级</option>
-                      <option value="grade2">二年级</option>
-                      <option value="grade3">三年级</option>
-                      <option value="grade4">四年级</option>
-                      <option value="grade5">五年级</option>
-                      <option value="grade6">六年级</option>
-                      <option value="grade7">七年级</option>
-                      <option value="grade8">八年级</option>
-                      <option value="grade9">九年级</option>
-                    </select>
-                    <select
-                      value={templateFilter.subject || ''}
-                      onChange={(e) => setTemplateFilter({ ...templateFilter, subject: e.target.value as any })}
-                      className="filter-select"
-                    >
-                      <option value="">全部学科</option>
-                      <option value="math">数学</option>
-                      <option value="chinese">语文</option>
-                      <option value="english">英语</option>
-                    </select>
-                    <select
-                      value={templateFilter.semester || ''}
-                      onChange={(e) => setTemplateFilter({ ...templateFilter, semester: e.target.value as any })}
-                      className="filter-select"
-                    >
-                      <option value="">全部学期</option>
-                      <option value="upper">上学期</option>
-                      <option value="lower">下学期</option>
-                    </select>
-                    <select
-                      value={templateFilter.textbook_version || ''}
-                      onChange={(e) => setTemplateFilter({ ...templateFilter, textbook_version: e.target.value })}
-                      className="filter-select"
-                    >
-                      <option value="">全部版本</option>
-                      <option value="人教版">人教版</option>
-                      <option value="北师大版">北师大版</option>
-                      <option value="苏教版">苏教版</option>
-                      <option value="沪教版">沪教版</option>
-                    </select>
-                    <button
-                      type="button"
-                      className="btn-search-template"
-                      onClick={loadTemplates}
-                      disabled={templateLoading}
-                    >
-                      {templateLoading ? '加载中...' : '查找模板'}
-                    </button>
-                  </div>
-                </section>
 
-                {/* 模板列表 */}
-                <section className="panel-section">
-                  <div className="section-header">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M9 5H7C6.46957 5 5.96086 5.21071 5.58579 5.58579C5.21071 5.96086 5 6.46957 5 7V19C5 19.5304 5.21071 20.0391 5.58579 20.4142C5.96086 20.7893 6.46957 21 7 21H17C17.5304 21 18.0391 20.7893 18.4142 20.4142C18.7893 20.0391 19 19.5304 19 19V7C19 6.46957 18.7893 5.96086 18.4142 5.58579C18.0391 5.21071 17.5304 5 17 5H15C14.4696 5 14 5.44772 14 6V8C14 8.55228 14.4696 9 15 9H17V19H7V7H9C9.53043 7 10 6.55228 10 6V4C10 3.44772 9.53043 3 9 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <label>模板列表</label>
-                  </div>
-                  <div className="template-list">
-                    {templateLoading && (
-                      <div className="template-loading">
-                        <span className="spinner-small"></span>
-                        加载中...
-                      </div>
-                    )}
-                    {!templateLoading && templates.length === 0 && (
-                      <div className="template-empty">
-                        点击"查找模板"加载模板列表
-                      </div>
-                    )}
-                    {!templateLoading && templates.map((template) => (
-                      <div
-                        key={template.id}
-                        className={`template-item ${selectedTemplate?.id === template.id ? 'selected' : ''}`}
-                        onClick={() => handleTemplateSelect(template)}
-                      >
-                        <div className="template-name">{template.name}</div>
-                        <div className="template-meta">
-                          {template.grade} · {template.subject} · {template.semester}
-                        </div>
-                        {template.example && (
-                          <div className="template-example">{template.example}</div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </section>
-
-                {/* 数量选择 */}
-                {selectedTemplate && (
-                  <section className="panel-section">
-                    <div className="section-header">
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 20V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M16 20V8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M8 20V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      <label>题目数量</label>
-                    </div>
-                    <div className="quantity-selector">
-                      <button
-                        type="button"
-                        className="quantity-btn"
-                        onClick={() => setTemplateQuantity(Math.max(5, templateQuantity - 5))}
-                      >
-                        -
-                      </button>
-                      <span className="quantity-value">{templateQuantity} 道</span>
-                      <button
-                        type="button"
-                        className="quantity-btn"
-                        onClick={() => setTemplateQuantity(Math.min(100, templateQuantity + 5))}
-                      >
-                        +
-                      </button>
-                    </div>
-                  </section>
-                )}
-              </>
-            )}
-
-            {/* 生成按钮 */}
             <div className="action-buttons">
+
+
+              {/* 打印按钮 - 仅在生成成功后显示 */}
+              {questions.length > 0 && meta && (
+                <button
+                  type="button"
+                  className="btn-print-sidebar"
+                  onClick={handlePrintWrapper}
+                  title="打印题目（可另存为 PDF）"
+                  aria-label="打印题目"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <polyline points="6,9 6,2 18,2 18,9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M6 18H4C3.46957 18 2.96086 17.7893 2.58579 17.4142C2.21071 17.0391 2 16.5304 2 16V10C2 9.46957 2.21071 8.96086 2.58579 8.58579C2.96086 8.21071 3.46957 8 4 8H20C20.5304 8 21.0391 8.21071 21.4142 8.58579C21.7893 8.96086 22 9.46957 22 10V16C22 16.5304 21.7893 17.0391 21.4142 17.4142C21.0391 17.7893 20.5304 18 20 18H18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <rect x="6" y="14" width="12" height="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  打印题目
+                </button>
+              )}
+              {/* 生成按钮 */}
               {mode === 'prompt' ? (
                 <button
                   type="button"
@@ -584,24 +673,6 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                       {selectedTemplate ? '生成题目' : '请选择模板'}
                     </>
                   )}
-                </button>
-              )}
-
-              {/* 打印按钮 - 仅在生成成功后显示 */}
-              {questions.length > 0 && meta && (
-                <button
-                  type="button"
-                  className="btn-print-sidebar"
-                  onClick={handlePrintWrapper}
-                  title="打印题目（可另存为 PDF）"
-                  aria-label="打印题目"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <polyline points="6,9 6,2 18,2 18,9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M6 18H4C3.46957 18 2.96086 17.7893 2.58579 17.4142C2.21071 17.0391 2 16.5304 2 16V10C2 9.46957 2.21071 8.96086 2.58579 8.58579C2.96086 8.21071 3.46957 8 4 8H20C20.5304 8 21.0391 8.21071 21.4142 8.58579C21.7893 8.96086 22 9.46957 22 10V16C22 16.5304 21.7893 17.0391 21.4142 17.4142C21.0391 17.7893 20.5304 18 20 18H18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    <rect x="6" y="14" width="12" height="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  打印题目
                 </button>
               )}
             </div>

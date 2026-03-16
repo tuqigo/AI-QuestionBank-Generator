@@ -23,6 +23,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  flex-shrink: 0;
 }
 
 .section-header {
@@ -285,12 +286,15 @@
   to { transform: rotate(360deg); }
 }
 
-/* 操作按钮区 */
+/* 操作按钮区 - 固定在底部 */
 .action-buttons {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  margin-top: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--gray-200);
+  flex-shrink: 0;
 }
 
 .btn-generate {
@@ -429,6 +433,31 @@
   box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
 }
 
+/* ===== 筛选条件折叠头 ===== */
+.filter-header {
+  cursor: pointer;
+  user-select: none;
+  transition: all var(--transition-base);
+  padding: var(--space-2) 0;
+}
+
+.filter-header:hover {
+  background: var(--gray-50);
+  border-radius: var(--radius-md);
+}
+
+.filter-toggle-icon {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  transition: transform var(--transition-base);
+  color: var(--gray-500);
+}
+
+.filter-toggle-icon.open {
+  transform: rotate(180deg);
+}
+
 /* ===== 模板筛选 ===== */
 .template-filter {
   display: flex;
@@ -491,7 +520,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  max-height: 300px;
+  max-height: 350px;
   overflow-y: auto;
   padding-right: var(--space-1);
 }
@@ -555,12 +584,6 @@
   font-size: 0.9375rem;
   font-weight: 600;
   color: var(--gray-800);
-  margin-bottom: var(--space-1);
-}
-
-.template-meta {
-  font-size: 0.75rem;
-  color: var(--gray-500);
   margin-bottom: var(--space-2);
 }
 

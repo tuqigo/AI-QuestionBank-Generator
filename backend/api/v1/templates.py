@@ -125,16 +125,44 @@ class TemplateAllResponse(BaseModel):
 
 
 @router.get("/list", response_model=TemplateListResponse)
-async def get_templates():
+async def get_templates(
+    grade: str = None,
+    subject: str = None,
+    semester: str = None,
+    textbook_version: str = None,
+):
     """
     获取所有启用的模板列表
 
     返回精简版模板信息，用于前端下拉选择
+
+    筛选参数：
+    - grade: 年级 (grade1, grade2, ...)
+    - subject: 学科 (math, chinese, english)
+    - semester: 学期 (upper, lower)
+    - textbook_version: 教材版本 (人教版，北师大版，...)
     """
-    api_logger.info("获取模板列表请求")
+    api_logger.info(f"获取模板列表请求，筛选条件：grade={grade}, subject={subject}, semester={semester}, textbook_version={textbook_version}")
 
     try:
+        # 获取所有启用的模板
         templates = get_template_list_items()
+
+        # 前端筛选（如果提供了筛选条件）
+        if grade or subject or semester or textbook_version:
+            filtered = []
+            for t in templates:
+                if grade and t.grade != grade:
+                    continue
+                if subject and t.subject != subject:
+                    continue
+                if semester and t.semester != semester:
+                    continue
+                if textbook_version and t.textbook_version != textbook_version:
+                    continue
+                filtered.append(t)
+            templates = filtered
+
         return TemplateListResponse(
             templates=[
                 TemplateListItem(
