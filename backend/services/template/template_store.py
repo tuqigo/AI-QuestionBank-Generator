@@ -72,6 +72,10 @@ def create_template(
 def update_template(
     template_id: int,
     name: Optional[str] = None,
+    subject: Optional[str] = None,
+    grade: Optional[str] = None,
+    semester: Optional[str] = None,
+    textbook_version: Optional[str] = None,
     template_pattern: Optional[str] = None,
     variables_config: Optional[str] = None,  # JSON 字符串格式
     example: Optional[str] = None,
@@ -91,6 +95,18 @@ def update_template(
         if name is not None:
             updates.append("name = ?")
             values.append(name)
+        if subject is not None:
+            updates.append("subject = ?")
+            values.append(subject)
+        if grade is not None:
+            updates.append("grade = ?")
+            values.append(grade)
+        if semester is not None:
+            updates.append("semester = ?")
+            values.append(semester)
+        if textbook_version is not None:
+            updates.append("textbook_version = ?")
+            values.append(textbook_version)
         if template_pattern is not None:
             updates.append("template_pattern = ?")
             values.append(template_pattern)

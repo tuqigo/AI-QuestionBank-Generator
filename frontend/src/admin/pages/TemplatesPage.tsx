@@ -164,6 +164,10 @@ export default function TemplatesPage() {
       } else if (modalMode === 'edit' && currentTemplate) {
         await updateTemplate(currentTemplate.id, {
           name: formData.name,
+          subject: formData.subject,
+          grade: formData.grade,
+          semester: formData.semester,
+          textbook_version: formData.textbook_version,
           template_pattern: formData.template_pattern,
           variables_config: JSON.stringify(variablesConfig),
           example: formData.example,

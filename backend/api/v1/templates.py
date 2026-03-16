@@ -71,6 +71,10 @@ class TemplateCreateInput(BaseModel):
 class TemplateUpdateInput(BaseModel):
     """更新模板输入"""
     name: Optional[str] = None
+    subject: Optional[str] = None
+    grade: Optional[str] = None
+    semester: Optional[str] = None
+    textbook_version: Optional[str] = None
     template_pattern: Optional[str] = None
     variables_config: Optional[str] = None  # JSON 字符串格式
     example: Optional[str] = None
@@ -273,6 +277,10 @@ async def update_template_api(template_id: int, input: TemplateUpdateInput):
         success = update_template(
             template_id=template_id,
             name=input.name,
+            subject=input.subject,
+            grade=input.grade,
+            semester=input.semester,
+            textbook_version=input.textbook_version,
             template_pattern=input.template_pattern,
             variables_config=input.variables_config,
             example=input.example,
