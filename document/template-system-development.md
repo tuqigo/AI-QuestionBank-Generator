@@ -753,7 +753,7 @@ stem = f"{a}（    ）{b}"
 **配置示例 - 简单加减**:
 ```json
 {
-    "question_types": ["simple"],
+    "question_complexity": ["simple"],
     "num": {"min": 1, "max": 10},
     "op": {"values": ["+", "-"]},
     "rules": ["ensure_positive"]
@@ -763,7 +763,7 @@ stem = f"{a}（    ）{b}"
 **配置示例 - 连加减**:
 ```json
 {
-    "question_types": ["consecutive_add", "consecutive_subtract"],
+    "question_complexity": ["consecutive_add", "consecutive_subtract"],
     "num": {"min": 1, "max": 10},
     "rules": ["ensure_positive", "result_within_10"]
 }
@@ -772,7 +772,7 @@ stem = f"{a}（    ）{b}"
 **配置示例 - 综合型**:
 ```json
 {
-    "question_types": ["mixed_operation", "missing_operand", "compare_mixed_operation"],
+    "question_complexity": ["mixed_operation", "missing_operand", "compare_mixed_operation"],
     "num": {"min": 1, "max": 100},
     "rules": ["ensure_positive", "result_within_100"]
 }
@@ -780,11 +780,11 @@ stem = f"{a}（    ）{b}"
 
 **核心逻辑**:
 ```python
-# 读取题型配置
-question_types = template_config.get("question_types", ["simple"])
+# 读取题型复杂度配置（避免与 generate() 的 question_type 参数混淆）
+question_complexity = template_config.get("question_complexity", ["simple"])
 
-# 随机选择题型生成
-q_type = random.choice(question_types)
+# 随机选择题型复杂度生成
+q_type = random.choice(question_complexity)
 
 if q_type == "simple":
     a = random.randint(num_min, num_max)

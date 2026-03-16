@@ -7,7 +7,7 @@
 | 生成器模块名 | 功能描述 | 适用场景 | 关键配置参数 |
 |-------------|---------|---------|-------------|
 | `compare_number` | 数字比大小 | 两个数比较大小 | `a.min/max`, `b.min/max`, `ensure_different` |
-| `mixed_addition_subtraction` ⭐ | **统一加减法生成器** | 所有加减法题型 | `question_types`, `num.min/max`, `result_within_X` |
+| `mixed_addition_subtraction` ⭐ | **统一加减法生成器** | 所有加减法题型 | `question_complexity` (原 `question_types`), `num.min/max`, `result_within_X` |
 | `currency_conversion` | 元角分换算 | 人民币单位换算 | `yuan/jiao/fen.max`, `convert_types` |
 | `volume_conversion` | 体积单位换算 | 立方米/立方分米/立方厘米/升/毫升 | `conversion_types` (12 种) |
 | `fraction_comparison` | 分数比大小 |  LaTeX 分数格式比较 | `denominator.min/max`, `compare_types` |
@@ -71,7 +71,7 @@
 **配置参数 - 简单加减** (替代 `addition_subtraction`):
 ```json
 {
-  "question_types": ["simple"],
+  "question_complexity": ["simple"],
   "num": {"min": 1, "max": 10},
   "op": {"values": ["+", "-"]},
   "rules": ["ensure_positive"]
@@ -81,7 +81,7 @@
 **配置参数 - 连加减** (替代 `consecutive_addition_subtraction`):
 ```json
 {
-  "question_types": ["consecutive_add", "consecutive_subtract"],
+  "question_complexity": ["consecutive_add", "consecutive_subtract"],
   "a": {"min": 1, "max": 10},
   "b": {"min": 1, "max": 10},
   "c": {"min": 1, "max": 10},
@@ -92,7 +92,7 @@
 **配置参数 - 综合型**:
 ```json
 {
-  "question_types": ["mixed_operation", "missing_operand", "compare_mixed_operation"],
+  "question_complexity": ["mixed_operation", "missing_operand", "compare_mixed_operation"],
   "num": {"min": 1, "max": 100},
   "rules": ["ensure_positive", "result_within_100"]
 }

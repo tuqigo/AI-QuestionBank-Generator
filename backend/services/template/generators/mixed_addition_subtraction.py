@@ -40,14 +40,19 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
         op1_values = template_config.get("op1", {}).get("values", ["+", "-"])
         op2_values = template_config.get("op2", {}).get("values", ["+", "-"])
 
-        # 题型配置
-        question_types = template_config.get("question_types", None)
-        if question_types is None:
-            # 旧格式兼容：根据是否有 op1/op2 判断
+        # 题型复杂度配置（支持新旧两种格式）
+        # 新格式：question_complexity（避免与 generate() 的 question_type 参数混淆）
+        # 旧格式：question_types（兼容已有数据库配置）
+        question_complexity = template_config.get("question_complexity", None)
+        if question_complexity is None:
+            # 尝试旧格式兼容
+            question_complexity = template_config.get("question_types", None)
+        if question_complexity is None:
+            # 默认：根据是否有 op1/op2 判断
             if "op1" in template_config or "op2" in template_config:
-                question_types = ["consecutive_add"]  # 连加减模式
+                question_complexity = ["consecutive_add"]  # 连加减模式
             else:
-                question_types = ["simple"]  # 简单加减模式
+                question_complexity = ["simple"]  # 简单加减模式
 
         # 规则配置
         ensure_positive = "ensure_positive" in template_config.get("rules", [])
@@ -59,8 +64,8 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
         for _ in range(quantity):
             max_attempts = 100
             for _ in range(max_attempts):
-                # 随机选择题型
-                q_type = random.choice(question_types)
+                # 随机选择题型复杂度
+                q_type = random.choice(question_complexity)
                 stem = ""
 
                 if q_type == "simple":
