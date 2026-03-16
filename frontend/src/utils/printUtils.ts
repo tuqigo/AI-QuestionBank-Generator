@@ -519,11 +519,17 @@ export function getPrintStyles(): string {
     mjx-container {
       display: inline !important;
       font-size: 1em !important;
+      break-inside: avoid !important; /* 避免公式在分页时被切断（如分数） */
     }
 
     /* 分页控制 */
     @page {
-      margin: 15mm;
+      margin: 15mm 20mm;
+      margin-bottom: 25mm; /* 增加底部边距，避免 Safari 页脚切断页码 */
+    }
+
+    @page :first {
+      margin-top: 20mm; /* 第一页顶部增加边距，避开浏览器页眉 */
     }
 
     @media print {
