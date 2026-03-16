@@ -5,15 +5,14 @@
 
 // ===================== 基础类型 =====================
 
-/** 学科类型 */
-export type Subject = 'math' | 'chinese' | 'english'
+/** 学科类型（从后端 API 获取） */
+export type Subject = string
 
-/** 年级类型 */
-export type Grade = 'grade1' | 'grade2' | 'grade3' | 'grade4' | 'grade5'
-  | 'grade6' | 'grade7' | 'grade8' | 'grade9'
+/** 年级类型（从后端 API 获取） */
+export type Grade = string
 
-/** 学期类型 */
-export type Semester = 'upper' | 'lower'
+/** 学期类型（从后端 API 获取） */
+export type Semester = string
 
 /** 题型枚举 */
 export type QuestionType =

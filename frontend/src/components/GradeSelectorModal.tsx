@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Modal, Button } from '@/components/shared'
+import { getConfigs, type ConfigOption } from '@/api/config'
 import './GradeSelectorModal.css'
 
 interface GradeSelectorModalProps {
@@ -8,23 +9,24 @@ interface GradeSelectorModalProps {
   onSelect: (grade: string) => Promise<void>
 }
 
-const PRIMARY_GRADES = [
-  { value: 'grade1', label: '一年级' },
-  { value: 'grade2', label: '二年级' },
-  { value: 'grade3', label: '三年级' },
-  { value: 'grade4', label: '四年级' },
-  { value: 'grade5', label: '五年级' },
-  { value: 'grade6', label: '六年级' },
-]
-
-const JUNIOR_GRADES = [
-  { value: 'grade7', label: '初一' },
-  { value: 'grade8', label: '初二' },
-  { value: 'grade9', label: '初三' },
-]
-
 export default function GradeSelectorModal({ isOpen, onClose, onSelect }: GradeSelectorModalProps) {
   const [loading, setLoading] = useState(false)
+  const [grades, setGrades] = useState<ConfigOption[]>([])
+
+  useEffect(() => {
+    if (isOpen) {
+      loadGrades()
+    }
+  }, [isOpen])
+
+  const loadGrades = async () => {
+    try {
+      const configs = await getConfigs()
+      setGrades(configs.grades)
+    } catch (error) {
+      console.error('加载年级列表失败:', error)
+    }
+  }
 
   const handleSelect = async (grade: string) => {
     setLoading(true)
@@ -42,7 +44,7 @@ export default function GradeSelectorModal({ isOpen, onClose, onSelect }: GradeS
         <div className="grade-section">
           <h3 className="grade-section-title">小学</h3>
           <div className="grade-grid">
-            {PRIMARY_GRADES.map((g) => (
+            {grades.filter(g => ['grade1', 'grade2', 'grade3', 'grade4', 'grade5', 'grade6'].includes(g.value)).map((g) => (
               <Button
                 key={g.value}
                 variant="secondary"
@@ -59,7 +61,7 @@ export default function GradeSelectorModal({ isOpen, onClose, onSelect }: GradeS
         <div className="grade-section">
           <h3 className="grade-section-title">初中</h3>
           <div className="grade-grid">
-            {JUNIOR_GRADES.map((g) => (
+            {grades.filter(g => ['grade7', 'grade8', 'grade9'].includes(g.value)).map((g) => (
               <Button
                 key={g.value}
                 variant="secondary"

@@ -11,7 +11,7 @@ from utils.logger import api_logger
 # 初始化数据库
 init_database()
 
-from api.v1 import questions, auth, extend, history, admin, users, templates
+from api.v1 import questions, auth, extend, history, admin, users, templates, configs
 
 app = FastAPI(title="题小宝 API")
 
@@ -38,6 +38,7 @@ app.include_router(extend.router)
 app.include_router(history.router)
 app.include_router(admin.router)
 app.include_router(templates.router)
+app.include_router(configs.router, prefix="/api/configs", tags=["configs"])
 # 注册分享路由（独立前缀，避免路由冲突）
 app.include_router(history.share_router)
 

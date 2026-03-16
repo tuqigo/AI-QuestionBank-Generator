@@ -7,6 +7,7 @@ import HistoryDropdown from '../history/HistoryList'
 import ProgressModal from './ProgressModal'
 import PrintPreview from '@/components/PrintPreview'
 import { generateStructuredQuestions, getTemplates, generateFromTemplate } from '@/core/api/history'
+import { getConfigs, type ConfigOption } from '@/api/config'
 import type { StructuredQuestion, MetaData, TemplateItem, TemplateFilter } from '@/types/question'
 import { useMathJaxSimple } from '@/hooks/useMathJax'
 import './MainContent.css'
@@ -60,6 +61,29 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
   const [templateLoading, setTemplateLoading] = useState(false)
   const [templateQuantity, setTemplateQuantity] = useState(15)
   const [filterOpen, setFilterOpen] = useState(false)
+
+  // 配置常量状态
+  const [grades, setGrades] = useState<ConfigOption[]>([])
+  const [subjects, setSubjects] = useState<ConfigOption[]>([])
+  const [semesters, setSemesters] = useState<ConfigOption[]>([])
+  const [textbookVersions, setTextbookVersions] = useState<string[]>([])
+
+  // 加载配置
+  useEffect(() => {
+    loadConfigs()
+  }, [])
+
+  const loadConfigs = async () => {
+    try {
+      const configs = await getConfigs()
+      setGrades(configs.grades)
+      setSubjects(configs.subjects)
+      setSemesters(configs.semesters)
+      setTextbookVersions(configs.textbook_versions)
+    } catch (error) {
+      console.error('加载配置失败:', error)
+    }
+  }
 
   // 模式切换时保存到 localStorage
   useEffect(() => {
@@ -433,15 +457,9 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                         className="filter-select"
                       >
                         <option value="">全部年级</option>
-                        <option value="grade1">一年级</option>
-                        <option value="grade2">二年级</option>
-                        <option value="grade3">三年级</option>
-                        <option value="grade4">四年级</option>
-                        <option value="grade5">五年级</option>
-                        <option value="grade6">六年级</option>
-                        <option value="grade7">七年级</option>
-                        <option value="grade8">八年级</option>
-                        <option value="grade9">九年级</option>
+                        {grades.map(g => (
+                          <option key={g.value} value={g.value}>{g.label}</option>
+                        ))}
                       </select>
                       <select
                         value={templateFilter.subject || ''}
@@ -449,9 +467,9 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                         className="filter-select"
                       >
                         <option value="">全部学科</option>
-                        <option value="math">数学</option>
-                        <option value="chinese">语文</option>
-                        <option value="english">英语</option>
+                        {subjects.map(s => (
+                          <option key={s.value} value={s.value}>{s.label}</option>
+                        ))}
                       </select>
                       <select
                         value={templateFilter.semester || ''}
@@ -459,8 +477,9 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                         className="filter-select"
                       >
                         <option value="">全部学期</option>
-                        <option value="upper">上学期</option>
-                        <option value="lower">下学期</option>
+                        {semesters.map(s => (
+                          <option key={s.value} value={s.value}>{s.label}</option>
+                        ))}
                       </select>
                       <select
                         value={templateFilter.textbook_version || ''}
@@ -468,10 +487,9 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                         className="filter-select"
                       >
                         <option value="">全部版本</option>
-                        <option value="人教版">人教版</option>
-                        <option value="北师大版">北师大版</option>
-                        <option value="苏教版">苏教版</option>
-                        <option value="沪教版">沪教版</option>
+                        {textbookVersions.map(v => (
+                          <option key={v} value={v}>{v}</option>
+                        ))}
                       </select>
                       <button
                         type="button"

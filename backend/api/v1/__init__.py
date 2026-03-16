@@ -4,3 +4,4 @@ from .extend import router as extend_router
 from .history import router as history_router, share_router
 from .admin import router as admin_router
 from .users import router as users_router
+from .configs import router as configs_router

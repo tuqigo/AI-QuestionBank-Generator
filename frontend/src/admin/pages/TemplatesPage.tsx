@@ -9,47 +9,8 @@ import {
   type QuestionTemplate,
   type TemplateCreateInput,
 } from '../services/api'
+import { getConfigs, type ConfigOption } from '@/api/config'
 import './TemplatesPage.css'
-
-// 常量定义
-const SUPPORTED_SUBJECTS = [
-  { value: 'math', label: '数学' },
-  { value: 'chinese', label: '语文' },
-]
-
-const SUPPORTED_GRADES = [
-  { value: 'grade1', label: '一年级' },
-  { value: 'grade2', label: '二年级' },
-  { value: 'grade3', label: '三年级' },
-  { value: 'grade4', label: '四年级' },
-  { value: 'grade5', label: '五年级' },
-  { value: 'grade6', label: '六年级' },
-]
-
-const SUPPORTED_SEMESTERS = [
-  { value: 'upper', label: '上学期' },
-  { value: 'lower', label: '下学期' },
-]
-
-const SUPPORTED_TEXTBOOK_VERSIONS = [
-  '人教版',
-  '人教版 (新)',
-  '北师大版',
-  '苏教版',
-  '西师版',
-  '沪教版',
-  '北京版',
-  '青岛六三',
-  '青岛五四',
-]
-
-const SUPPORTED_QUESTION_TYPES = [
-  { value: 'CALCULATION', label: '计算题' },
-  { value: 'CHOICE', label: '选择题' },
-  { value: 'FILL_BLANK', label: '填空题' },
-  { value: 'COMPARE', label: '比较大小' },
-  { value: 'WORD_PROBLEM', label: '应用题' },
-]
 
 const QUESTION_TYPE_LABELS: Record<string, string> = {
   CALCULATION: '计算题',
@@ -82,9 +43,29 @@ export default function TemplatesPage() {
     generator_module: '',
   })
 
+  // 配置常量状态
+  const [subjects, setSubjects] = useState<ConfigOption[]>([])
+  const [grades, setGrades] = useState<ConfigOption[]>([])
+  const [semesters, setSemesters] = useState<ConfigOption[]>([])
+  const [textbookVersions, setTextbookVersions] = useState<string[]>([])
+
   useEffect(() => {
+    loadConfigs()
     loadTemplates()
   }, [])
+
+  const loadConfigs = async () => {
+    try {
+      const configs = await getConfigs()
+      setSubjects(configs.subjects)
+      setGrades(configs.grades)
+      setSemesters(configs.semesters)
+      setTextbookVersions(configs.textbook_versions)
+    } catch (error) {
+      console.error('加载配置失败:', error)
+      alert('加载配置失败')
+    }
+  }
 
   const loadTemplates = async () => {
     setLoading(true)
@@ -240,15 +221,15 @@ export default function TemplatesPage() {
   }
 
   const getSubjectLabel = (subject: string) => {
-    return SUPPORTED_SUBJECTS.find(s => s.value === subject)?.label || subject
+    return subjects.find(s => s.value === subject)?.label || subject
   }
 
   const getGradeLabel = (grade: string) => {
-    return SUPPORTED_GRADES.find(g => g.value === grade)?.label || grade
+    return grades.find(g => g.value === grade)?.label || grade
   }
 
   const getSemesterLabel = (semester: string) => {
-    return semester === 'upper' ? '上学期' : '下学期'
+    return semesters.find(s => s.value === semester)?.label || semester
   }
 
   const renderModalContent = () => {
@@ -283,7 +264,7 @@ export default function TemplatesPage() {
                 value={formData.subject}
                 onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
               >
-                {SUPPORTED_SUBJECTS.map(s => (
+                {subjects.map(s => (
                   <option key={s.value} value={s.value}>{s.label}</option>
                 ))}
               </select>
@@ -294,7 +275,7 @@ export default function TemplatesPage() {
                 value={formData.grade}
                 onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
               >
-                {SUPPORTED_GRADES.map(g => (
+                {grades.map(g => (
                   <option key={g.value} value={g.value}>{g.label}</option>
                 ))}
               </select>
@@ -308,7 +289,7 @@ export default function TemplatesPage() {
                 value={formData.semester}
                 onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
               >
-                {SUPPORTED_SEMESTERS.map(s => (
+                {semesters.map(s => (
                   <option key={s.value} value={s.value}>{s.label}</option>
                 ))}
               </select>
@@ -319,7 +300,7 @@ export default function TemplatesPage() {
                 value={formData.textbook_version}
                 onChange={(e) => setFormData({ ...formData, textbook_version: e.target.value })}
               >
-                {SUPPORTED_TEXTBOOK_VERSIONS.map(v => (
+                {textbookVersions.map(v => (
                   <option key={v} value={v}>{v}</option>
                 ))}
               </select>
@@ -333,9 +314,11 @@ export default function TemplatesPage() {
                 value={formData.question_type}
                 onChange={(e) => setFormData({ ...formData, question_type: e.target.value })}
               >
-                {SUPPORTED_QUESTION_TYPES.map(t => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
-                ))}
+                <option value="CALCULATION">计算题</option>
+                <option value="CHOICE">选择题</option>
+                <option value="FILL_BLANK">填空题</option>
+                <option value="COMPARE">比较大小</option>
+                <option value="WORD_PROBLEM">应用题</option>
               </select>
             </div>
             <div className="form-group">
