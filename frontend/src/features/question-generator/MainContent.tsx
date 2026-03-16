@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchWithAuth, clearToken } from '@/core/auth/userAuth'
 import { validatePrompt } from '@/utils/promptValidator'
@@ -51,8 +51,8 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
   })
 
   // 模板相关状态
-  const [templates, setTemplates] = useState<TemplateItem[]>([])
-  // 筛选条件 - 从 localStorage 读取
+  const [allTemplates, setAllTemplates] = useState<TemplateItem[]>([])
+  const [filteredTemplates, setFilteredTemplates] = useState<TemplateItem[]>([])
   const [templateFilter, setTemplateFilter] = useState<TemplateFilter>(() => {
     const saved = localStorage.getItem('question-generator-filter')
     return saved ? JSON.parse(saved) : {}
@@ -113,21 +113,11 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
   )
   const isMobile = isMobileWidth
 
-  // 页面加载时，如果有缓存的筛选条件，自动加载模板
-  useEffect(() => {
-    const savedFilter = localStorage.getItem('question-generator-filter')
-    if (savedFilter) {
-      const parsed = JSON.parse(savedFilter)
-      // 如果有有效的筛选条件，自动加载
-      if (parsed.grade || parsed.subject || parsed.semester || parsed.textbook_version) {
-        loadTemplates()
-      }
-    }
-  }, [])
+  // 模板列表 ref，用于 MathJax 渲染
+  const templateListRef = useRef<HTMLDivElement>(null)
 
-  // 进度条状态
-  const [progressStage, setProgressStage] = useState<'preparing' | 'connecting' | 'generating' | 'processing' | 'complete'>('preparing')
-  const [showProgress, setShowProgress] = useState(false)
+  // MathJax 渲染 - 模板列表
+  useMathJaxSimple(templateListRef, [filteredTemplates])
 
   // 预览区 ref，用于自动滚动
   const previewRef = useRef<HTMLDivElement>(null)
@@ -135,36 +125,125 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
   // 打印按钮 ref，用于移动端滚动定位
   const printButtonRef = useRef<HTMLButtonElement>(null)
 
-  // 模板列表 ref，用于 MathJax 渲染
-  const templateListRef = useRef<HTMLDivElement>(null)
+  // 进度条状态
+  const [progressStage, setProgressStage] = useState<'preparing' | 'connecting' | 'generating' | 'processing' | 'complete'>('preparing')
+  const [showProgress, setShowProgress] = useState(false)
 
-  // MathJax 渲染 - 模板列表
-  useMathJaxSimple(templateListRef, [templates])
+  // 从模板列表中提取唯一的筛选选项
+  const getFilterOptionsFromTemplates = (templateList: TemplateItem[]) => {
+    if (templateList.length === 0) {
+      return {
+        grades: [],
+        subjects: [],
+        semesters: [],
+        textbook_versions: [],
+      }
+    }
 
-  // 加载模板列表
-  const loadTemplates = async () => {
+    const gradesSet = new Set<string>()
+    const subjectsSet = new Set<string>()
+    const semestersSet = new Set<string>()
+    const textbookVersionsSet = new Set<string>()
+
+    templateList.forEach((template) => {
+      if (template.grade) gradesSet.add(template.grade)
+      if (template.subject) subjectsSet.add(template.subject)
+      if (template.semester) semestersSet.add(template.semester)
+      if (template.textbook_version) textbookVersionsSet.add(template.textbook_version)
+    })
+
+    // 转换为 ConfigOption 格式
+    const getOptionLabel = (type: string, value: string): string => {
+      const configMap: Record<string, ConfigOption[]> = {
+        grade: grades,
+        subject: subjects,
+        semester: semesters,
+      }
+      const options = configMap[type] || []
+      return options.find(o => o.value === value)?.label || value
+    }
+
+    return {
+      grades: Array.from(gradesSet).map(g => ({ value: g, label: getOptionLabel('grade', g) })),
+      subjects: Array.from(subjectsSet).map(s => ({ value: s, label: getOptionLabel('subject', s) })),
+      semesters: Array.from(semestersSet).map(s => ({ value: s, label: getOptionLabel('semester', s) })),
+      textbook_versions: Array.from(textbookVersionsSet),
+    }
+  }
+
+  // 使用全部模板计算筛选选项
+  const filterOptions = getFilterOptionsFromTemplates(allTemplates)
+
+  // 前端筛选模板
+  const applyFilter = useCallback(() => {
+    let result = allTemplates
+
+    if (templateFilter.grade) {
+      result = result.filter(t => t.grade === templateFilter.grade)
+    }
+    if (templateFilter.subject) {
+      result = result.filter(t => t.subject === templateFilter.subject)
+    }
+    if (templateFilter.semester) {
+      result = result.filter(t => t.semester === templateFilter.semester)
+    }
+    if (templateFilter.textbook_version) {
+      result = result.filter(t => t.textbook_version === templateFilter.textbook_version)
+    }
+
+    setFilteredTemplates(result)
+
+    if (result.length === 0) {
+      setError('没有找到符合条件的模板')
+    } else {
+      setError('')
+      // 筛选后自动折叠
+      setFilterOpen(false)
+    }
+  }, [allTemplates, templateFilter.grade, templateFilter.subject, templateFilter.semester, templateFilter.textbook_version])
+
+  // 加载全部模板
+  const loadAllTemplates = async () => {
     setTemplateLoading(true)
     setError('')
     try {
-      const data = await getTemplates(templateFilter)
-      setTemplates(data)
-      if (data.length === 0) {
-        setError('没有找到符合条件的模板')
-      } else {
-        // 加载成功后自动折叠筛选条件
-        setFilterOpen(false)
-      }
+      const data = await getTemplates({})
+      setAllTemplates(data)
+      setFilteredTemplates(data)
     } catch (e) {
       if (e instanceof Error) {
         setError(e.message || '加载模板失败')
       } else {
         setError('加载模板失败')
       }
-      setTemplates([])
+      setAllTemplates([])
+      setFilteredTemplates([])
     } finally {
       setTemplateLoading(false)
     }
   }
+
+  // 页面加载时，自动加载全部模板并恢复筛选条件
+  useEffect(() => {
+    if (allTemplates.length === 0 && !templateLoading) {
+      // 恢复本地存储的筛选条件
+      const savedFilter = localStorage.getItem('question-generator-filter')
+      if (savedFilter) {
+        const parsed = JSON.parse(savedFilter)
+        if (parsed.grade || parsed.subject || parsed.semester || parsed.textbook_version) {
+          setTemplateFilter(parsed)
+        }
+      }
+      loadAllTemplates()
+    }
+  }, [])
+
+  // 筛选条件变化时，应用前端筛选
+  useEffect(() => {
+    if (allTemplates.length > 0) {
+      applyFilter()
+    }
+  }, [applyFilter])
 
   // 处理模板选择
   const handleTemplateSelect = (template: TemplateItem) => {
@@ -462,7 +541,7 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                         className="filter-select"
                       >
                         <option value="">全部年级</option>
-                        {grades.map(g => (
+                        {filterOptions.grades.map(g => (
                           <option key={g.value} value={g.value}>{g.label}</option>
                         ))}
                       </select>
@@ -472,7 +551,7 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                         className="filter-select"
                       >
                         <option value="">全部学科</option>
-                        {subjects.map(s => (
+                        {filterOptions.subjects.map(s => (
                           <option key={s.value} value={s.value}>{s.label}</option>
                         ))}
                       </select>
@@ -482,7 +561,7 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                         className="filter-select"
                       >
                         <option value="">全部学期</option>
-                        {semesters.map(s => (
+                        {filterOptions.semesters.map(s => (
                           <option key={s.value} value={s.value}>{s.label}</option>
                         ))}
                       </select>
@@ -492,14 +571,14 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                         className="filter-select"
                       >
                         <option value="">全部版本</option>
-                        {textbookVersions.map(v => (
+                        {filterOptions.textbook_versions.map(v => (
                           <option key={v} value={v}>{v}</option>
                         ))}
                       </select>
                       <button
                         type="button"
                         className="btn-search-template"
-                        onClick={loadTemplates}
+                        onClick={loadAllTemplates}
                         disabled={templateLoading}
                       >
                         {templateLoading ? '加载中...' : '查找模板'}
@@ -523,12 +602,12 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                         加载中...
                       </div>
                     )}
-                    {!templateLoading && templates.length === 0 && (
+                    {!templateLoading && filteredTemplates.length === 0 && (
                       <div className="template-empty">
                         点击"查找模板"加载模板列表
                       </div>
                     )}
-                    {!templateLoading && templates.map((template) => (
+                    {!templateLoading && filteredTemplates.map((template) => (
                       <div
                         key={template.id}
                         className={`template-item ${selectedTemplate?.id === template.id ? 'selected' : ''}`}
