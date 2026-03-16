@@ -169,6 +169,7 @@ export default function TemplatesPage() {
           example: formData.example,
           sort_order: formData.sort_order,
           is_active: formData.is_active,
+          question_type: formData.question_type,
         })
         alert('更新成功')
       }

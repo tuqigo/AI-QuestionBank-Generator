@@ -77,6 +77,7 @@ def update_template(
     example: Optional[str] = None,
     sort_order: Optional[int] = None,
     is_active: Optional[bool] = None,
+    question_type: Optional[str] = None,
 ) -> bool:
     """
     更新模板
@@ -105,6 +106,9 @@ def update_template(
         if is_active is not None:
             updates.append("is_active = ?")
             values.append(1 if is_active else 0)
+        if question_type is not None:
+            updates.append("question_type = ?")
+            values.append(question_type)
 
         if not updates:
             return False
