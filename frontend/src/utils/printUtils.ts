@@ -515,11 +515,14 @@ export function getPrintStyles(): string {
       margin: 0 !important;
     }
 
-    /* 数学公式 */
-    mjx-container {
-      display: inline !important;
-      font-size: 1em !important;
-      break-inside: avoid !important; /* 避免公式在分页时被切断（如分数） */
+    /* 数学公式 - 防止分页时公式被切断 */
+    mjx-container,
+    mjx-container > svg,
+    .MathJax,
+    .MathJax > svg {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+      display: inline-block !important;
     }
 
     /* 分页控制 */
@@ -537,10 +540,36 @@ export function getPrintStyles(): string {
         padding: 0;
       }
 
-      .question-item {
-        page-break-inside: avoid;
+      /* 题目容器 - 防止题目内部被分页切断 */
+      .question-item,
+      .question-grid-item {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        overflow: hidden; /* 确保内容不被溢出 */
       }
 
+      /* 题目内部元素 */
+      .question-header,
+      .question-stem,
+      .question-options,
+      .option-item,
+      .passage-section,
+      .sub-questions {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+
+      /* 数学公式 - 确保公式不被切断 */
+      mjx-container,
+      mjx-container > svg,
+      .MathJax,
+      .MathJax > svg {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+        display: inline-block !important;
+      }
+
+      /* 作文行 */
       .essay-line {
         break-inside: avoid;
       }
