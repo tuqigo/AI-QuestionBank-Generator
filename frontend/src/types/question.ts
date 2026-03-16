@@ -21,6 +21,7 @@ export type QuestionType =
   | 'TRUE_FALSE'       // 判断题
   | 'FILL_BLANK'       // 填空题
   | 'CALCULATION'      // 计算题
+  | 'ORAL_CALCULATION' // 口算题
   | 'WORD_PROBLEM'     // 应用题
   | 'GEOMETRY'         // 几何题
   | 'READ_COMP'        // 阅读理解

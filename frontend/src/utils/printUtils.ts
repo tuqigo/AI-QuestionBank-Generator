@@ -2,6 +2,8 @@ import { renderMarkdown } from './markdownProcessor'
 import { toast } from '../hooks'
 import type { StructuredQuestion } from '@/types/question'
 import '@/types/mathjax'
+import type { LayoutConfig } from '@/config/questionConfig'
+import { QUESTION_TYPE_CONFIGS } from '@/config/questionConfig'
 
 // 扩展 Window 类型，支持 mathJaxReady
 declare global {
@@ -46,6 +48,7 @@ export function getQuestionTypeClass(type: string): string {
     TRUE_FALSE: 'question-true-false',
     FILL_BLANK: 'question-fill-blank',
     CALCULATION: 'question-calculation',
+    ORAL_CALCULATION: 'question-oral-calculation',
     WORD_PROBLEM: 'question-word-problem',
     READ_COMP: 'question-read-comp',
     CLOZE: 'question-cloze',
@@ -53,6 +56,127 @@ export function getQuestionTypeClass(type: string): string {
     GEOMETRY: 'question-geometry'
   }
   return typeMap[type] || 'question-item'
+}
+
+/**
+ * 将题目按题型分组，连续相同题型归为一组
+ */
+function groupQuestionsByType(questions: StructuredQuestion[]): {
+  type: string
+  questions: StructuredQuestion[]
+}[] {
+  const groups: { type: string; questions: StructuredQuestion[] }[] = []
+
+  for (const question of questions) {
+    const lastGroup = groups[groups.length - 1]
+    if (lastGroup && lastGroup.type === question.type) {
+      lastGroup.questions.push(question)
+    } else {
+      groups.push({ type: question.type, questions: [question] })
+    }
+  }
+
+  return groups
+}
+
+/**
+ * 渲染单个题目 HTML
+ */
+function renderSingleQuestion(question: StructuredQuestion, index: number): string {
+  const typeClass = getQuestionTypeClass(question.type)
+  const stemHtml = renderMarkdown(question.stem)
+  const optionLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+
+  let html = `<div class="question-item ${typeClass}" style="margin-bottom: 12px; page-break-inside: avoid;">`
+
+  // 题目头部
+  html += `<div class="question-header" style="display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px; flex-wrap: nowrap;">`
+  html += `<span class="question-number" style="font-weight: bold; min-width: 20px; flex-shrink: 0; white-space: nowrap; font-size: 10.5pt; line-height: 1.8;">${index + 1}.</span>`
+  html += `<div class="question-stem" style="flex: 1; font-size: 10.5pt; line-height: 1.8;">${stemHtml}</div>`
+  html += `</div>`
+
+  // 选项
+  if (question.options && question.options.length > 0) {
+    html += `<div class="question-options" style="margin-top: 8px; padding-left: 36px;">`
+    question.options.forEach((opt, optIndex) => {
+      const optionText = opt.replace(/^[A-D]\.\s*/, '')
+      const optHtml = renderMarkdown(optionText)
+      html += `<div class="option-item" style="margin: 4px 0; padding: 4px 0;">`
+      html += `<span class="option-label" style="font-weight: 600; font-size: 10.5pt; line-height: 1.8;">${optionLabels[optIndex] || String.fromCharCode(65 + optIndex)}.</span>`
+      html += `<span class="option-text" style="font-size: 10.5pt; line-height: 1.8;">${optHtml}</span>`
+      html += `</div>`
+    })
+    html += `</div>`
+  }
+
+  // 阅读材料
+  if (question.passage) {
+    const passageText = question.passage.replace(/【阅读材料】/, '').replace(/【材料】/, '').trim()
+    html += `<div class="passage-section" style="margin: 8px 0; padding: 8px; background: #fff7ed; border-left: 3px solid #ff6b4a; border-radius: 4px;">`
+    html += `<div class="passage-content" style="font-size: 10.5pt; line-height: 1.8; color: #262626;">${renderMarkdown(passageText)}</div>`
+    html += `</div>`
+  }
+
+  // 子题目
+  if (question.sub_questions && question.sub_questions.length > 0) {
+    html += `<div class="sub-questions" style="margin-top: 8px; padding-left: 20px; border-left: 2px solid #f0f0f0;">`
+    html += renderSubQuestions(question.sub_questions)
+    html += `</div>`
+  }
+
+  html += `</div>`
+  return html
+}
+
+/**
+ * 渲染网格布局的题目组
+ */
+function renderGridGroup(
+  questions: StructuredQuestion[],
+  startIndex: number,
+  layout: LayoutConfig,
+  mode: 'render' | 'print'
+): string {
+  const columns = layout.columns || 3
+  const gap = layout.gap || '12px'
+  const itemPadding = layout.itemPadding || '0'
+  const itemBorder = layout.itemBorder || 'none'
+
+  let html = `<div class="question-grid-container" style="display: grid; grid-template-columns: repeat(${columns}, 1fr); gap: ${gap}; margin-bottom: 12px;">`
+
+  questions.forEach((question, i) => {
+    const typeClass = getQuestionTypeClass(question.type)
+    const stemHtml = renderMarkdown(question.stem)
+    const globalIndex = startIndex + i
+
+    html += `<div class="question-grid-item ${typeClass}" style="padding: ${itemPadding}; border: ${itemBorder}; page-break-inside: avoid;">`
+
+    // 题目头部（网格模式下题号与题目在同一行）
+    html += `<div class="question-header" style="display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px; flex-wrap: nowrap;">`
+    html += `<span class="question-number" style="font-weight: bold; min-width: 20px; flex-shrink: 0; white-space: nowrap; font-size: 10.5pt; line-height: 1.8;">${globalIndex + 1}.</span>`
+    html += `<div class="question-stem" style="flex: 1; font-size: 10.5pt; line-height: 1.8;">${stemHtml}</div>`
+    html += `</div>`
+
+    // 选项（如果有）
+    if (question.options && question.options.length > 0) {
+      html += `<div class="question-options" style="margin-top: 8px; padding-left: 24px;">`
+      const optionLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+      question.options.forEach((opt, optIndex) => {
+        const optionText = opt.replace(/^[A-D]\.\s*/, '')
+        const optHtml = renderMarkdown(optionText)
+        html += `<div class="option-item" style="margin: 4px 0; padding: 4px 0;">`
+        html += `<span class="option-label" style="font-weight: 600; font-size: 10.5pt; line-height: 1.8;">${optionLabels[optIndex] || String.fromCharCode(65 + optIndex)}.</span>`
+        html += `<span class="option-text" style="font-size: 10.5pt; line-height: 1.8;">${optHtml}</span>`
+        html += `</div>`
+      })
+      html += `</div>`
+    }
+
+    html += `</div>`
+  })
+
+  html += `</div>`
+  return html
 }
 
 /**
@@ -110,50 +234,27 @@ export function renderStructuredQuestions(questions: StructuredQuestion[], title
   let html = `<h1 class="print-title" style="text-align: center; margin-bottom: 30px; font-size: 18pt; font-weight: bold;">${title}</h1>`
   html += `<div style="height: 20px;"></div>`
 
-  questions.forEach((question, index) => {
-    const typeClass = getQuestionTypeClass(question.type)
-    const stemHtml = renderMarkdown(question.stem)
-    const optionLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+  // 1. 按题型分组
+  const groups = groupQuestionsByType(questions)
+  let globalIndex = 0
 
-    // 题目容器 - 使用 CSS 类名
-    html += `<div class="question-item ${typeClass}" style="margin-bottom: 12px; page-break-inside: avoid;">`
+  groups.forEach(group => {
+    // 获取题型配置
+    const config = QUESTION_TYPE_CONFIGS[group.type as keyof typeof QUESTION_TYPE_CONFIGS]
+    const printConfig = config?.print
+    const layout = printConfig?.layout
 
-    // 题目头部 - 修复题号和题目换行问题（使用 baseline 对齐）
-    html += `<div class="question-header" style="display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px; flex-wrap: nowrap;">`
-    html += `<span class="question-number" style="font-weight: bold; min-width: 20px; flex-shrink: 0; white-space: nowrap; font-size: 10.5pt; line-height: 1.8;">${index + 1}.</span>`
-    html += `<div class="question-stem" style="flex: 1; font-size: 10.5pt; line-height: 1.8;">${stemHtml}</div>`
-    html += `</div>`
-
-    // 选项
-    if (question.options && question.options.length > 0) {
-      html += `<div class="question-options" style="margin-top: 8px; padding-left: 36px;">`
-      question.options.forEach((opt, optIndex) => {
-        const optionText = opt.replace(/^[A-D]\.\s*/, '')
-        const optHtml = renderMarkdown(optionText)
-        html += `<div class="option-item" style="margin: 4px 0; padding: 4px 0;">`
-        html += `<span class="option-label" style="font-weight: 600; font-size: 10.5pt; line-height: 1.8;">${optionLabels[optIndex] || String.fromCharCode(65 + optIndex)}.</span>`
-        html += `<span class="option-text" style="font-size: 10.5pt; line-height: 1.8;">${optHtml}</span>`
-        html += `</div>`
+    if (layout?.type === 'grid') {
+      // 2. 有 grid 配置，使用网格布局
+      html += renderGridGroup(group.questions, globalIndex, layout, 'print')
+    } else {
+      // 3. 无配置，使用默认渲染
+      group.questions.forEach((q, i) => {
+        html += renderSingleQuestion(q, globalIndex + i)
       })
-      html += `</div>`
     }
 
-    // 阅读材料
-    if (question.passage) {
-      const passageText = question.passage.replace(/【阅读材料】/, '').replace(/【材料】/, '').trim()
-      html += `<div class="passage-section" style="margin: 8px 0; padding: 8px; background: #fff7ed; border-left: 3px solid #ff6b4a; border-radius: 4px;">`
-      html += `<div class="passage-content" style="font-size: 10.5pt; line-height: 1.8; color: #262626;">${renderMarkdown(passageText)}</div>`
-      html += `</div>`
-    }
-
-    // 子题目
-    if (question.sub_questions && question.sub_questions.length > 0) {
-      html += `<div class="sub-questions" style="margin-top: 8px; padding-left: 20px; border-left: 2px solid #f0f0f0;">`
-      html += renderSubQuestions(question.sub_questions)
-      html += `</div>`
-    }
-
-    html += `</div>`
+    globalIndex += group.questions.length
   })
 
   return html
@@ -333,6 +434,19 @@ export function getPrintStyles(): string {
     .sub-questions {
       padding-left: 20px;
       border-left: 1px solid #ddd;
+    }
+
+    /* 网格布局样式 */
+    .question-grid-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .question-grid-item {
+      padding: 8px;
+      border: 1px solid #000;
+      page-break-inside: avoid;
     }
 
     /* 判断题选项横向排列 */

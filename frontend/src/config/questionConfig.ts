@@ -11,6 +11,20 @@ export type OptionLayout = 'horizontal' | 'vertical'
 /** 答案区域类型 */
 export type AnswerAreaType = 'none' | 'blank' | 'lined' | 'grid'
 
+/** 布局配置 */
+export interface LayoutConfig {
+  /** 布局类型：default=默认垂直排列，grid=网格布局 */
+  type: 'default' | 'grid'
+  /** 列数（仅 grid 类型使用） */
+  columns?: number
+  /** 间距，如 '12px' */
+  gap?: string
+  /** 题目内边距 */
+  itemPadding?: string
+  /** 题目边框 */
+  itemBorder?: string
+}
+
 /** 单套配置（渲染或打印） */
 export interface QuestionModeConfig {
   /** 是否显示答案区域 */
@@ -27,6 +41,8 @@ export interface QuestionModeConfig {
   numberSuffix: string
   /** 自定义 class 名 */
   customClass?: string
+  /** 布局配置（可选） */
+  layout?: LayoutConfig
 }
 
 /** 题型完整配置（包含渲染和打印） */
@@ -138,7 +154,12 @@ export const QUESTION_TYPE_CONFIGS: Record<QuestionType, QuestionTypeConfig> = {
       optionLayout: 'vertical',
       showQuestionNumber: true,
       numberSuffix: '. ',
-      customClass: 'render-calculation'
+      customClass: 'render-calculation',
+      layout: {
+        type: 'grid',
+        columns: 3,
+        gap: '12px'
+      }
     },
     print: {
       showAnswerArea: true,
@@ -147,7 +168,44 @@ export const QUESTION_TYPE_CONFIGS: Record<QuestionType, QuestionTypeConfig> = {
       optionLayout: 'vertical',
       showQuestionNumber: true,
       numberSuffix: '. ',
-      customClass: 'print-calculation'
+      customClass: 'print-calculation',
+      layout: {
+        type: 'grid',
+        columns: 3,
+        gap: '12px'
+      }
+    }
+  },
+
+  /** 口算题 */
+  ORAL_CALCULATION: {
+    render: {
+      showAnswerArea: false,
+      answerAreaText: '',
+      answerAreaType: 'none',
+      optionLayout: 'vertical',
+      showQuestionNumber: true,
+      numberSuffix: '. ',
+      customClass: 'render-oral-calculation',
+      layout: {
+        type: 'grid',
+        columns: 3,
+        gap: '12px'
+      }
+    },
+    print: {
+      showAnswerArea: false,
+      answerAreaText: '',
+      answerAreaType: 'none',
+      optionLayout: 'vertical',
+      showQuestionNumber: true,
+      numberSuffix: '. ',
+      customClass: 'print-oral-calculation',
+      layout: {
+        type: 'grid',
+        columns: 3,
+        gap: '12px'
+      }
     }
   },
 

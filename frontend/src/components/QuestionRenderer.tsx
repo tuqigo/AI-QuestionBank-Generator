@@ -14,6 +14,7 @@ import MultipleChoice from './questions/MultipleChoice'
 import TrueFalse from './questions/TrueFalse'
 import FillBlank from './questions/FillBlank'
 import Calculation from './questions/Calculation'
+import OralCalculation from './questions/OralCalculation'
 import WordProblem from './questions/WordProblem'
 import ReadComp from './questions/ReadComp'
 import Cloze from './questions/Cloze'
@@ -57,6 +58,9 @@ export default function QuestionRenderer({ question, index = 1, mode = 'render' 
 
       case 'CALCULATION':
         return <Calculation question={question} index={index} mode={mode} />
+
+      case 'ORAL_CALCULATION':
+        return <OralCalculation question={question} index={index} mode={mode} />
 
       case 'WORD_PROBLEM':
         return <WordProblem question={question} index={index} mode={mode} />
