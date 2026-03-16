@@ -87,7 +87,7 @@ function renderSingleQuestion(question: StructuredQuestion, index: number): stri
   const stemHtml = renderMarkdown(question.stem)
   const optionLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
 
-  let html = `<div class="question-item ${typeClass}" style="margin-bottom: 12px; page-break-inside: avoid;">`
+  let html = `<div class="question-item ${typeClass}" style="margin-bottom: 12px; page-break-inside: avoid; break-inside: avoid;">`
 
   // 题目头部
   html += `<div class="question-header" style="display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px; flex-wrap: nowrap;">`
@@ -536,7 +536,7 @@ export function getPrintStyles(): string {
     /* 分页控制 */
     @page {
       margin: 15mm 20mm;
-      margin-bottom: 25mm; /* 增加底部边距，避免 Safari 页脚切断页码 */
+      margin-bottom: 30mm; /* 增加底部边距，给浏览器更多空间调整分页 */
     }
 
     @page :first {
