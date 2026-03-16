@@ -132,6 +132,9 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
   // 预览区 ref，用于自动滚动
   const previewRef = useRef<HTMLDivElement>(null)
 
+  // 打印按钮 ref，用于移动端滚动定位
+  const printButtonRef = useRef<HTMLButtonElement>(null)
+
   // 模板列表 ref，用于 MathJax 渲染
   const templateListRef = useRef<HTMLDivElement>(null)
 
@@ -217,11 +220,13 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
 
       setTimeout(() => {
         setShowProgress(false)
-        // 滚动到预览区（仅移动端）
-        if (isMobile && previewRef.current) {
-          previewRef.current.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
+        // 滚动到打印按钮（仅移动端）- 让按钮位于屏幕中间偏上位置
+        if (isMobile && printButtonRef.current) {
+          const buttonRect = printButtonRef.current.getBoundingClientRect()
+          const scrollTop = window.scrollY + buttonRect.top - 80 // 减去顶部导航栏和一点余量
+          window.scrollTo({
+            top: scrollTop,
+            behavior: 'smooth'
           })
         }
       }, 500)
@@ -300,13 +305,13 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
       // 完成后显示完成状态
       setProgressStage('complete')
 
-      // 500ms 后关闭进度条并滚动到预览区（仅移动端）
+      // 500ms 后关闭进度条并滚动到打印按钮（仅移动端）
       setTimeout(() => {
         setShowProgress(false)
-        if (isMobile && previewRef.current) {
-          previewRef.current.scrollIntoView({
+        if (isMobile && printButtonRef.current) {
+          printButtonRef.current.scrollIntoView({
             behavior: 'smooth',
-            block: 'start'
+            block: 'center'
           })
         }
       }, 500)
@@ -642,6 +647,7 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                   onClick={handlePrintWrapper}
                   title="打印题目（可另存为 PDF）"
                   aria-label="打印题目"
+                  ref={printButtonRef}
                 >
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <polyline points="6,9 6,2 18,2 18,9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
