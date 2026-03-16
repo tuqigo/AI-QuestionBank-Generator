@@ -61,7 +61,7 @@ class TemplateCreateInput(BaseModel):
     textbook_version: str
     question_type: str
     template_pattern: str
-    variables_config: dict
+    variables_config: str  # JSON 字符串格式
     example: Optional[str] = None
     sort_order: int = 0
     is_active: bool = True
@@ -72,7 +72,7 @@ class TemplateUpdateInput(BaseModel):
     """更新模板输入"""
     name: Optional[str] = None
     template_pattern: Optional[str] = None
-    variables_config: Optional[dict] = None
+    variables_config: Optional[str] = None  # JSON 字符串格式
     example: Optional[str] = None
     sort_order: Optional[int] = None
     is_active: Optional[bool] = None

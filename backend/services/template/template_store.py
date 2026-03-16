@@ -37,7 +37,7 @@ def create_template(
     textbook_version: str,
     question_type: str,
     template_pattern: str,
-    variables_config: dict,
+    variables_config: str,  # JSON 字符串格式
     example: Optional[str] = None,
     sort_order: int = 0,
     is_active: bool = True,
@@ -56,7 +56,7 @@ def create_template(
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (name, subject, grade, semester, textbook_version, question_type, template_pattern,
-             json.dumps(variables_config, ensure_ascii=False), example, sort_order, 1 if is_active else 0)
+             variables_config, example, sort_order, 1 if is_active else 0)
         )
         conn.commit()
         template_id = cursor.lastrowid
@@ -73,7 +73,7 @@ def update_template(
     template_id: int,
     name: Optional[str] = None,
     template_pattern: Optional[str] = None,
-    variables_config: Optional[dict] = None,
+    variables_config: Optional[str] = None,  # JSON 字符串格式
     example: Optional[str] = None,
     sort_order: Optional[int] = None,
     is_active: Optional[bool] = None,
@@ -95,7 +95,7 @@ def update_template(
             values.append(template_pattern)
         if variables_config is not None:
             updates.append("variables_config = ?")
-            values.append(json.dumps(variables_config, ensure_ascii=False))
+            values.append(variables_config)  # 已经是 JSON 字符串，无需转换
         if example is not None:
             updates.append("example = ?")
             values.append(example)
