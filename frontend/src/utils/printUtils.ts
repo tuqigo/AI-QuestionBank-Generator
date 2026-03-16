@@ -516,13 +516,21 @@ export function getPrintStyles(): string {
     }
 
     /* 数学公式 - 防止分页时公式被切断 */
-    mjx-container,
-    mjx-container > svg,
-    .MathJax,
-    .MathJax > svg {
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
+    /*
+     * 注意：WebKit/Blink 引擎对 break-inside: avoid 支持有限
+     * 需要同时设置 display: block 和 min-height 来增强效果
+     */
+    mjx-container {
       display: inline-block !important;
+      font-size: 1em !important;
+      min-height: 1.5em !important; /* 确保公式有最小高度，帮助浏览器计算分页 */
+      vertical-align: middle !important;
+    }
+
+    /* 针对 display math 的容器，使用 block 显示 */
+    mjx-container[jax="true"][display="true"] {
+      display: block !important;
+      margin: 0.5em 0 !important;
     }
 
     /* 分页控制 */
@@ -538,6 +546,9 @@ export function getPrintStyles(): string {
     @media print {
       body {
         padding: 0;
+        /* orphans 和 widows 控制段落分页时的最小行数 */
+        orphans: 3 !important;
+        widows: 3 !important;
       }
 
       /* 题目容器 - 防止题目内部被分页切断 */
@@ -546,27 +557,34 @@ export function getPrintStyles(): string {
         page-break-inside: avoid !important;
         break-inside: avoid !important;
         overflow: hidden; /* 确保内容不被溢出 */
+        /* contain 让浏览器将整个元素作为一个独立的渲染单元 */
+        contain: layout style !important;
+        /* 确保题目有足够的保留空间 */
+        orphans: 99 !important;
+        widows: 99 !important;
       }
 
-      /* 题目内部元素 */
-      .question-header,
-      .question-stem,
+      /* 题目内部元素 - 使用 display: block 确保 break-inside 生效 */
+      .question-header {
+        display: block !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+
+      .question-stem {
+        display: block !important;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+        orphans: 99 !important;
+        widows: 99 !important;
+      }
+
       .question-options,
       .option-item,
       .passage-section,
       .sub-questions {
         break-inside: avoid !important;
         page-break-inside: avoid !important;
-      }
-
-      /* 数学公式 - 确保公式不被切断 */
-      mjx-container,
-      mjx-container > svg,
-      .MathJax,
-      .MathJax > svg {
-        break-inside: avoid !important;
-        page-break-inside: avoid !important;
-        display: inline-block !important;
       }
 
       /* 作文行 */
