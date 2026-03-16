@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 from pydantic import BaseModel
 
 
@@ -37,7 +37,7 @@ class QuestionTypeResponse(QuestionTypeInDB):
 class QuestionTypeListResponse(BaseModel):
     """题型列表响应模型"""
     total: int
-    items: list[QuestionTypeResponse]
+    items: List[QuestionTypeResponse]
 
 
 # 题型常量定义
