@@ -96,29 +96,21 @@ fi
 
 # 6. 代码没问题了，再杀旧进程
 echo -e "\n6. 停止旧服务..."
-# 方法 1：优先用 lsof 检测端口占用（更可靠）
-if command -v lsof >/dev/null 2>&1; then
-    OLD_PID=$(lsof -ti :${PORT} 2>/dev/null || echo "")
-elif command -v netstat >/dev/null 2>&1; then
-    # 方法 2：用 netstat（Windows/Linux）
-    OLD_PID=$(netstat -ano 2>/dev/null | grep ":${PORT} " | grep LISTENING | awk '{print $NF}' | head -1 || echo "")
-else
-    # 方法 3：降级用 ps grep（原逻辑，增强匹配）
-    OLD_PID=$(ps aux | grep "[u]vicorn.*main:app.*--port.*${PORT}" | awk '{print $2}' | head -1 || echo "")
-fi
+# 使用 ps aux | grep uvicorn 查找进程
+OLD_PID=$(ps aux | grep "[u]vicorn.*main:app" | awk '{print $2}' | head -1)
 
 if [ -n "${OLD_PID}" ]; then
     kill -9 "${OLD_PID}" 2>/dev/null || true
     # 等待进程完全退出
-    sleep 1
+    sleep 2
     if ps -p "${OLD_PID}" > /dev/null 2>&1; then
         echo -e "${YELLOW}⚠️  旧进程仍在运行，尝试强制终止...${NC}"
         kill -KILL "${OLD_PID}" 2>/dev/null || true
-        sleep 1
+        sleep 2
     fi
     echo -e "${GREEN}✅ 旧进程已停止（PID: ${OLD_PID}）${NC}"
 else
-    echo -e "${YELLOW}⚠️  未找到占用端口 ${PORT} 的进程${NC}"
+    echo -e "${YELLOW}⚠️  未找到 uvicorn 进程${NC}"
 fi
 
 # 7. 启动新服务
