@@ -89,10 +89,10 @@ function renderSingleQuestion(question: StructuredQuestion, index: number): stri
 
   let html = `<div class="question-item ${typeClass}" style="margin-bottom: 12px; page-break-inside: avoid; break-inside: avoid;">`
 
-  // 题目头部
-  html += `<div class="question-header" style="display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px; flex-wrap: nowrap;">`
-  html += `<span class="question-number" style="font-weight: bold; min-width: 20px; flex-shrink: 0; white-space: nowrap; font-size: 10.5pt; line-height: 1.8;">${index + 1}.</span>`
-  html += `<div class="question-stem" style="flex: 1; font-size: 10.5pt; line-height: 1.8;">${stemHtml}</div>`
+  // 题目头部 - 使用 block 布局而非 flex，避免分页时切断
+  html += `<div class="question-header" style="display: block; margin-bottom: 6px;">`
+  html += `<span class="question-number" style="font-weight: bold; margin-right: 4px; font-size: 10.5pt; line-height: 1.8;">${index + 1}.</span>`
+  html += `<span class="question-stem" style="display: inline; font-size: 10.5pt; line-height: 1.8;">${stemHtml}</span>`
   html += `</div>`
 
   // 选项
