@@ -9,16 +9,8 @@ import {
   type QuestionTemplate,
   type TemplateCreateInput,
 } from '../services/api'
-import { getConfigs, type ConfigOption } from '@/api/config'
+import { getConfigs, type ConfigOption, type QuestionTypeOption } from '@/api/config'
 import './TemplatesPage.css'
-
-const QUESTION_TYPE_LABELS: Record<string, string> = {
-  CALCULATION: '计算题',
-  CHOICE: '选择题',
-  FILL_BLANK: '填空题',
-  COMPARE: '比较大小',
-  WORD_PROBLEM: '应用题',
-}
 
 export default function TemplatesPage() {
   const [templates, setTemplates] = useState<QuestionTemplate[]>([])
@@ -48,6 +40,7 @@ export default function TemplatesPage() {
   const [grades, setGrades] = useState<ConfigOption[]>([])
   const [semesters, setSemesters] = useState<ConfigOption[]>([])
   const [textbookVersions, setTextbookVersions] = useState<string[]>([])
+  const [questionTypes, setQuestionTypes] = useState<QuestionTypeOption[]>([])
 
   useEffect(() => {
     loadConfigs()
@@ -61,6 +54,7 @@ export default function TemplatesPage() {
       setGrades(configs.grades)
       setSemesters(configs.semesters)
       setTextbookVersions(configs.textbook_versions)
+      setQuestionTypes(configs.question_types)
     } catch (error) {
       console.error('加载配置失败:', error)
       alert('加载配置失败')
@@ -232,6 +226,10 @@ export default function TemplatesPage() {
     return semesters.find(s => s.value === semester)?.label || semester
   }
 
+  const getQuestionTypeLabel = (questionType: string) => {
+    return questionTypes.find(t => t.value === questionType)?.label || questionType
+  }
+
   const renderModalContent = () => {
     if (modalMode === 'create' || modalMode === 'edit') {
       return (
@@ -314,11 +312,9 @@ export default function TemplatesPage() {
                 value={formData.question_type}
                 onChange={(e) => setFormData({ ...formData, question_type: e.target.value })}
               >
-                <option value="CALCULATION">计算题</option>
-                <option value="CHOICE">选择题</option>
-                <option value="FILL_BLANK">填空题</option>
-                <option value="COMPARE">比较大小</option>
-                <option value="WORD_PROBLEM">应用题</option>
+                {questionTypes.map(t => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
               </select>
             </div>
             <div className="form-group">
@@ -431,7 +427,7 @@ export default function TemplatesPage() {
             <strong>教材版本:</strong> {currentTemplate?.textbook_version}
           </div>
           <div className="view-row">
-            <strong>题型:</strong> {currentTemplate?.question_type && QUESTION_TYPE_LABELS[currentTemplate.question_type]}
+            <strong>题型:</strong> {currentTemplate?.question_type && getQuestionTypeLabel(currentTemplate.question_type)}
           </div>
           <div className="view-row">
             <strong>模板模式:</strong>
