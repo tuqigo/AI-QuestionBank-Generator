@@ -87,12 +87,12 @@ function renderSingleQuestion(question: StructuredQuestion, index: number): stri
   const stemHtml = renderMarkdown(question.stem)
   const optionLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
 
-  let html = `<div class="question-item ${typeClass}" style="margin-bottom: 12px; page-break-inside: avoid; break-inside: avoid;">`
+  let html = `<div class="question-item ${typeClass}" style="margin-bottom: 12px; page-break-inside: avoid;">`
 
-  // 题目头部 - 使用 block 布局而非 flex，避免分页时切断
-  html += `<div class="question-header" style="display: block; margin-bottom: 6px;">`
-  html += `<span class="question-number" style="font-weight: bold; margin-right: 4px; font-size: 10.5pt; line-height: 1.8;">${index + 1}.</span>`
-  html += `<span class="question-stem" style="display: inline; font-size: 10.5pt; line-height: 1.8;">${stemHtml}</span>`
+  // 题目头部
+  html += `<div class="question-header" style="display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px; flex-wrap: nowrap;">`
+  html += `<span class="question-number" style="font-weight: bold; min-width: 20px; flex-shrink: 0; white-space: nowrap; font-size: 10.5pt; line-height: 1.8;">${index + 1}.</span>`
+  html += `<div class="question-stem" style="flex: 1; font-size: 10.5pt; line-height: 1.8;">${stemHtml}</div>`
   html += `</div>`
 
   // 选项
@@ -515,31 +515,17 @@ export function getPrintStyles(): string {
       margin: 0 !important;
     }
 
-    /* 数学公式 - 防止分页时公式被切断 */
-    /*
-     * 注意：WebKit/Blink 引擎对 break-inside: avoid 支持有限
-     * 将公式强制设为 block 显示，增加分页控制
-     */
+    /* 数学公式 */
     mjx-container {
-      display: block !important; /* 强制 block 显示，使 break-inside 生效 */
+      display: inline !important;
       font-size: 1em !important;
-      min-height: 1.5em !important;
-      vertical-align: middle !important;
-      page-break-inside: avoid !important;
-      break-inside: avoid !important;
-      margin: 0.2em 0 !important; /* 减小 margin 让公式更紧凑 */
-    }
-
-    /* 针对 display math 的容器 */
-    mjx-container[jax="true"][display="true"] {
-      display: block !important;
-      margin: 0.5em 0 !important;
+      break-inside: avoid !important; /* 避免公式在分页时被切断（如分数） */
     }
 
     /* 分页控制 */
     @page {
       margin: 15mm 20mm;
-      margin-bottom: 30mm; /* 增加底部边距，给浏览器更多空间调整分页 */
+      margin-bottom: 25mm; /* 增加底部边距，避免 Safari 页脚切断页码 */
     }
 
     @page :first {
@@ -549,48 +535,12 @@ export function getPrintStyles(): string {
     @media print {
       body {
         padding: 0;
-        /* orphans 和 widows 控制段落分页时的最小行数 */
-        orphans: 3 !important;
-        widows: 3 !important;
       }
 
-      /* 题目容器 - 防止题目内部被分页切断 */
-      .question-item,
-      .question-grid-item {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-        overflow: hidden; /* 确保内容不被溢出 */
-        /* contain 让浏览器将整个元素作为一个独立的渲染单元 */
-        contain: layout style !important;
-        /* 确保题目有足够的保留空间 */
-        orphans: 99 !important;
-        widows: 99 !important;
+      .question-item {
+        page-break-inside: avoid;
       }
 
-      /* 题目内部元素 - 使用 display: block 确保 break-inside 生效 */
-      .question-header {
-        display: block !important;
-        break-inside: avoid !important;
-        page-break-inside: avoid !important;
-      }
-
-      .question-stem {
-        display: block !important;
-        break-inside: avoid !important;
-        page-break-inside: avoid !important;
-        orphans: 99 !important;
-        widows: 99 !important;
-      }
-
-      .question-options,
-      .option-item,
-      .passage-section,
-      .sub-questions {
-        break-inside: avoid !important;
-        page-break-inside: avoid !important;
-      }
-
-      /* 作文行 */
       .essay-line {
         break-inside: avoid;
       }
