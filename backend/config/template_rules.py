@@ -30,6 +30,7 @@ OPERATION_RULES = {
     "ensure_no_remainder": "确保除法无余数",
     "ensure_borrowing": "确保减法需要借位",
     "ensure_carrying": "确保加法需要进位",
+    "ensure_remainder": "确保除法有余数（用于带余数除法练习）",
 }
 
 # ===================== 分数相关约束 =====================

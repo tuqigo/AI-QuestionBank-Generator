@@ -8,6 +8,8 @@ from .multiplication_table import MultiplicationTableGenerator
 from .volume_conversion import VolumeConversionGenerator
 from .fraction_comparison import FractionComparisonGenerator
 from .mixed_addition_subtraction import MixedAdditionSubtractionGenerator
+from .length_comparison import LengthComparisonGenerator
+from .multiplication_division_comprehensive import MultiplicationDivisionComprehensiveGenerator
 
 
 # 生成器注册表
@@ -19,6 +21,8 @@ GENERATOR_REGISTRY = {
     "volume_conversion": VolumeConversionGenerator,
     "fraction_comparison": FractionComparisonGenerator,
     "mixed_addition_subtraction": MixedAdditionSubtractionGenerator,
+    "length_comparison": LengthComparisonGenerator,
+    "multiplication_division_comprehensive": MultiplicationDivisionComprehensiveGenerator,
 }
 
 

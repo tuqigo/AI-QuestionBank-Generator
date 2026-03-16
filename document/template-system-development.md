@@ -369,6 +369,7 @@ curl -X POST http://localhost:8000/api/templates/generate \
 
 | 题型值 | 说明 | 适用场景 |
 |--------|------|----------|
+| `ORAL_CALCULATION` | 口算题 | 加减乘除、混合运算 |
 | `CALCULATION` | 计算题 | 加减乘除、混合运算 |
 | `CHOICE` | 选择题 | 单选/多选 |
 | `FILL_BLANK` | 填空题 | 填空、比大小 |
@@ -1018,6 +1019,234 @@ if numerator1 * denominator2 > numerator2 * denominator1:
 
 ---
 
+### 5.8 LengthComparisonGenerator - 长度单位换算
+
+**文件**: `services/template/generators/length_comparison.py`
+
+**适用**: 一年级 下学期 长度单位换算（沪教版）
+
+**例题**:
+- 7m = （ ）cm
+- 500cm = （ ）m
+- 1dm = （ ）cm
+- 30cm = （ ）dm
+- 5m = （ ）dm
+- 40dm = （ ）m
+- 2m50cm = （ ）cm
+- 3m5dm = （ ）dm
+
+**配置示例**:
+```json
+{
+    "value": {"min": 1, "max": 100},
+    "convert_types": [
+        "m_to_cm", "cm_to_m",
+        "dm_to_cm", "cm_to_dm",
+        "m_to_dm", "dm_to_m",
+        "m_cm_to_cm", "m_dm_to_dm"
+    ]
+}
+```
+
+**支持的换算类型**:
+
+| 类型 | 说明 | 例题 |
+|------|------|------|
+| `m_to_cm` | 米→厘米 | 7m = （ ）cm |
+| `cm_to_m` | 厘米→米 | 500cm = （ ）m |
+| `dm_to_cm` | 分米→厘米 | 1dm = （ ）cm |
+| `cm_to_dm` | 厘米→分米 | 30cm = （ ）dm |
+| `m_to_dm` | 米→分米 | 5m = （ ）dm |
+| `dm_to_m` | 分米→米 | 40dm = （ ）m |
+| `m_cm_to_cm` | 米 + 厘米→厘米 | 2m50cm = （ ）cm |
+| `m_dm_to_dm` | 米 + 分米→分米 | 3m5dm = （ ）dm |
+
+**进率关系**:
+- 1 米 (m) = 100 厘米 (cm)
+- 1 分米 (dm) = 10 厘米 (cm)
+- 1 米 (m) = 10 分米 (dm)
+
+---
+
+### 5.9 MultiplicationDivisionComprehensiveGenerator - 乘除综合（全小学阶段通用）
+
+**文件**: `services/template/generators/multiplication_division_comprehensive.py`
+
+**设计理念**: 生成器本身不限制年级，所有范围通过 configuration 控制。后期添加新模板只需 SQL 配置，无需修改代码。
+
+**适用**: 小学全阶段（通过配置适应不同年级）
+
+**例题**:
+- 3 × 4 = （ ）
+- 12 ÷ 3 = （ ）
+- （ ）× 4 = 12
+- 12 ÷ （ ） = 4
+- 3 × 4 + 5 = （ ）
+- 12 ÷ 3 - 2 = （ ）
+- 14 ÷ 3 = （ ）……（ ）
+- 3 × 4 （ ） 10
+
+**配置示例（二年级 - 表内乘除）**:
+```json
+{
+    "factor": {"min": 1, "max": 9},
+    "divisor": {"min": 1, "max": 9},
+    "dividend": {"min": 1, "max": 81},
+    "extra": {"min": 1, "max": 20},
+    "question_complexity": [
+        "simple_multiply",
+        "simple_divide",
+        "multiply_fill_first",
+        "multiply_fill_second",
+        "divide_fill_dividend",
+        "divide_fill_divisor",
+        "multiply_add",
+        "multiply_subtract",
+        "divide_add",
+        "divide_subtract",
+        "remainder_division",
+        "compare_multiply",
+        "compare_division"
+    ],
+    "rules": ["ensure_divisible", "ensure_positive", "result_within_100"]
+}
+```
+
+**支持的题型**:
+
+| 题型 | 说明 | 例题 |
+|------|------|------|
+| `simple_multiply` | 简单乘法 | 3 × 4 = （ ） |
+| `simple_divide` | 简单除法 | 12 ÷ 3 = （ ） |
+| `multiply_fill_first` | 乘法填空（求第一个因子） | （ ）× 4 = 12 |
+| `multiply_fill_second` | 乘法填空（求第二个因子） | 3 × （ ） = 12 |
+| `divide_fill_dividend` | 除法填空（求被除数） | （ ）÷ 3 = 4 |
+| `divide_fill_divisor` | 除法填空（求除数） | 12 ÷ （ ） = 4 |
+| `multiply_add` | 乘加混合 | 3 × 4 + 5 = （ ） |
+| `multiply_subtract` | 乘减混合 | 3 × 4 - 5 = （ ） |
+| `divide_add` | 除加混合 | 12 ÷ 3 + 5 = （ ） |
+| `divide_subtract` | 除减混合 | 12 ÷ 3 - 2 = （ ） |
+| `remainder_division` | 带余数除法 | 14 ÷ 3 = （ ）……（ ） |
+| `compare_multiply` | 乘法比较 | 3 × 4 （ ） 10 |
+| `compare_division` | 除法比较 | 12 ÷ 3 （ ） 4 |
+| `multiply_chain` | 连乘 | 2 × 3 × 4 = （ ） |
+| `mixed_compare` | 混合运算比较 | 3 × 4 + 2 （ ） 15 |
+
+**支持的规则**:
+- `ensure_divisible`: 确保除法能整除
+- `ensure_positive`: 确保结果不为负
+- `ensure_remainder`: 确保有余数（用于带余数除法）
+- `ensure_no_remainder`: 确保无余数
+- `ensure_different`: 确保两个因子不同
+- `result_within_20`: 确保结果 ≤ 20
+- `result_within_100`: 确保结果 ≤ 100
+
+**配置参数说明**:
+
+| 参数 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `factor.min` | int | 1 | 乘法因子最小值 |
+| `factor.max` | int | 9 | 乘法因子最大值 |
+| `fixed_first_factor` | int | null | 固定第一个因子（用于乘法口诀专项，如设为 7 则只生成 7 的乘法） |
+| `divisor.min` | int | 1 | 除数最小值 |
+| `divisor.max` | int | 9 | 除数最大值 |
+| `dividend.min` | int | 1 | 被除数最小值 |
+| `dividend.max` | int | 81 | 被除数最大值 |
+| `quotient.min` | int | 1 | 商最小值 |
+| `quotient.max` | int | 9 | 商最大值 |
+| `extra.min` | int | 1 | 混合运算中加/减数最小值 |
+| `extra.max` | int | 20 | 混合运算中加/减数最大值 |
+| `chain_factors` | int | 3 | 连乘因子数量 |
+| `compare_offset.min` | int | 1 | 比较题偏移最小值 |
+| `compare_offset.max` | int | 10 | 比较题偏移最大值 |
+| `knowledge_points` | array | 自动判断 | 自定义知识点列表 |
+| `result_within` | int | null | 自定义结果上限 |
+
+**不同年级配置示例**:
+
+```sql
+-- ============================================
+-- 示例 1：二年级 表内乘除（只练习 1-5 的乘法）
+-- ============================================
+INSERT INTO question_templates (
+    name, subject, grade, semester, textbook_version, question_type,
+    template_pattern, variables_config, example,
+    generator_module, sort_order, is_active
+) VALUES (
+    '乘除基础 - 1 至 5 的乘法',
+    'math', 'grade2', 'upper', '沪教版', 'ORAL_CALCULATION',
+    '表内乘法基础练习（1-5）',
+    '{"factor": {"min": 1, "max": 5}, "divisor": {"min": 1, "max": 5}, "dividend": {"min": 1, "max": 25}, "question_complexity": ["simple_multiply"], "rules": ["result_within_25"]}',
+    '3 × 4 = （ ）',
+    'multiplication_division_comprehensive', 1, 1
+);
+
+-- ============================================
+-- 示例 2：三年级 多位数乘法（整十/整百）
+-- ============================================
+INSERT INTO question_templates (
+    name, subject, grade, semester, textbook_version, question_type,
+    template_pattern, variables_config, example,
+    generator_module, sort_order, is_active
+) VALUES (
+    '多位数乘法 - 整十整百',
+    'math', 'grade3', 'upper', '人教版', 'ORAL_CALCULATION',
+    '整十/整百数乘法',
+    '{"factor": {"min": 10, "max": 90, "step": 10}, "divisor": {"min": 1, "max": 9}, "question_complexity": ["simple_multiply", "multiply_chain"], "rules": ["result_within_1000"]}',
+    '30 × 4 = （ ）、200 × 3 = （ ）',
+    'multiplication_division_comprehensive', 2, 1
+);
+
+-- ============================================
+-- 示例 3：四年级 除数是两位数的除法
+-- ============================================
+INSERT INTO question_templates (
+    name, subject, grade, semester, textbook_version, question_type,
+    template_pattern, variables_config, example,
+    generator_module, sort_order, is_active
+) VALUES (
+    '除数是两位数的除法',
+    'math', 'grade4', 'upper', '人教版', 'ORAL_CALCULATION',
+    '除数是两位数的整除练习',
+    '{"divisor": {"min": 10, "max": 99}, "quotient": {"min": 1, "max": 20}, "dividend": {"min": 100, "max": 1000}, "question_complexity": ["simple_divide", "divide_fill_dividend"], "rules": ["ensure_divisible", "result_within_100"]}',
+    '120 ÷ 12 = （ ）、（ ）÷ 15 = 8',
+    'multiplication_division_comprehensive', 3, 1
+);
+
+-- ============================================
+-- 扩展示例 - 新增模板只需 SQL（生成器无需修改）
+-- ============================================
+-- 场景：添加一个"乘法口诀专项练习 - 只练 7 的乘法"
+INSERT INTO question_templates (
+    name, subject, grade, semester, textbook_version, question_type,
+    template_pattern, variables_config, example,
+    generator_module, sort_order, is_active
+) VALUES (
+    '乘法口诀专项 - 7 的乘法',
+    'math', 'grade2', 'upper', '沪教版', 'ORAL_CALCULATION',
+    '7 的乘法口诀专项练习',
+    '{"factor": {"min": 1, "max": 9}, "fixed_first_factor": 7, "question_complexity": ["simple_multiply"], "rules": ["result_within_81"], "knowledge_points": ["7 的乘法口诀"]}',
+    '7 × 1 = （ ）、7 × 2 = （ ）...',
+    'multiplication_division_comprehensive', 10, 1
+);
+
+-- 场景：添加一个"乘法口诀专项 - 只练 9 的乘法"
+INSERT INTO question_templates (
+    name, subject, grade, semester, textbook_version, question_type,
+    template_pattern, variables_config, example,
+    generator_module, sort_order, is_active
+) VALUES (
+    '乘法口诀专项 - 9 的乘法',
+    'math', 'grade2', 'upper', '沪教版', 'ORAL_CALCULATION',
+    '9 的乘法口诀专项练习',
+    '{"factor": {"min": 1, "max": 9}, "fixed_first_factor": 9, "question_complexity": ["simple_multiply"], "rules": ["result_within_81"], "knowledge_points": ["9 的乘法口诀"]}',
+    '9 × 1 = （ ）、9 × 2 = （ ）...',
+    'multiplication_division_comprehensive', 11, 1
+);
+```
+
+---
+
 ## 6. API 使用
 
 ### 6.1 获取模板列表
@@ -1284,7 +1513,9 @@ backend/services/template/
     ├── currency_conversion.py  # 人民币换算生成器
     ├── multiplication_table.py # 九九乘法表生成器
     ├── volume_conversion.py    # 体积单位换算生成器
-    └── fraction_comparison.py  # 分数比大小生成器
+    ├── fraction_comparison.py  # 分数比大小生成器
+    ├── length_comparison.py    # 长度单位换算生成器 ⭐
+    └── multiplication_division_comprehensive.py  # 乘除综合生成器 ⭐
 ```
 
 ```
@@ -1312,7 +1543,11 @@ backend/db/migrations/
 ├── 007_add_bainaineishu_comparison_template.sql  # 百以内数比大小模板
 ├── 008_add_currency_recognition_template.sql   # 人民币认识模板
 ├── 009_add_mixed_addition_subtraction_template.sql  # 连加连减及加减综合模板
-└── 010_unify_arithmetic_generators.sql         # 统一加减法生成器迁移
+├── 010_unify_arithmetic_generators.sql         # 统一加减法生成器迁移
+├── 011_rename_question_types_to_complexity.sql
+├── 012_add_question_types_table.sql
+├── 013_add_length_comparison_template.sql      # 长度单位换算模板 ⭐
+└── 014_add_multiplication_division_comprehensive_template.sql  # 乘除综合模板 ⭐
 ```
 
 ```
