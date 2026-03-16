@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchWithAuth, clearToken } from '@/core/auth/userAuth'
 import { validatePrompt } from '@/utils/promptValidator'
@@ -174,8 +174,8 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
   // 使用全部模板计算筛选选项
   const filterOptions = getFilterOptionsFromTemplates(allTemplates)
 
-  // 前端筛选模板
-  const applyFilter = useCallback(() => {
+  // 前端筛选模板（点击"查找模板"按钮时调用）
+  const applyFilter = () => {
     let result = allTemplates
 
     if (templateFilter.grade) {
@@ -200,7 +200,7 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
       // 筛选后自动折叠
       setFilterOpen(false)
     }
-  }, [allTemplates, templateFilter.grade, templateFilter.subject, templateFilter.semester, templateFilter.textbook_version])
+  }
 
   // 加载全部模板
   const loadAllTemplates = async () => {
@@ -209,7 +209,7 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
     try {
       const data = await getTemplates({})
       setAllTemplates(data)
-      setFilteredTemplates(data)
+      setFilteredTemplates(data) // 初始显示全部模板
     } catch (e) {
       if (e instanceof Error) {
         setError(e.message || '加载模板失败')
@@ -226,24 +226,19 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
   // 页面加载时，自动加载全部模板并恢复筛选条件
   useEffect(() => {
     if (allTemplates.length === 0 && !templateLoading) {
-      // 恢复本地存储的筛选条件
+      // 恢复之前保存的筛选条件
       const savedFilter = localStorage.getItem('question-generator-filter')
       if (savedFilter) {
         const parsed = JSON.parse(savedFilter)
         if (parsed.grade || parsed.subject || parsed.semester || parsed.textbook_version) {
           setTemplateFilter(parsed)
+          // 恢复筛选条件后，应用过滤
+          setTimeout(() => applyFilter(), 0)
         }
       }
       loadAllTemplates()
     }
   }, [])
-
-  // 筛选条件变化时，应用前端筛选
-  useEffect(() => {
-    if (allTemplates.length > 0) {
-      applyFilter()
-    }
-  }, [applyFilter])
 
   // 处理模板选择
   const handleTemplateSelect = (template: TemplateItem) => {
@@ -578,10 +573,10 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                       <button
                         type="button"
                         className="btn-search-template"
-                        onClick={loadAllTemplates}
+                        onClick={applyFilter}
                         disabled={templateLoading}
                       >
-                        {templateLoading ? '加载中...' : '查找模板'}
+                        查找模板
                       </button>
                     </div>
                   )}
