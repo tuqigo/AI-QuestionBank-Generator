@@ -5,6 +5,7 @@ from models.user import UserGradeUpdate
 from services.user.user_store import update_user_grade
 from api.v1.auth import get_current_user_email
 from utils.logger import api_logger
+from core.constants import SUPPORTED_GRADES
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
@@ -16,8 +17,7 @@ async def update_grade(
 ):
     """更新当前用户年级"""
     # 验证年级格式
-    valid_grades = [f"grade{i}" for i in range(1, 10)]  # grade1~grade9
-    if data.grade not in valid_grades:
+    if data.grade not in SUPPORTED_GRADES:
         api_logger.warning(f"更新年级失败 - 无效的年级：{data.grade}")
         raise HTTPException(status_code=400, detail="无效的年级格式")
 

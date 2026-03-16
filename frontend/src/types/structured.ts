@@ -4,27 +4,16 @@
  */
 
 // ===================== 基础类型 =====================
+// 注意：具体值从后端 API /api/configs/configs 动态获取
 
-/** 学科类型 */
-export type Subject = 'math' | 'chinese' | 'english';
+/** 学科类型（从后端 API 获取） */
+export type Subject = string;
 
-/** 年级类型 */
-export type Grade = 'grade1' | 'grade2' | 'grade3' | 'grade4' | 'grade5'
-  | 'grade6' | 'grade7' | 'grade8' | 'grade9';
+/** 年级类型（从后端 API 获取） */
+export type Grade = string;
 
-/** 题型枚举 */
-export type QuestionType =
-  | 'SINGLE_CHOICE'    // 单选题
-  | 'MULTIPLE_CHOICE'  // 多选题
-  | 'TRUE_FALSE'       // 判断题
-  | 'FILL_BLANK'       // 填空题
-  | 'CALCULATION'      // 计算题
-  | 'WORD_PROBLEM'     // 应用题
-  | 'GEOMETRY'         // 几何题
-  | 'READ_COMP'        // 阅读理解
-  | 'POETRY_APP'       // 古诗文鉴赏/默写
-  | 'CLOZE'            // 完形填空
-  | 'ESSAY';           // 作文题
+/** 题型枚举（从后端 API 获取） */
+export type QuestionType = string;
 
 // ===================== 元数据 =====================
 

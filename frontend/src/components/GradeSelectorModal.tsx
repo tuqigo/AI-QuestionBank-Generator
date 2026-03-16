@@ -37,6 +37,18 @@ export default function GradeSelectorModal({ isOpen, onClose, onSelect }: GradeS
     }
   }
 
+  // 小学：一年级 ~ 六年级 (grade1~grade6)
+  // 初中：七年级 ~ 九年级 (grade7~grade9)
+  const isPrimaryGrade = (value: string) => {
+    const gradeNum = parseInt(value.replace('grade', ''))
+    return gradeNum >= 1 && gradeNum <= 6
+  }
+
+  const isJuniorGrade = (value: string) => {
+    const gradeNum = parseInt(value.replace('grade', ''))
+    return gradeNum >= 7 && gradeNum <= 9
+  }
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="请选择年级" size="medium">
       <p className="grade-hint">便于我们为您提供更好的服务</p>
@@ -44,7 +56,7 @@ export default function GradeSelectorModal({ isOpen, onClose, onSelect }: GradeS
         <div className="grade-section">
           <h3 className="grade-section-title">小学</h3>
           <div className="grade-grid">
-            {grades.filter(g => ['grade1', 'grade2', 'grade3', 'grade4', 'grade5', 'grade6'].includes(g.value)).map((g) => (
+            {grades.filter(g => isPrimaryGrade(g.value)).map((g) => (
               <Button
                 key={g.value}
                 variant="secondary"
@@ -61,7 +73,7 @@ export default function GradeSelectorModal({ isOpen, onClose, onSelect }: GradeS
         <div className="grade-section">
           <h3 className="grade-section-title">初中</h3>
           <div className="grade-grid">
-            {grades.filter(g => ['grade7', 'grade8', 'grade9'].includes(g.value)).map((g) => (
+            {grades.filter(g => isJuniorGrade(g.value)).map((g) => (
               <Button
                 key={g.value}
                 variant="secondary"

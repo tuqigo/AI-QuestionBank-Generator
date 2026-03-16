@@ -94,11 +94,11 @@ class Question(BaseModel):
 class MetaData(BaseModel):
     """元数据"""
     subject: str = Field(
-        description="学科：math, chinese, english",
+        description="学科（见 core.constants.SUPPORTED_SUBJECTS）",
         example="math"
     )
     grade: str = Field(
-        description="年级：grade1 ~ grade9",
+        description="年级（见 core.constants.SUPPORTED_GRADES）",
         example="grade7"
     )
     title: str = Field(

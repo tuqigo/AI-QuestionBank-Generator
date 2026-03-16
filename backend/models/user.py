@@ -42,4 +42,4 @@ class ResetPasswordRequest(BaseModel):
 
 
 class UserGradeUpdate(BaseModel):
-    grade: str  # grade1~grade9
+    grade: str  # 年级，有效值见 core.constants.SUPPORTED_GRADES
