@@ -417,6 +417,12 @@ export function getPrintStyles(): string {
       border-bottom: 1px var(--answer-placeholder-style) var(--answer-placeholder-color);
     }
 
+    /* 口算题作答区域 - 括号中间的空白区域 */
+    .answer-blank {
+      display: inline-block;
+      min-width: 50px;
+    }
+
     /* 答案区域 */
     .answer-area {
       margin-top: var(--answer-area-margin-top);

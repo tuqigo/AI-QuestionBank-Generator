@@ -52,18 +52,14 @@ function processSpecialFormats(content: string): string {
   // 处理 [   ] 方框填空（2 个空格以上）
   processed = processed.replace(/\[ {2,}\]/g, '<span class="blank-box"></span>')
 
-  // 处理带空格的括号（全角）
-  processed = processed.replace(/（ {2,}）/g, (match) => {
-    const spaces = match.slice(1, -1)
-    const nbsp = '\u00a0'.repeat(spaces.length)
-    return `（${nbsp}）`
+  // 处理带空格的括号（全角）- 使用 span 包裹空白区域，通过 CSS 控制宽度
+  processed = processed.replace(/（ {2,}）/g, () => {
+    return '（<span class="answer-blank"></span>）'
   })
 
   // 处理带空格的半角括号
-  processed = processed.replace(/\( {2,}\)/g, (match) => {
-    const spaces = match.slice(1, -1)
-    const nbsp = '\u00a0'.repeat(spaces.length)
-    return `(${nbsp})`
+  processed = processed.replace(/\( {2,}\)/g, () => {
+    return '(<span class="answer-blank"></span>)'
   })
 
   // 处理完全空的括号（全角和半角）
