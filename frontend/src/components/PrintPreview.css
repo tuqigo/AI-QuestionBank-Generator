@@ -9,6 +9,37 @@
   box-shadow: var(--shadow-sm);
 }
 
+/* 打印预览容器 - 屏幕预览时的内边距 */
+.print-preview-container {
+  padding: 16px;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .print-preview-wrapper {
+    padding: var(--space-4);
+  }
+
+  .print-preview-container {
+    padding: 8px;
+  }
+}
+
+@media (max-width: 640px) {
+  .print-preview-wrapper {
+    padding: var(--space-3);
+  }
+
+  .print-preview-container {
+    padding: 4px;
+  }
+
+  /* 网格布局在移动端改为 2 列 */
+  .question-grid-container {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
 /* 打印时移除 wrapper 样式 */
 @media print {
   .print-preview-wrapper {

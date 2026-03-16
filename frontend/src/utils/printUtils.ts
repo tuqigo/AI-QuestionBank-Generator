@@ -271,11 +271,16 @@ export function getPrintStyles(): string {
 
     body {
       margin: 0;
-      padding: 20mm;
+      padding: 0;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       font-size: 10.5pt;
       line-height: 1.6;
       color: #000;
+    }
+
+    /* 打印预览容器 - 屏幕预览时的内边距 */
+    .print-preview-container {
+      padding: 16px;
     }
 
     /* CSS 变量定义 */
