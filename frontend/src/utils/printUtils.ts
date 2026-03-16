@@ -518,16 +518,19 @@ export function getPrintStyles(): string {
     /* 数学公式 - 防止分页时公式被切断 */
     /*
      * 注意：WebKit/Blink 引擎对 break-inside: avoid 支持有限
-     * 需要同时设置 display: block 和 min-height 来增强效果
+     * 将公式强制设为 block 显示，增加分页控制
      */
     mjx-container {
-      display: inline-block !important;
+      display: block !important; /* 强制 block 显示，使 break-inside 生效 */
       font-size: 1em !important;
-      min-height: 1.5em !important; /* 确保公式有最小高度，帮助浏览器计算分页 */
+      min-height: 1.5em !important;
       vertical-align: middle !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      margin: 0.2em 0 !important; /* 减小 margin 让公式更紧凑 */
     }
 
-    /* 针对 display math 的容器，使用 block 显示 */
+    /* 针对 display math 的容器 */
     mjx-container[jax="true"][display="true"] {
       display: block !important;
       margin: 0.5em 0 !important;
