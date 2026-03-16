@@ -1,0 +1,25 @@
+/* ===== PrintPreview 打印预览样式 ===== */
+/* 注意：所有打印相关样式由 printUtils.ts 中的 getPrintStyles() 统一管理 */
+/* 此文件仅包含预览容器的展示样式 */
+
+.print-preview-wrapper {
+  padding: var(--space-6);
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* 打印时移除 wrapper 样式 */
+@media print {
+  .print-preview-wrapper {
+    display: block !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+  }
+
+  .print-preview-container {
+    display: block !important;
+  }
+}

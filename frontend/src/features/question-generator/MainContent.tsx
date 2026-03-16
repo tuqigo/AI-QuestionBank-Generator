@@ -5,7 +5,7 @@ import { validatePrompt } from '@/utils/promptValidator'
 import { handlePrint } from '@/utils/printUtils'
 import HistoryDropdown from '../history/HistoryList'
 import ProgressModal from './ProgressModal'
-import StructuredPreviewShared from '@/components/StructuredPreviewShared'
+import PrintPreview from '@/components/PrintPreview'
 import { generateStructuredQuestions, getTemplates, generateFromTemplate } from '@/core/api/history'
 import type { StructuredQuestion, MetaData, TemplateItem, TemplateFilter } from '@/types/question'
 import { useMathJaxSimple } from '@/hooks/useMathJax'
@@ -702,7 +702,7 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
           <div className="preview-card">
             {questions.length > 0 ? (
               <div className="preview-body">
-                <StructuredPreviewShared
+                <PrintPreview
                   questions={questions}
                   meta={meta}
                 />

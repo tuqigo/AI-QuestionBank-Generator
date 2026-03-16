@@ -39,7 +39,7 @@ function cleanAnswerText(text: string) {
 /**
  * 获取题型对应的 CSS 类名
  */
-function getQuestionTypeClass(type: string): string {
+export function getQuestionTypeClass(type: string): string {
   const typeMap: Record<string, string> = {
     SINGLE_CHOICE: 'question-single-choice',
     MULTIPLE_CHOICE: 'question-multiple-choice',
@@ -58,7 +58,7 @@ function getQuestionTypeClass(type: string): string {
 /**
  * 渲染选项 HTML
  */
-function renderOptions(options: string[], startLabel: number = 0): string {
+export function renderOptions(options: string[], startLabel: number = 0): string {
   const optionLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
   return options.map((opt, idx) => {
     const optionText = opt.replace(/^[A-D]\.\s*/, '')
@@ -74,7 +74,7 @@ function renderOptions(options: string[], startLabel: number = 0): string {
 /**
  * 渲染子题目 HTML
  */
-function renderSubQuestions(subQuestions: any[], mode: 'print' | 'render' = 'print'): string {
+export function renderSubQuestions(subQuestions: any[], mode: 'print' | 'render' = 'print'): string {
   const optionLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
 
   return subQuestions.map((subQ, subIdx) => {
@@ -106,7 +106,7 @@ function renderSubQuestions(subQuestions: any[], mode: 'print' | 'render' = 'pri
 /**
  * 将结构化题目转换为 HTML（打印优化版本）
  */
-function renderStructuredQuestions(questions: StructuredQuestion[], title: string): string {
+export function renderStructuredQuestions(questions: StructuredQuestion[], title: string): string {
   let html = `<h1 class="print-title" style="text-align: center; margin-bottom: 30px; font-size: 18pt; font-weight: bold;">${title}</h1>`
   html += `<div style="height: 20px;"></div>`
 
@@ -162,7 +162,7 @@ function renderStructuredQuestions(questions: StructuredQuestion[], title: strin
 /**
  * 获取打印所需的完整 CSS 样式
  */
-function getPrintStyles(): string {
+export function getPrintStyles(): string {
   return `
     * {
       box-sizing: border-box;

@@ -1,4 +1,6 @@
-/* ===== StructuredPreviewShared 共用样式 ===== */
+/* ===== StructuredPreviewShared 共用样式（做题模式） ===== */
+/* 注意：此样式配合 StructuredPreviewShared 组件使用，专为未来"做题模式"设计 */
+/* 打印预览样式请使用 PrintPreview.css */
 
 .structured-preview-shared {
   font-size: 0.9375rem;

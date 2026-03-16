@@ -1,3 +1,21 @@
+/**
+ * StructuredPreviewShared - 结构化题目预览（做题模式）
+ *
+ * ⚠️ 注意：此组件专为未来"做题模式"设计
+ * 功能特点：
+ * - 支持交互操作（点击、选择、输入答案等）
+ * - 支持答题功能
+ * - MathJax 动态渲染
+ *
+ * 与 PrintPreview 的区别：
+ * - PrintPreview: 纯展示模式，无交互，直接展示打印效果
+ * - StructuredPreviewShared: 支持交互、答题等功能（做题模式）
+ *
+ * TODO: 未来实现做题模式时，需要：
+ * 1. 添加答案选择/输入功能
+ * 2. 添加判题功能
+ * 3. 添加答题进度管理
+ */
 import { useEffect, useRef, useState } from 'react'
 import type { StructuredQuestion, RecordMeta } from '@/types/question'
 import QuestionRenderer from '@/components/QuestionRenderer'

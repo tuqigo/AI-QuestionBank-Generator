@@ -350,7 +350,7 @@
   cursor: not-allowed;
 }
 
-/* 打印按钮样式 */
+/* 打印按钮样式 - 与生成按钮保持一致 */
 .btn-print-sidebar {
   display: flex;
   align-items: center;
@@ -360,12 +360,12 @@
   font-size: 1rem;
   font-weight: 600;
   color: white;
-  background: linear-gradient(135deg, var(--primary-500) 0%, var(--primary-600) 100%);
+  background: linear-gradient(135deg, #ff6b4a 0%, #ff8a65 100%);
   border: none;
   border-radius: var(--radius-xl);
   cursor: pointer;
   transition: all var(--transition-base);
-  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.3);
+  box-shadow: 0 4px 16px rgba(255, 107, 74, 0.4);
   position: relative;
   overflow: hidden;
 }
@@ -392,7 +392,7 @@
 
 .btn-print-sidebar:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.4);
+  box-shadow: 0 8px 24px rgba(255, 107, 74, 0.5);
 }
 
 .btn-print-sidebar:active:not(:disabled) {

@@ -317,3 +317,22 @@ CREATE INDEX IF NOT EXISTS idx_admin_logs_action
 
 CREATE INDEX IF NOT EXISTS idx_admin_logs_target
     ON admin_operation_logs(target_type, target_id);
+
+-- ============================================
+-- 10. 题型表 (question_types)
+-- ============================================
+CREATE TABLE IF NOT EXISTS question_types (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    en_name TEXT UNIQUE NOT NULL,
+    zh_name TEXT NOT NULL,
+    subject TEXT NOT NULL DEFAULT 'all',
+    is_active INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_question_types_subject
+    ON question_types(subject, is_active);
+
+CREATE INDEX IF NOT EXISTS idx_question_types_en_name
+    ON question_types(en_name);
