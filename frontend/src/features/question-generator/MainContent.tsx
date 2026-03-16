@@ -8,7 +8,16 @@ import ProgressModal from './ProgressModal'
 import StructuredPreviewShared from '@/components/StructuredPreviewShared'
 import { generateStructuredQuestions, getTemplates, generateFromTemplate } from '@/core/api/history'
 import type { StructuredQuestion, MetaData, TemplateItem, TemplateFilter } from '@/types/question'
+import { useMathJaxSimple } from '@/hooks/useMathJax'
 import './MainContent.css'
+
+/**
+ * 转义 LaTeX 公式中的反斜杠
+ * 后端返回的 JSON 中反斜杠被转义为 \\，需要转换回 \
+ */
+function unescapeLatex(str: string): string {
+  return str.replace(/\\\\/g, '\\')
+}
 
 const SHORTCUTS = [
   { label: '口算题', prompt: '小学一年级数学 数的组成，比大小、多少、长短、高矮、轻重、简单分类、统计', icon: '🔢' },
@@ -98,6 +107,12 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
 
   // 预览区 ref，用于自动滚动
   const previewRef = useRef<HTMLDivElement>(null)
+
+  // 模板列表 ref，用于 MathJax 渲染
+  const templateListRef = useRef<HTMLDivElement>(null)
+
+  // MathJax 渲染 - 模板列表
+  useMathJaxSimple(templateListRef, [templates])
 
   // 加载模板列表
   const loadTemplates = async () => {
@@ -478,7 +493,7 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                     </svg>
                     <label>模板列表</label>
                   </div>
-                  <div className="template-list">
+                  <div className="template-list" ref={templateListRef}>
                     {templateLoading && (
                       <div className="template-loading">
                         <span className="spinner-small"></span>
@@ -498,7 +513,10 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                       >
                         <div className="template-name">{template.name}</div>
                         {template.example && (
-                          <div className="template-example">{template.example}</div>
+                          <div className="template-example">
+                            <span className="example-label">例题：</span>
+                            <span className="example-content">{unescapeLatex(template.example)}</span>
+                          </div>
                         )}
                       </div>
                     ))}
