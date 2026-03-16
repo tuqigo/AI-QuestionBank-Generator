@@ -11,9 +11,10 @@
 | `currency_conversion` | 元角分换算 | 人民币单位换算 | `yuan/jiao/fen.max`, `convert_types` |
 | `volume_conversion` | 体积单位换算 | 立方米/立方分米/立方厘米/升/毫升 | `conversion_types` (12 种) |
 | `fraction_comparison` | 分数比大小 |  LaTeX 分数格式比较 | `denominator.min/max`, `compare_types` |
-| `multiplication_table` | 九九乘法表 | 乘法口诀练习 | `factors.min/max` |
 
-> **注意**: `mixed_addition_subtraction` 是统一的加减法生成器，已覆盖原有的 `addition_subtraction` 和 `consecutive_addition_subtraction` 功能。旧模板已通过迁移 010 更新配置。
+> **注意**:
+> 1. `mixed_addition_subtraction` 是统一的加减法生成器，已覆盖原有的 `addition_subtraction` 和 `consecutive_addition_subtraction` 功能。旧模板已通过迁移 010 更新配置。
+> 2. `multiplication_table` 生成器已删除，其功能由 `multiplication_division_comprehensive` 统一支持（通过 `question_complexity: ["simple_multiply"]` 配置实现）。
 
 ---
 
@@ -214,26 +215,10 @@
 
 ---
 
-### 6. MultiplicationTableGenerator
-
-**模块名**: `multiplication_table`
-**文件**: `multiplication_table.py`
-
-**功能**: 九九乘法表练习
-
-**题型**: `CALCULATION`
-
-**输出格式**: `{a} × {b} = （ ）`
-
-**配置参数**:
-```json
-{
-  "factors": {"min": 1, "max": 9}
-}
-```
+### 6. FractionComparisonGenerator (续)
 
 **适用模板**:
-- 九九乘法表练习
+- 分数比大小
 
 ---
 

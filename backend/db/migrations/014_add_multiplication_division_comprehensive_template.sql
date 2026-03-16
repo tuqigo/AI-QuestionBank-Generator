@@ -53,7 +53,7 @@ INSERT INTO question_templates (
         ],
         "rules": ["ensure_divisible", "ensure_positive", "result_within_100"]
     }',
-    '3 × 4 = （ ）、12 ÷ 3 = （ ）、（ ）× 4 = 12、12 ÷ （ ）= 4、3 × 4 + 5 = （ ）、12 ÷ 3 - 2 = （ ）、14 ÷ 3 = （ ）……（ ）',
+    '3 × 4 = （ ）、12 ÷ 3 = （ ）、（ ）× 4 = 12、12 ÷ （ ）= 4、3 × 4 + 5 = （ ）、12 ÷ 3 - 2 = （ ）、14 ÷ 3 = （ ）',
     'multiplication_division_comprehensive',
     14,
     1

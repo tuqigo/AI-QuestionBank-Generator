@@ -288,19 +288,17 @@ class MultiplicationDivisionComprehensiveGenerator(TemplateGenerator):
                     stem = f"{dividend} ÷ {divisor} - {extra} = （    ）"
 
                 elif q_type == "remainder_division":
-                    # 带余数除法：14 ÷ 3 = （ ）……（ ）
+                    # 带余数除法：11 ÷ 2 = （ ）  学生填写 5……1
+                    # 注意：余数必须大于 0 且小于除数
                     divisor = random.randint(divisor_min, divisor_max)
                     quotient = random.randint(quotient_min, quotient_max)
-                    if ensure_remainder:
-                        remainder = random.randint(1, divisor - 1)
-                    else:
-                        remainder = random.randint(0, divisor - 1)
+                    remainder = random.randint(1, divisor - 1)
 
                     dividend = quotient * divisor + remainder
                     if dividend > dividend_max:
                         continue
 
-                    stem = f"{dividend} ÷ {divisor} = （    ）…… （    ）"
+                    stem = f"{dividend} ÷ {divisor} = （    ）"
 
                 # ==================== 比较题型 ====================
                 elif q_type == "compare_multiply":

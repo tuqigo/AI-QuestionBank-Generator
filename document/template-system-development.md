@@ -485,7 +485,7 @@ GENERATOR_REGISTRY = {
     "addition_subtraction": AdditionSubtractionGenerator,
     "consecutive_addition_subtraction": ConsecutiveAdditionSubtractionGenerator,
     "currency_conversion": CurrencyConversionGenerator,
-    "multiplication_table": MultiplicationTableGenerator,
+    # 注意：multiplication_table 生成器已删除，功能由 multiplication_division_comprehensive 统一支持
 }
 
 
@@ -865,67 +865,27 @@ elif convert_type == "yuan_jiao_to_jiao":
 
 ---
 
-### 5.5 MultiplicationTableGenerator - 九九乘法表
+### 5.5 MultiplicationDivisionComprehensiveGenerator - 乘除综合（统一生成器）
 
-**文件**: `services/template/generators/multiplication_table.py`
+**文件**: `services/template/generators/multiplication_division_comprehensive.py`
 
-**适用**: 三年级乘法口诀表练习
+**适用**: 小学全阶段乘除法练习（通过配置支持不同年级）
 
 **例题**:
-- 3 × 4 = （ ）
-- 7 × 8 = （ ）
-- 9 × 9 = （ ）
+- 简单乘法：3 × 4 = （ ）
+- 乘法填空：（ ）× 4 = 12
+- 简单除法：12 ÷ 3 = （ ）
+- 乘加混合：3 × 4 + 5 = （ ）
+- 带余数除法：14 ÷ 3 = （ ）……（ ）
 
-**配置示例**:
-```json
-{
-    "min_factor": 1,
-    "max_factor": 9,
-    "fixed_first": null,
-    "allow_commute": false
-}
-```
+> **注意**: 原 `MultiplicationTableGenerator` 已删除，其功能由本生成器通过配置实现。
+>
+> 旧模板 `九九乘法表练习` 已迁移至本生成器，配置为：
+> ```json
+> {"factor": {"min": 1, "max": 9}, "question_complexity": ["simple_multiply"], "rules": ["result_within_81"]}
+> ```
 
-**配置参数说明**:
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `min_factor` | int | 1 | 最小因子 |
-| `max_factor` | int | 9 | 最大因子 |
-| `fixed_first` | int/null | null | 固定第一个因子（例如设为 3 则只生成 3 的乘法） |
-| `allow_commute` | bool | false | 是否允许交换因子位置（3×4 和 4×3 都出现） |
-
-**核心逻辑**:
-```python
-# 读取配置
-min_factor = template_config.get("min_factor", 1)
-max_factor = template_config.get("max_factor", 9)
-fixed_first = template_config.get("fixed_first", None)
-allow_commute = template_config.get("allow_commute", False)
-
-# 生成因子
-if fixed_first is not None:
-    a = fixed_first
-else:
-    a = random.randint(min_factor, max_factor)
-
-b = random.randint(min_factor, max_factor)
-
-# 如果不允许交换，确保 a <= b 避免重复
-if not allow_commute and a > b:
-    a, b = b, a
-
-stem = f"{a} × {b} = （    ）"
-```
-
-**使用场景**:
-
-| 场景 | 配置示例 |
-|------|----------|
-| 完整九九乘法表 | `{"min_factor": 1, "max_factor": 9}` |
-| 只练习 5 的乘法 | `{"min_factor": 1, "max_factor": 9, "fixed_first": 5}` |
-| 练习 1-5 的乘法 | `{"min_factor": 1, "max_factor": 5}` |
-| 包含交换律练习 | `{"min_factor": 1, "max_factor": 9, "allow_commute": true}` |
+**配置参数**: 详见第 5.9 节
 
 ---
 
@@ -1511,7 +1471,6 @@ backend/services/template/
     ├── compare_number.py       # 比大小生成器
     ├── mixed_addition_subtraction.py  # 加减法统一生成器 ⭐
     ├── currency_conversion.py  # 人民币换算生成器
-    ├── multiplication_table.py # 九九乘法表生成器
     ├── volume_conversion.py    # 体积单位换算生成器
     ├── fraction_comparison.py  # 分数比大小生成器
     ├── length_comparison.py    # 长度单位换算生成器 ⭐
@@ -1537,7 +1496,6 @@ backend/models/
 backend/db/migrations/
 ├── 001_add_questions_table.sql       # 题目表
 ├── 002_add_question_templates.sql    # 模板系统
-├── 004_add_multiplication_table_template.sql  # 乘法表模板
 ├── 005_add_volume_conversion_template.sql     # 体积换算模板
 ├── 006_add_fraction_comparison_template.sql   # 分数比大小模板
 ├── 007_add_bainaineishu_comparison_template.sql  # 百以内数比大小模板
@@ -1547,7 +1505,8 @@ backend/db/migrations/
 ├── 011_rename_question_types_to_complexity.sql
 ├── 012_add_question_types_table.sql
 ├── 013_add_length_comparison_template.sql      # 长度单位换算模板 ⭐
-└── 014_add_multiplication_division_comprehensive_template.sql  # 乘除综合模板 ⭐
+├── 014_add_multiplication_division_comprehensive_template.sql  # 乘除综合模板 ⭐
+└── 015_add_multiplication_practice_template.sql  # 乘法口诀练习模板（替代原 multiplication_table）
 ```
 
 ```
