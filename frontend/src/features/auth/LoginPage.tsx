@@ -21,6 +21,7 @@ export default function LoginPage({ onSuccess }: Props) {
   const [loading, setLoading] = useState(false)
   const [sendingOtp, setSendingOtp] = useState(false)
   const [countdown, setCountdown] = useState(0)
+  const [otpSent, setOtpSent] = useState(false) // 验证码是否已发送
   const [showGradeSelector, setShowGradeSelector] = useState(false)
   const timerRef = useRef<number | null>(null)
 
@@ -77,6 +78,8 @@ export default function LoginPage({ onSuccess }: Props) {
         throw new Error((data as { detail?: string }).detail || '发送失败')
       }
       setCountdown(60) // 60 秒倒计时
+      setOtpSent(true) // 标记验证码已发送
+      toast.success('验证码已发送，请检查邮箱')
     } catch (e) {
       setError(e instanceof Error ? e.message : '发送失败')
     } finally {
@@ -126,6 +129,10 @@ export default function LoginPage({ onSuccess }: Props) {
         setError('验证码为 6 位数字')
         return
       }
+      if (!otpSent) {
+        setError('请先获取验证码')
+        return
+      }
     }
 
     // 找回密码页面验证
@@ -144,6 +151,10 @@ export default function LoginPage({ onSuccess }: Props) {
       }
       if (!isValidPassword(passwordVal)) {
         setError('密码至少 6 个字符')
+        return
+      }
+      if (!otpSent) {
+        setError('请先获取验证码')
         return
       }
     }
@@ -202,6 +213,7 @@ export default function LoginPage({ onSuccess }: Props) {
     setCode('')
     setPassword('')
     setCountdown(0)
+    setOtpSent(false) // 重置验证码发送状态
   }
 
   // 更新用户年级

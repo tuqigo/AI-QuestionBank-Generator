@@ -1,19 +1,25 @@
 import os
 from datetime import datetime
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 
 from utils.logger import api_logger
+from db import init_database
 
-# 注意：数据库迁移不再自动执行
-# 启动前请手动执行：python -m db.migrations_cli migrate
-# 或者在 CI/CD 部署流程中执行迁移
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """应用生命周期管理"""
+    # 启动时初始化数据库（执行 schema.sql）
+    init_database()
+    yield
 
 from api.v1 import questions, auth, extend, history, admin, users, templates, configs
 
-app = FastAPI(title="题小宝 API")
+app = FastAPI(title="题小宝 API", lifespan=lifespan)
 
 # 从环境变量读取允许的来源，支持 Cloudflare Pages 部署
 allow_origins = os.getenv("ALLOW_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")

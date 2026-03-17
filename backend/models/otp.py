@@ -4,9 +4,13 @@ import sqlite3
 import random
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Literal
+import os
 
 from utils.logger import auth_logger
 from config import DB_PATH
+
+# 测试模式：固定验证码为 666666，便于开发测试
+TEST_MODE = os.getenv("TEST_MODE", "false").lower() == "true"
 
 
 # 验证码用途
@@ -22,6 +26,8 @@ def _get_connection() -> sqlite3.Connection:
 
 def generate_code() -> str:
     """生成 6 位数字验证码"""
+    if TEST_MODE:
+        return "666666"
     return str(random.randint(100000, 999999))
 
 
