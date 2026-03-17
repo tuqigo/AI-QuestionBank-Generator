@@ -44,7 +44,7 @@ export default function TemplatesPage() {
   const [textbookVersions, setTextbookVersions] = useState<TextbookVersionOption[]>([])
   const [questionTypes, setQuestionTypes] = useState<QuestionTypeOption[]>([])
   const [generatorModules, setGeneratorModules] = useState<ConfigOption[]>([])
-  // 知识点分组选项（从现有模板中提取）
+  // 知识点选项（从现有模板中提取）
   const [knowledgePoints, setKnowledgePoints] = useState<string[]>([])
   // 筛选状态
   const [filterKnowledgePoint, setFilterKnowledgePoint] = useState<string>('')
@@ -82,34 +82,7 @@ export default function TemplatesPage() {
       }
     }
     loadPoints()
-  }, [modalVisible, modalMode]) // 只在弹窗打开或模式变化时触发
-
-  // 当表单中的学科、年级、学期、教材版本变化时，重新加载知识点
-  useEffect(() => {
-    if (!modalVisible) return
-    if (modalMode !== 'create' && modalMode !== 'edit') return
-
-    const loadPoints = async () => {
-      try {
-        const result = await getKnowledgePoints(
-          formData.subject,
-          formData.grade,
-          formData.semester,
-          formData.textbook_version
-        )
-        console.log('筛选条件变化，重新加载知识点:', result.knowledge_points,
-          'params:', { subject: formData.subject, grade: formData.grade, semester: formData.semester, textbook_version: formData.textbook_version })
-        setAvailableKnowledgePoints(result.knowledge_points)
-        // 如果当前选择的知识点不在可用列表中，清空
-        if (formData.knowledge_point && !result.knowledge_points.includes(formData.knowledge_point)) {
-          setFormData({ ...formData, knowledge_point: '' })
-        }
-      } catch (error) {
-        console.error('加载知识点列表失败:', error)
-      }
-    }
-    loadPoints()
-  }, [formData.subject, formData.grade, formData.semester, formData.textbook_version]) // 当筛选条件变化时触发
+  }, [modalVisible, modalMode, formData.subject, formData.grade, formData.semester, formData.textbook_version]) // 在弹窗打开、模式变化或筛选条件变化时触发
 
   const loadConfigs = async () => {
     try {
@@ -131,7 +104,7 @@ export default function TemplatesPage() {
     try {
       const result = await getAllTemplates()
       setTemplates(result.templates)
-      // 提取所有唯一的知识点分组选项
+      // 提取所有唯一的知识点选项
       const kps = Array.from(new Set(result.templates.map(t => t.knowledge_point).filter(Boolean) as string[]))
       setKnowledgePoints(kps)
     } catch (error) {
@@ -168,7 +141,7 @@ export default function TemplatesPage() {
       subject: 'math',
       grade: 'grade1',
       semester: 'upper',
-      textbook_version: 'rjb',
+      textbook_version: 'rjb_2024',  // 默认使用 2024 新版人教版
       question_type: 'CALCULATION',
       template_pattern: '',
       variables_config: '{}',
@@ -348,7 +321,7 @@ export default function TemplatesPage() {
 
           <div className="form-row">
             <div className="form-group">
-              <label>知识点分组</label>
+              <label>知识点</label>
               <select
                 value={formData.knowledge_point}
                 onChange={(e) => setFormData({ ...formData, knowledge_point: e.target.value })}
@@ -552,7 +525,7 @@ export default function TemplatesPage() {
             <strong>教材版本:</strong> {currentTemplate?.textbook_version}
           </div>
           <div className="view-row">
-            <strong>知识点分组:</strong> {currentTemplate?.knowledge_point || '-'}
+            <strong>知识点:</strong> {currentTemplate?.knowledge_point || '-'}
           </div>
           <div className="view-row">
             <strong>题型:</strong> {currentTemplate?.question_type && getQuestionTypeLabel(currentTemplate.question_type)}
@@ -603,7 +576,7 @@ export default function TemplatesPage() {
             共 <span>{templates.length}</span> 个模板
           </div>
           <div className="filter-group">
-            <label>知识点分组：</label>
+            <label>知识点：</label>
             <select
               value={filterKnowledgePoint}
               onChange={(e) => setFilterKnowledgePoint(e.target.value)}
@@ -636,7 +609,7 @@ export default function TemplatesPage() {
                   <tr>
                     <th>ID</th>
                     <th>模板名称</th>
-                    <th>知识点分组</th>
+                    <th>知识点</th>
                     <th>学科</th>
                     <th>年级</th>
                     <th>学期</th>

@@ -159,47 +159,44 @@ async def get_knowledge_points(
     返回匹配的知识点列表，如果未提供筛选条件则返回所有知识点
     """
     try:
-        if not subject:
-            # 返回所有知识点（去重）
-            all_points = set()
-            for subject_data in KNOWLEDGE_POINTS.values():
-                for grade_data in subject_data.values():
-                    for semester_data in grade_data.values():
-                        for points in semester_data.values():
-                            all_points.update(points)
-            return KnowledgePointResponse(knowledge_points=sorted(list(all_points)))
+        import sqlite3
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
 
-        # 根据筛选条件逐级查找
-        subject_data = KNOWLEDGE_POINTS.get(subject, {})
-        if not grade:
-            # 返回该学科所有知识点
-            all_points = set()
-            for grade_data in subject_data.values():
-                for semester_data in grade_data.values():
-                    for points in semester_data.values():
-                        all_points.update(points)
-            return KnowledgePointResponse(knowledge_points=sorted(list(all_points)))
+        # 构建查询条件
+        conditions = []
+        params = []
+        if subject:
+            conditions.append("subject_code = ?")
+            params.append(subject)
+        if grade:
+            conditions.append("grade_code = ?")
+            params.append(grade)
+        if semester:
+            conditions.append("semester_code = ?")
+            params.append(semester)
+        if textbook_version:
+            conditions.append("textbook_version_code = ?")
+            params.append(textbook_version)
 
-        grade_data = subject_data.get(grade, {})
-        if not semester:
-            # 返回该学科该年级所有知识点
-            all_points = set()
-            for semester_data in grade_data.values():
-                for points in semester_data.values():
-                    all_points.update(points)
-            return KnowledgePointResponse(knowledge_points=sorted(list(all_points)))
+        # 只查询启用的知识点
+        conditions.append("is_active = 1")
 
-        semester_data = grade_data.get(semester, {})
-        if not textbook_version:
-            # 返回该学科该年级该学期所有知识点
-            all_points = set()
-            for points in semester_data.values():
-                all_points.update(points)
-            return KnowledgePointResponse(knowledge_points=sorted(list(all_points)))
+        where_clause = " AND ".join(conditions) if conditions else "1=1"
 
-        # 返回精确匹配的知识点
-        points = semester_data.get(textbook_version, [])
-        return KnowledgePointResponse(knowledge_points=points)
+        # 从数据库查询知识点
+        cursor.execute(f"""
+            SELECT name FROM knowledge_points
+            WHERE {where_clause}
+            ORDER BY sort_order ASC, name ASC
+        """, params)
+
+        rows = cursor.fetchall()
+        conn.close()
+
+        knowledge_points = [row['name'] for row in rows]
+        return KnowledgePointResponse(knowledge_points=knowledge_points)
 
     except Exception as e:
         api_logger.error(f"获取知识点列表失败：{e}")

@@ -14,12 +14,11 @@ from config import DB_PATH
 
 
 def migrate_knowledge_points():
-    """迁移知识点数据到数据库"""
+    """迁移知识点数据到数据库（扁平结构）"""
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
 
-    total_groups = 0
     total_points = 0
 
     print("开始迁移知识点数据...")
@@ -29,39 +28,20 @@ def migrate_knowledge_points():
         for grade_code, semesters in grades.items():
             for semester_code, textbook_versions in semesters.items():
                 for textbook_version_code, knowledge_points in textbook_versions.items():
-                    # 1. 插入或获取 knowledge_point_group
-                    cursor.execute("""
-                        INSERT OR IGNORE INTO knowledge_point_groups
-                        (subject_code, grade_code, semester_code, textbook_version_code)
-                        VALUES (?, ?, ?, ?)
-                    """, (subject_code, grade_code, semester_code, textbook_version_code))
+                    print(f"  处理：{subject_code}/{grade_code}/{semester_code}/{textbook_version_code}")
 
-                    cursor.execute("""
-                        SELECT id FROM knowledge_point_groups
-                        WHERE subject_code = ? AND grade_code = ? AND semester_code = ? AND textbook_version_code = ?
-                    """, (subject_code, grade_code, semester_code, textbook_version_code))
-
-                    group_row = cursor.fetchone()
-                    if not group_row:
-                        print(f"  警告：未找到知识分组 {subject_code}/{grade_code}/{semester_code}/{textbook_version_code}")
-                        continue
-
-                    group_id = group_row['id']
-                    total_groups += 1
-
-                    # 2. 插入知识点明细
+                    # 直接插入知识点（扁平结构）
                     for sort_order, kp_name in enumerate(knowledge_points, start=1):
                         cursor.execute("""
-                            INSERT OR IGNORE INTO knowledge_points
-                            (group_id, name, sort_order, is_active)
-                            VALUES (?, ?, ?, 1)
-                        """, (group_id, kp_name, sort_order))
+                            INSERT INTO knowledge_points
+                            (name, subject_code, grade_code, semester_code, textbook_version_code, sort_order, is_active)
+                            VALUES (?, ?, ?, ?, ?, ?, 1)
+                        """, (kp_name, subject_code, grade_code, semester_code, textbook_version_code, sort_order))
                         total_points += 1
 
     conn.commit()
 
     print(f"迁移完成！")
-    print(f"  - 知识点分组：{total_groups} 个")
     print(f"  - 知识点明细：{total_points} 个")
 
     conn.close()
