@@ -39,6 +39,7 @@ def create_template(
     template_pattern: str,
     variables_config: str,  # JSON 字符串格式
     example: Optional[str] = None,
+    knowledge_point: Optional[str] = None,
     sort_order: int = 0,
     is_active: bool = True,
 ) -> int:
@@ -52,11 +53,11 @@ def create_template(
             """
             INSERT INTO question_templates
             (name, subject, grade, semester, textbook_version, question_type, template_pattern,
-             variables_config, example, sort_order, is_active)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             variables_config, example, knowledge_point, sort_order, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (name, subject, grade, semester, textbook_version, question_type, template_pattern,
-             variables_config, example, sort_order, 1 if is_active else 0)
+             variables_config, example, knowledge_point, sort_order, 1 if is_active else 0)
         )
         conn.commit()
         template_id = cursor.lastrowid
@@ -79,6 +80,7 @@ def update_template(
     template_pattern: Optional[str] = None,
     variables_config: Optional[str] = None,  # JSON 字符串格式
     example: Optional[str] = None,
+    knowledge_point: Optional[str] = None,
     sort_order: Optional[int] = None,
     is_active: Optional[bool] = None,
     question_type: Optional[str] = None,
@@ -117,6 +119,9 @@ def update_template(
         if example is not None:
             updates.append("example = ?")
             values.append(example)
+        if knowledge_point is not None:
+            updates.append("knowledge_point = ?")
+            values.append(knowledge_point)
         if sort_order is not None:
             updates.append("sort_order = ?")
             values.append(sort_order)
@@ -190,7 +195,7 @@ def get_template_by_id(template_id: int) -> Optional[QuestionTemplate]:
         cursor = conn.execute(
             """
             SELECT id, name, subject, grade, semester, textbook_version, question_type, template_pattern,
-                   variables_config, example, generator_module, sort_order, is_active,
+                   variables_config, example, knowledge_point, generator_module, sort_order, is_active,
                    created_at, updated_at
             FROM question_templates
             WHERE id = ?
@@ -218,7 +223,7 @@ def get_all_templates() -> List[QuestionTemplate]:
         cursor = conn.execute(
             """
             SELECT id, name, subject, grade, semester, textbook_version, question_type, template_pattern,
-                   variables_config, example, generator_module, sort_order, is_active,
+                   variables_config, example, knowledge_point, generator_module, sort_order, is_active,
                    created_at, updated_at
             FROM question_templates
             WHERE is_active = 1
@@ -243,7 +248,7 @@ def get_templates_by_grade(subject: str, grade: str) -> List[QuestionTemplate]:
         cursor = conn.execute(
             """
             SELECT id, name, subject, grade, semester, textbook_version, question_type, template_pattern,
-                   variables_config, example, generator_module, sort_order, is_active,
+                   variables_config, example, knowledge_point, generator_module, sort_order, is_active,
                    created_at, updated_at
             FROM question_templates
             WHERE subject = ? AND grade = ? AND is_active = 1
@@ -268,7 +273,7 @@ def get_template_list_items() -> List[QuestionTemplateListItem]:
     try:
         cursor = conn.execute(
             """
-            SELECT id, name, subject, grade, semester, textbook_version, question_type, example, sort_order
+            SELECT id, name, subject, grade, semester, textbook_version, question_type, knowledge_point, example, sort_order
             FROM question_templates
             WHERE is_active = 1
             ORDER BY sort_order ASC, id ASC
@@ -332,6 +337,7 @@ def _row_to_template(row: sqlite3.Row) -> QuestionTemplate:
         template_pattern=row["template_pattern"],
         variables_config=json.loads(row["variables_config"]),
         example=row["example"],
+        knowledge_point=row["knowledge_point"],
         generator_module=row["generator_module"],
         sort_order=row["sort_order"],
         is_active=bool(row["is_active"]),
@@ -350,6 +356,7 @@ def _row_to_list_item(row: sqlite3.Row) -> QuestionTemplateListItem:
         semester=row["semester"],
         textbook_version=row["textbook_version"],
         question_type=row["question_type"],
+        knowledge_point=row["knowledge_point"],
         example=row["example"],
         sort_order=row["sort_order"]
     )

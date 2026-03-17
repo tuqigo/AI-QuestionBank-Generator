@@ -10,6 +10,12 @@ export interface ConfigOption {
   label: string
 }
 
+export interface TextbookVersionOption {
+  id: string      // 版本 ID（如 "rjb", "bsd"）
+  name: string    // 显示名称（如 "人教版"）
+  sort: number    // 排序序号
+}
+
 export interface QuestionTypeOption extends ConfigOption {
   subjects: string[]  // 适用学科列表
 }
@@ -18,7 +24,7 @@ export interface ConfigData {
   subjects: ConfigOption[]
   grades: ConfigOption[]
   semesters: ConfigOption[]
-  textbook_versions: string[]
+  textbook_versions: TextbookVersionOption[]
   question_types: QuestionTypeOption[]
   generator_modules: ConfigOption[]
 }

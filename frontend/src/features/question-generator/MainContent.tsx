@@ -7,7 +7,7 @@ import HistoryDropdown from '../history/HistoryList'
 import ProgressModal from './ProgressModal'
 import PrintPreview from '@/components/PrintPreview'
 import { generateStructuredQuestions, getTemplates, generateFromTemplate } from '@/core/api/history'
-import { getConfigs, type ConfigOption } from '@/api/config'
+import { getConfigs, type ConfigOption, type TextbookVersionOption } from '@/api/config'
 import type { StructuredQuestion, MetaData, TemplateItem, TemplateFilter } from '@/types/question'
 import { useMathJaxSimple } from '@/hooks/useMathJax'
 import './MainContent.css'
@@ -66,7 +66,7 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
   const [grades, setGrades] = useState<ConfigOption[]>([])
   const [subjects, setSubjects] = useState<ConfigOption[]>([])
   const [semesters, setSemesters] = useState<ConfigOption[]>([])
-  const [textbookVersions, setTextbookVersions] = useState<string[]>([])
+  const [textbookVersions, setTextbookVersions] = useState<TextbookVersionOption[]>([])
 
   // 加载配置
   useEffect(() => {
@@ -163,11 +163,16 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
       return options.find(o => o.value === value)?.label || value
     }
 
+    // 获取教材版本名称（从全局配置中查找）
+    const getTextbookVersionName = (versionId: string): string => {
+      return textbookVersions.find(v => v.id === versionId)?.name || versionId
+    }
+
     return {
       grades: Array.from(gradesSet).map(g => ({ value: g, label: getOptionLabel('grade', g) })),
       subjects: Array.from(subjectsSet).map(s => ({ value: s, label: getOptionLabel('subject', s) })),
       semesters: Array.from(semestersSet).map(s => ({ value: s, label: getOptionLabel('semester', s) })),
-      textbook_versions: Array.from(textbookVersionsSet),
+      textbook_versions: Array.from(textbookVersionsSet).map(v => ({ value: v, label: getTextbookVersionName(v) })),
     }
   }
 
@@ -589,7 +594,7 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                       >
                         <option value="">全部版本</option>
                         {filterOptions.textbook_versions.map(v => (
-                          <option key={v} value={v}>{v}</option>
+                          <option key={v.value} value={v.value}>{v.label}</option>
                         ))}
                       </select>
                       <button

@@ -146,7 +146,7 @@ export interface TemplateFilter {
   grade?: Grade
   subject?: Subject
   semester?: Semester
-  textbook_version?: string
+  textbook_version?: string  // 教材版本 ID（如 "rjb", "bsd"）
 }
 
 /** 模板列表项 */
@@ -156,7 +156,7 @@ export interface TemplateItem {
   subject: string
   grade: string
   semester: string
-  textbook_version: string
+  textbook_version: string  // 教材版本 ID（如 "rjb", "bsd"）
   example: string | null
 }
 

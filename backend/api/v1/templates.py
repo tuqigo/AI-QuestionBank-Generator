@@ -26,6 +26,7 @@ from api.v1.auth import get_current_user_email
 from services.user.user_store import get_user as get_user_by_email
 from utils.logger import api_logger
 from config import DB_PATH
+from core.constants import KNOWLEDGE_POINTS
 
 router = APIRouter(prefix="/api/templates", tags=["templates"])
 
@@ -38,6 +39,7 @@ class TemplateListItem(BaseModel):
     grade: str
     semester: str
     textbook_version: str
+    knowledge_point: Optional[str]
     example: Optional[str]
 
 
@@ -63,6 +65,7 @@ class TemplateCreateInput(BaseModel):
     template_pattern: str
     variables_config: str  # JSON 字符串格式
     example: Optional[str] = None
+    knowledge_point: Optional[str] = None
     sort_order: int = 0
     is_active: bool = True
     generator_module: Optional[str] = None
@@ -78,6 +81,7 @@ class TemplateUpdateInput(BaseModel):
     template_pattern: Optional[str] = None
     variables_config: Optional[str] = None  # JSON 字符串格式
     example: Optional[str] = None
+    knowledge_point: Optional[str] = None
     sort_order: Optional[int] = None
     is_active: Optional[bool] = None
     question_type: Optional[str] = None
@@ -118,6 +122,7 @@ class TemplateFull(BaseModel):
     template_pattern: str
     variables_config: dict
     example: Optional[str]
+    knowledge_point: Optional[str]
     generator_module: Optional[str]
     sort_order: int
     is_active: bool
@@ -130,12 +135,84 @@ class TemplateAllResponse(BaseModel):
     templates: List[TemplateFull]
 
 
+class KnowledgePointResponse(BaseModel):
+    """知识点列表响应"""
+    knowledge_points: List[str]
+
+
+@router.get("/knowledge-points", response_model=KnowledgePointResponse)
+async def get_knowledge_points(
+    subject: str = None,
+    grade: str = None,
+    semester: str = None,
+    textbook_version: str = None,
+):
+    """
+    获取知识点列表（根据筛选条件动态返回）
+
+    筛选参数：
+    - subject: 学科 (math, chinese, english)
+    - grade: 年级 (grade1, grade2, ...)
+    - semester: 学期 (upper, lower)
+    - textbook_version: 教材版本 (人教版，北师大版，...)
+
+    返回匹配的知识点列表，如果未提供筛选条件则返回所有知识点
+    """
+    try:
+        if not subject:
+            # 返回所有知识点（去重）
+            all_points = set()
+            for subject_data in KNOWLEDGE_POINTS.values():
+                for grade_data in subject_data.values():
+                    for semester_data in grade_data.values():
+                        for points in semester_data.values():
+                            all_points.update(points)
+            return KnowledgePointResponse(knowledge_points=sorted(list(all_points)))
+
+        # 根据筛选条件逐级查找
+        subject_data = KNOWLEDGE_POINTS.get(subject, {})
+        if not grade:
+            # 返回该学科所有知识点
+            all_points = set()
+            for grade_data in subject_data.values():
+                for semester_data in grade_data.values():
+                    for points in semester_data.values():
+                        all_points.update(points)
+            return KnowledgePointResponse(knowledge_points=sorted(list(all_points)))
+
+        grade_data = subject_data.get(grade, {})
+        if not semester:
+            # 返回该学科该年级所有知识点
+            all_points = set()
+            for semester_data in grade_data.values():
+                for points in semester_data.values():
+                    all_points.update(points)
+            return KnowledgePointResponse(knowledge_points=sorted(list(all_points)))
+
+        semester_data = grade_data.get(semester, {})
+        if not textbook_version:
+            # 返回该学科该年级该学期所有知识点
+            all_points = set()
+            for points in semester_data.values():
+                all_points.update(points)
+            return KnowledgePointResponse(knowledge_points=sorted(list(all_points)))
+
+        # 返回精确匹配的知识点
+        points = semester_data.get(textbook_version, [])
+        return KnowledgePointResponse(knowledge_points=points)
+
+    except Exception as e:
+        api_logger.error(f"获取知识点列表失败：{e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/list", response_model=TemplateListResponse)
 async def get_templates(
     grade: str = None,
     subject: str = None,
     semester: str = None,
     textbook_version: str = None,
+    knowledge_point: str = None,
 ):
     """
     获取所有启用的模板列表
@@ -147,15 +224,16 @@ async def get_templates(
     - subject: 学科 (math, chinese, english)
     - semester: 学期 (upper, lower)
     - textbook_version: 教材版本 (人教版，北师大版，...)
+    - knowledge_point: 知识点分组名称
     """
-    api_logger.info(f"获取模板列表请求，筛选条件：grade={grade}, subject={subject}, semester={semester}, textbook_version={textbook_version}")
+    api_logger.info(f"获取模板列表请求，筛选条件：grade={grade}, subject={subject}, semester={semester}, textbook_version={textbook_version}, knowledge_point={knowledge_point}")
 
     try:
         # 获取所有启用的模板
         templates = get_template_list_items()
 
         # 前端筛选（如果提供了筛选条件）
-        if grade or subject or semester or textbook_version:
+        if grade or subject or semester or textbook_version or knowledge_point:
             filtered = []
             for t in templates:
                 if grade and t.grade != grade:
@@ -165,6 +243,8 @@ async def get_templates(
                 if semester and t.semester != semester:
                     continue
                 if textbook_version and t.textbook_version != textbook_version:
+                    continue
+                if knowledge_point and t.knowledge_point != knowledge_point:
                     continue
                 filtered.append(t)
             templates = filtered
@@ -178,6 +258,7 @@ async def get_templates(
                     grade=t.grade,
                     semester=t.semester,
                     textbook_version=t.textbook_version,
+                    knowledge_point=t.knowledge_point,
                     example=t.example,
                 )
                 for t in templates
@@ -203,7 +284,7 @@ async def get_all_templates_for_admin():
         cursor = conn.execute(
             """
             SELECT id, name, subject, grade, semester, textbook_version, question_type, template_pattern,
-                   variables_config, example, generator_module, sort_order, is_active,
+                   variables_config, example, knowledge_point, generator_module, sort_order, is_active,
                    created_at, updated_at
             FROM question_templates
             ORDER BY sort_order ASC, id ASC
@@ -225,6 +306,7 @@ async def get_all_templates_for_admin():
                 template_pattern=row["template_pattern"],
                 variables_config=json.loads(row["variables_config"]),
                 example=row["example"],
+                knowledge_point=row["knowledge_point"],
                 generator_module=row["generator_module"],
                 sort_order=row["sort_order"],
                 is_active=bool(row["is_active"]),
@@ -257,6 +339,7 @@ async def create_template_api(input: TemplateCreateInput):
             template_pattern=input.template_pattern,
             variables_config=input.variables_config,
             example=input.example,
+            knowledge_point=input.knowledge_point,
             sort_order=input.sort_order,
             is_active=input.is_active,
         )
@@ -285,6 +368,7 @@ async def update_template_api(template_id: int, input: TemplateUpdateInput):
             template_pattern=input.template_pattern,
             variables_config=input.variables_config,
             example=input.example,
+            knowledge_point=input.knowledge_point,
             sort_order=input.sort_order,
             is_active=input.is_active,
             question_type=input.question_type,

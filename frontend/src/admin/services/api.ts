@@ -240,6 +240,7 @@ export interface QuestionTemplate {
   template_pattern: string
   variables_config: string
   example: string | null
+  knowledge_point: string | null
   generator_module: string | null
   sort_order: number
   is_active: boolean
@@ -258,6 +259,7 @@ export interface TemplateListItem {
   grade: string
   semester: string
   textbook_version: string
+  knowledge_point: string | null
   example: string | null
 }
 
@@ -271,6 +273,7 @@ export interface TemplateCreateInput {
   template_pattern: string
   variables_config: string
   example?: string
+  knowledge_point?: string
   sort_order?: number
   is_active?: boolean
   generator_module?: string
@@ -285,6 +288,7 @@ export interface TemplateUpdateInput {
   template_pattern?: string
   variables_config?: string
   example?: string
+  knowledge_point?: string
   sort_order?: number
   is_active?: boolean
   question_type?: string
@@ -294,6 +298,25 @@ export interface TemplateUpdateInput {
 export interface TemplateGenerateInput {
   template_id: number
   quantity: number
+}
+
+export async function getKnowledgePoints(
+  subject?: string,
+  grade?: string,
+  semester?: string,
+  textbook_version?: string
+): Promise<{ knowledge_points: string[] }> {
+  const params = new URLSearchParams()
+  if (subject) params.set('subject', subject)
+  if (grade) params.set('grade', grade)
+  if (semester) params.set('semester', semester)
+  if (textbook_version) params.set('textbook_version', textbook_version)
+
+  const response = await fetchWithAdminAuth(`/api/templates/knowledge-points?${params}`)
+  if (!response.ok) {
+    throw new Error('获取知识点列表失败')
+  }
+  return response.json()
 }
 
 export async function getTemplates(): Promise<TemplateListResponse> {

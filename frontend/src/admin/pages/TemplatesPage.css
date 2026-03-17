@@ -120,6 +120,18 @@
   outline: none;
 }
 
+.form-group select:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.form-hint {
+  display: block;
+  font-size: 12px;
+  color: #999;
+  margin-top: 4px;
+}
+
 .form-group textarea {
   resize: vertical;
   font-family: 'Consolas', 'Monaco', monospace;

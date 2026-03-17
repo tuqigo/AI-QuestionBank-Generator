@@ -6,10 +6,11 @@ import {
   deleteTemplate,
   toggleTemplate,
   testTemplate,
+  getKnowledgePoints,
   type QuestionTemplate,
   type TemplateCreateInput,
 } from '../services/api'
-import { getConfigs, type ConfigOption, type QuestionTypeOption } from '@/api/config'
+import { getConfigs, type ConfigOption, type QuestionTypeOption, type TextbookVersionOption } from '@/api/config'
 import './TemplatesPage.css'
 
 export default function TemplatesPage() {
@@ -25,11 +26,12 @@ export default function TemplatesPage() {
     subject: 'math',
     grade: 'grade1',
     semester: 'upper',
-    textbook_version: '人教版',
+    textbook_version: 'rjb',
     question_type: 'CALCULATION',
     template_pattern: '',
     variables_config: '{}',
     example: '',
+    knowledge_point: '',
     sort_order: 0,
     is_active: true,
     generator_module: '',
@@ -39,14 +41,75 @@ export default function TemplatesPage() {
   const [subjects, setSubjects] = useState<ConfigOption[]>([])
   const [grades, setGrades] = useState<ConfigOption[]>([])
   const [semesters, setSemesters] = useState<ConfigOption[]>([])
-  const [textbookVersions, setTextbookVersions] = useState<string[]>([])
+  const [textbookVersions, setTextbookVersions] = useState<TextbookVersionOption[]>([])
   const [questionTypes, setQuestionTypes] = useState<QuestionTypeOption[]>([])
   const [generatorModules, setGeneratorModules] = useState<ConfigOption[]>([])
+  // 知识点分组选项（从现有模板中提取）
+  const [knowledgePoints, setKnowledgePoints] = useState<string[]>([])
+  // 筛选状态
+  const [filterKnowledgePoint, setFilterKnowledgePoint] = useState<string>('')
+  // 动态知识点选项（根据已选择的学科/年级/学期/教材版本加载）
+  const [availableKnowledgePoints, setAvailableKnowledgePoints] = useState<string[]>([])
 
   useEffect(() => {
     loadConfigs()
     loadTemplates()
   }, [])
+
+  // 当学科、年级、学期、教材版本变化时，或者弹窗打开时，重新加载可用知识点
+  useEffect(() => {
+    if (!modalVisible) return
+    if (modalMode !== 'create' && modalMode !== 'edit') return
+
+    // 确保表单数据已经设置完成后再加载知识点
+    const loadPoints = async () => {
+      try {
+        const result = await getKnowledgePoints(
+          formData.subject,
+          formData.grade,
+          formData.semester,
+          formData.textbook_version
+        )
+        console.log('加载知识点成功:', result.knowledge_points,
+          'params:', { subject: formData.subject, grade: formData.grade, semester: formData.semester, textbook_version: formData.textbook_version })
+        setAvailableKnowledgePoints(result.knowledge_points)
+        // 如果当前选择的知识点不在可用列表中，清空
+        if (formData.knowledge_point && !result.knowledge_points.includes(formData.knowledge_point)) {
+          setFormData({ ...formData, knowledge_point: '' })
+        }
+      } catch (error) {
+        console.error('加载知识点列表失败:', error)
+      }
+    }
+    loadPoints()
+  }, [modalVisible, modalMode]) // 只在弹窗打开或模式变化时触发
+
+  // 当表单中的学科、年级、学期、教材版本变化时，重新加载知识点
+  useEffect(() => {
+    if (!modalVisible) return
+    if (modalMode !== 'create' && modalMode !== 'edit') return
+
+    const loadPoints = async () => {
+      try {
+        const result = await getKnowledgePoints(
+          formData.subject,
+          formData.grade,
+          formData.semester,
+          formData.textbook_version
+        )
+        console.log('筛选条件变化，重新加载知识点:', result.knowledge_points,
+          'params:', { subject: formData.subject, grade: formData.grade, semester: formData.semester, textbook_version: formData.textbook_version })
+        setAvailableKnowledgePoints(result.knowledge_points)
+        // 如果当前选择的知识点不在可用列表中，清空
+        if (formData.knowledge_point && !result.knowledge_points.includes(formData.knowledge_point)) {
+          setFormData({ ...formData, knowledge_point: '' })
+        }
+      } catch (error) {
+        console.error('加载知识点列表失败:', error)
+      }
+    }
+    loadPoints()
+  }, [formData.subject, formData.grade, formData.semester, formData.textbook_version]) // 当筛选条件变化时触发
 
   const loadConfigs = async () => {
     try {
@@ -68,11 +131,33 @@ export default function TemplatesPage() {
     try {
       const result = await getAllTemplates()
       setTemplates(result.templates)
+      // 提取所有唯一的知识点分组选项
+      const kps = Array.from(new Set(result.templates.map(t => t.knowledge_point).filter(Boolean) as string[]))
+      setKnowledgePoints(kps)
     } catch (error) {
       console.error('加载模板列表失败:', error)
       alert('加载模板列表失败')
     } finally {
       setLoading(false)
+    }
+  }
+
+  // 根据已选择的学科/年级/学期/教材版本加载可用知识点
+  const loadAvailableKnowledgePoints = async () => {
+    try {
+      const result = await getKnowledgePoints(
+        formData.subject,
+        formData.grade,
+        formData.semester,
+        formData.textbook_version
+      )
+      setAvailableKnowledgePoints(result.knowledge_points)
+      // 如果当前选择的知识点不在可用列表中，清空
+      if (formData.knowledge_point && !result.knowledge_points.includes(formData.knowledge_point)) {
+        setFormData({ ...formData, knowledge_point: '' })
+      }
+    } catch (error) {
+      console.error('加载知识点列表失败:', error)
     }
   }
 
@@ -83,11 +168,12 @@ export default function TemplatesPage() {
       subject: 'math',
       grade: 'grade1',
       semester: 'upper',
-      textbook_version: '人教版',
+      textbook_version: 'rjb',
       question_type: 'CALCULATION',
       template_pattern: '',
       variables_config: '{}',
       example: '',
+      knowledge_point: '',
       sort_order: 0,
       is_active: true,
       generator_module: '',
@@ -110,6 +196,7 @@ export default function TemplatesPage() {
         ? template.variables_config
         : JSON.stringify(template.variables_config, null, 2),
       example: template.example || '',
+      knowledge_point: template.knowledge_point || '',
       sort_order: template.sort_order,
       is_active: template.is_active,
       generator_module: template.generator_module || '',
@@ -173,6 +260,7 @@ export default function TemplatesPage() {
           template_pattern: formData.template_pattern,
           variables_config: JSON.stringify(variablesConfig),
           example: formData.example,
+          knowledge_point: formData.knowledge_point,
           sort_order: formData.sort_order,
           is_active: formData.is_active,
           question_type: formData.question_type,
@@ -234,6 +322,10 @@ export default function TemplatesPage() {
     return semesters.find(s => s.value === semester)?.label || semester
   }
 
+  const getTextbookVersionName = (versionId: string) => {
+    return textbookVersions.find(v => v.id === versionId)?.name || versionId
+  }
+
   const getQuestionTypeLabel = (questionType: string) => {
     return questionTypes.find(t => t.value === questionType)?.label || questionType
   }
@@ -252,6 +344,28 @@ export default function TemplatesPage() {
                 placeholder="例如：一年级 10 以内的加减法"
               />
             </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>知识点分组</label>
+              <select
+                value={formData.knowledge_point}
+                onChange={(e) => setFormData({ ...formData, knowledge_point: e.target.value })}
+                disabled={availableKnowledgePoints.length === 0}
+              >
+                <option value="">请选择</option>
+                {availableKnowledgePoints.map(kp => (
+                  <option key={kp} value={kp}>{kp}</option>
+                ))}
+              </select>
+              {availableKnowledgePoints.length === 0 && (
+                <span className="form-hint">请先选择学科、年级、学期和教材版本</span>
+              )}
+            </div>
+          </div>
+
+          <div className="form-row">
             <div className="form-group">
               <label>生成器模块</label>
               <select
@@ -310,7 +424,7 @@ export default function TemplatesPage() {
                 onChange={(e) => setFormData({ ...formData, textbook_version: e.target.value })}
               >
                 {textbookVersions.map(v => (
-                  <option key={v} value={v}>{v}</option>
+                  <option key={v.id} value={v.id}>{v.name}</option>
                 ))}
               </select>
             </div>
@@ -438,6 +552,9 @@ export default function TemplatesPage() {
             <strong>教材版本:</strong> {currentTemplate?.textbook_version}
           </div>
           <div className="view-row">
+            <strong>知识点分组:</strong> {currentTemplate?.knowledge_point || '-'}
+          </div>
+          <div className="view-row">
             <strong>题型:</strong> {currentTemplate?.question_type && getQuestionTypeLabel(currentTemplate.question_type)}
           </div>
           <div className="view-row">
@@ -485,6 +602,18 @@ export default function TemplatesPage() {
           <div className="page-stats">
             共 <span>{templates.length}</span> 个模板
           </div>
+          <div className="filter-group">
+            <label>知识点分组：</label>
+            <select
+              value={filterKnowledgePoint}
+              onChange={(e) => setFilterKnowledgePoint(e.target.value)}
+            >
+              <option value="">全部</option>
+              {knowledgePoints.map(kp => (
+                <option key={kp} value={kp}>{kp}</option>
+              ))}
+            </select>
+          </div>
           <button className="admin-btn admin-btn-primary" onClick={openCreateModal}>
             + 添加模板
           </button>
@@ -507,6 +636,7 @@ export default function TemplatesPage() {
                   <tr>
                     <th>ID</th>
                     <th>模板名称</th>
+                    <th>知识点分组</th>
                     <th>学科</th>
                     <th>年级</th>
                     <th>学期</th>
@@ -517,14 +647,15 @@ export default function TemplatesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {templates.map((template) => (
+                  {(filterKnowledgePoint ? templates.filter(t => t.knowledge_point === filterKnowledgePoint) : templates).map((template) => (
                     <tr key={template.id}>
                       <td>#{template.id}</td>
                       <td className="template-name">{template.name}</td>
+                      <td className="knowledge-point">{template.knowledge_point || '-'}</td>
                       <td>{getSubjectLabel(template.subject)}</td>
                       <td>{getGradeLabel(template.grade)}</td>
                       <td>{getSemesterLabel(template.semester)}</td>
-                      <td>{template.textbook_version}</td>
+                      <td>{getTextbookVersionName(template.textbook_version)}</td>
                       <td>{getQuestionTypeLabel(template.question_type)}</td>
                       <td>
                         <span className={`admin-badge ${template.is_active ? 'admin-badge-success' : 'admin-badge-error'}`}>

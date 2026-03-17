@@ -7,6 +7,7 @@ from core.constants import (
     SUPPORTED_TEXTBOOK_VERSIONS,
     SUPPORTED_QUESTION_TYPES,
     SUPPORTED_GENERATOR_MODULES,
+    get_textbook_versions_list,
 )
 
 router = APIRouter()
@@ -30,11 +31,18 @@ def get_all_configs():
         for k, v in SUPPORTED_GENERATOR_MODULES.items()
     ]
 
+    # 教材版本：返回 ID 和名称映射
+    textbook_versions = [
+        {"id": vid, "name": vdata["name"], "sort": vdata["sort"]}
+        for vid, vdata in sorted(SUPPORTED_TEXTBOOK_VERSIONS.items(),
+                                  key=lambda x: x[1]["sort"])
+    ]
+
     return {
         "subjects": [{"value": k, "label": v} for k, v in SUPPORTED_SUBJECTS.items()],
         "grades": [{"value": k, "label": v} for k, v in SUPPORTED_GRADES.items()],
         "semesters": [{"value": k, "label": v} for k, v in SUPPORTED_SEMESTERS.items()],
-        "textbook_versions": SUPPORTED_TEXTBOOK_VERSIONS,
+        "textbook_versions": textbook_versions,
         "question_types": question_types,
         "generator_modules": generator_modules,
     }
