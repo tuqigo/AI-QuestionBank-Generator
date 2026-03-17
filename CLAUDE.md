@@ -216,3 +216,7 @@ python -m db.migrations_cli history
 1. 检查 `backend/logs/` 中的 API 日志
 2. 验证 `.env` 中的 `DASHSCOPE_API_KEY`
 3. 检查 `ai_generation_records` 表中的错误消息
+
+
+### 必要说明
+1. 如果有图的需求请使用Mermaid语法表示
