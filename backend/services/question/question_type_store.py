@@ -1,5 +1,7 @@
 """题型数据存储库"""
 
+from __future__ import annotations
+
 import sqlite3
 from typing import Optional, List, Dict, Any
 
