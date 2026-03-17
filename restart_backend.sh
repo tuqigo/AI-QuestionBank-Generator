@@ -97,6 +97,40 @@ fi
 # 6. 【新增】执行数据库迁移
 echo -e "\n6. 执行数据库迁移..."
 cd "${BACKEND_DIR}"
+
+# 6.1 先应用 schema.sql 确保表结构存在
+echo -e "${YELLOW}6.1 应用表结构 (schema.sql)...${NC}"
+if [ -f "db/schema.sql" ]; then
+    python3 -c "
+import sqlite3
+from config import DB_PATH
+
+# 确保数据库目录存在
+DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+# 连接数据库
+conn = sqlite3.connect(str(DB_PATH))
+conn.row_factory = sqlite3.Row
+
+# 读取并执行 schema.sql
+with open('db/schema.sql', 'r', encoding='utf-8') as f:
+    schema_sql = f.read()
+
+conn.executescript(schema_sql)
+conn.commit()
+conn.close()
+print('✅ 表结构已应用')
+"
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}❌ 应用表结构失败！${NC}"
+        echo -e "${RED}👉 已终止部署，旧服务继续运行${NC}"
+        exit 1
+    fi
+else
+    echo -e "${YELLOW}⚠️  未找到 schema.sql，跳过表结构初始化${NC}"
+fi
+
+# 6.2 检查迁移状态
 MIGRATION_OUTPUT=$(python3 -m db.migrations_cli json 2>&1)
 MIGRATION_STATUS=$?
 
@@ -115,7 +149,6 @@ if [ "${FAILED_COUNT}" -gt 0 ] 2>/dev/null; then
     echo -e "${YELLOW}失败的迁移：${FAILED_COUNT}${NC}"
 
     # 删除失败的迁移记录
-    cd "${BACKEND_DIR}"
     python3 -c "
 import sqlite3
 conn = sqlite3.connect('data/tixiaobao.db')
@@ -133,7 +166,7 @@ conn.close()
     echo -e "${GREEN}✅ 失败记录已清理，继续执行迁移...${NC}"
 fi
 
-# 执行迁移
+# 6.3 执行迁移
 MIGRATE_OUTPUT=$(python3 -m db.migrations_cli migrate 2>&1)
 MIGRATE_STATUS=$?
 
