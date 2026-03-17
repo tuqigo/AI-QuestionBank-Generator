@@ -31,7 +31,7 @@ class CurrencyConversionGenerator(TemplateGenerator):
                 if convert_type == "yuan_to_jiao":
                     # 元→角：6 元 = （ ）角
                     yuan = random.randint(1, yuan_max)
-                    stem = f"{yuan}元 = （    ）角"
+                    stem = f"${yuan}$元 = （    ）角"
                     answer = yuan * 10
 
                 elif convert_type == "jiao_to_yuan":
@@ -39,13 +39,13 @@ class CurrencyConversionGenerator(TemplateGenerator):
                     jiao = random.randint(10, jiao_max) - (random.randint(1, jiao_max) % 10)
                     if jiao < 10:
                         jiao = 10
-                    stem = f"{jiao}角 = （    ）元"
+                    stem = f"${jiao}$角 = （    ）元"
                     answer = jiao // 10
 
                 elif convert_type == "jiao_to_fen":
                     # 角→分：5 角 = （ ）分
                     jiao = random.randint(1, jiao_max)
-                    stem = f"{jiao}角 = （    ）分"
+                    stem = f"${jiao}$角 = （    ）分"
                     answer = jiao * 10
 
                 elif convert_type == "fen_to_jiao":
@@ -53,13 +53,13 @@ class CurrencyConversionGenerator(TemplateGenerator):
                     fen = random.randint(10, fen_max) - (random.randint(1, fen_max) % 10)
                     if fen < 10:
                         fen = 10
-                    stem = f"{fen}分 = （    ）角"
+                    stem = f"${fen}$分 = （    ）角"
                     answer = fen // 10
 
                 elif convert_type == "yuan_to_fen":
                     # 元→分：5 元 = （ ）分
                     yuan = random.randint(1, yuan_max)
-                    stem = f"{yuan}元 = （    ）分"
+                    stem = f"${yuan}$元 = （    ）分"
                     answer = yuan * 100
 
                 elif convert_type == "fen_to_yuan":
@@ -67,21 +67,21 @@ class CurrencyConversionGenerator(TemplateGenerator):
                     fen = random.randint(100, fen_max * 10) - (random.randint(1, fen_max * 10) % 100)
                     if fen < 100:
                         fen = 100
-                    stem = f"{fen}分 = （    ）元"
+                    stem = f"${fen}$分 = （    ）元"
                     answer = fen // 100
 
                 elif convert_type == "yuan_jiao_to_jiao":
                     # 元 + 角→角：3 元 5 角 = （ ）角
                     yuan = random.randint(1, yuan_max)
                     jiao = random.randint(1, 9)
-                    stem = f"{yuan}元{jiao}角 = （    ）角"
+                    stem = f"${yuan}$元${jiao}$角 = （    ）角"
                     answer = yuan * 10 + jiao
 
                 elif convert_type == "yuan_fen_to_fen":
                     # 元 + 分→分：54 元 50 分 = （ ）分
                     yuan = random.randint(1, yuan_max)
                     fen = random.randint(10, 99)
-                    stem = f"{yuan}元{fen}分 = （    ）分"
+                    stem = f"${yuan}$元${fen}$分 = （    ）分"
                     answer = yuan * 100 + fen
 
                 elif convert_type == "yuan_jiao_fen_to_fen":
@@ -89,7 +89,7 @@ class CurrencyConversionGenerator(TemplateGenerator):
                     yuan = random.randint(1, yuan_max)
                     jiao = random.randint(1, 9)
                     fen = random.randint(10, 99)
-                    stem = f"{yuan}元{jiao}角{fen}分 = （    ）分"
+                    stem = f"${yuan}$元${jiao}$角${fen}$分 = （    ）分"
                     answer = yuan * 100 + jiao * 10 + fen
 
                 else:
@@ -97,7 +97,7 @@ class CurrencyConversionGenerator(TemplateGenerator):
                     fen = random.randint(10, fen_max) - (random.randint(1, fen_max) % 10)
                     if fen < 10:
                         fen = 10
-                    stem = f"{fen}分 = （    ）角"
+                    stem = f"${fen}$分 = （    ）角"
                     answer = fen // 10
 
                 if stem in used_stems:
