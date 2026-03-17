@@ -146,6 +146,46 @@ def _get_connection():
     return conn
 ```
 
+#### 2.2.6 数据库迁移系统（2026-03 新增）
+
+迁移系统独立于应用启动，支持多实例部署：
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│              数据库迁移系统 (db/migrations/)                 │
+├─────────────────────────────────────────────────────────────┤
+│  migrations/__init__.py     - 迁移管理器核心逻辑             │
+│  migrations_cli.py          - 命令行迁移工具                 │
+│  000_create_schema_migrations_table.sql - 迁移元数据表       │
+│  001_add_questions_table.sql - 题目表结构                   │
+│  002_add_question_templates.sql - 模板系统表                │
+│  ...                                                     │
+│  MIGRATIONS_GUIDE.md        - 使用指南                       │
+│  sync_migration_records.py  - 迁移记录同步脚本               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**部署流程**:
+```bash
+# CI/CD 阶段执行（restart_backend.sh）
+# 1. 代码检查
+python3 -m py_compile main.py
+
+# 2. 执行迁移（失败则停止部署）
+python -m db.migrations_cli migrate
+
+# 3. 重启服务
+uvicorn main:app &
+```
+
+**核心特性**:
+- 幂等性保证：每个迁移脚本只执行一次
+- 状态追踪：通过 `schema_migrations` 表记录已执行的迁移
+- 事务支持：每个迁移在独立事务中执行，失败自动回滚
+- 多实例安全：CI/CD 独立执行，避免并发问题
+
+详见 [数据库迁移系统文档](./database-migrations.md)。
+
 ---
 
 ## 3. 核心模块设计
@@ -667,6 +707,41 @@ def _get_connection():
 - 易于维护：修改数据库位置只需改一处
 - 不易出错：无需计算多层 `parent`
 
+### 4.4 数据库迁移系统（2026-03 新增）
+
+详见 [数据库迁移系统文档](./database-migrations.md)。
+
+**元数据表**:
+```sql
+CREATE TABLE schema_migrations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    version TEXT UNIQUE NOT NULL,
+    filename TEXT NOT NULL,
+    executed_at TIMESTAMP DEFAULT (datetime('now')),
+    checksum TEXT,
+    status TEXT DEFAULT 'success'
+);
+```
+
+**迁移脚本列表**:
+```
+db/migrations/
+├── 000_create_schema_migrations_table.sql
+├── 001_add_questions_table.sql
+├── 002_add_question_templates.sql
+├── 005_add_volume_conversion_template.sql
+├── 006_add_fraction_comparison_template.sql
+├── 007_add_bainaineishu_comparison_template.sql
+├── 008_add_currency_recognition_template.sql
+├── 009_add_mixed_addition_subtraction_template.sql
+├── 010_unify_arithmetic_generators.sql
+├── 011_rename_question_types_to_complexity.sql
+├── 012_add_question_types_table.sql
+├── 013_add_length_comparison_template.sql
+├── 014_add_multiplication_division_comprehensive_template.sql
+└── 015_add_multiplication_practice_template.sql
+```
+
 ---
 
 ## 5. API 设计
@@ -907,8 +982,16 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 - 支持规则约束（ensure_positive, result_within_10 等）
 - 已实现 4 个生成器：比大小、加减法、连加减、人民币换算
 
+**数据库迁移系统** (2026-03 新增):
+- 新增 `db/migrations/` 模块
+- 幂等性保证：每个迁移脚本只执行一次
+- 多实例安全：CI/CD 独立执行，避免并发问题
+- 集成到 `restart_backend.sh` 部署流程
+- 详见 [数据库迁移系统文档](./database-migrations.md)
+
 ### D. 相关文档
 - [后端代码结构](./backend-code-structure.md)
 - [前后端交互逻辑](./frontend-backend-interaction-logic.md)
 - [前端系统架构](./frontend-system-architecture.md)
 - [模板系统开发指南](./template-system-development.md) (2026-03)
+- [数据库迁移系统](./database-migrations.md) (2026-03 新增)

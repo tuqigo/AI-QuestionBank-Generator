@@ -85,11 +85,16 @@ backend/
 │           └── currency_conversion.py      # 人民币换算生成器
 │
 ├── db/                         # 数据层（原 sql/）
-│   ├── __init__.py             # 数据库初始化入口
+│   ├── __init__.py             # 数据库初始化入口（仅执行 schema.sql）
 │   ├── schema.sql              # 表结构定义
-│   └── migrations/             # 数据库迁移脚本
-│       ├── 001_add_questions_table.sql
-│       └── 002_add_question_templates.sql  # 模板系统表（2026-03 新增）
+│   ├── migrations/             # 数据库迁移脚本（2026-03 新增）
+│   │   ├── __init__.py         # 迁移管理器核心逻辑
+│   │   ├── cli.py              # 命令行迁移工具
+│   │   ├── 000_create_schema_migrations_table.sql
+│   │   ├── 001_add_questions_table.sql
+│   │   └── ...
+│   ├── MIGRATIONS_GUIDE.md     # 迁移使用指南
+│   └── sync_migration_records.py  # 迁移记录同步脚本（2026-03 新增）
 │
 ├── utils/                      # 工具函数层
 │   ├── __init__.py
@@ -387,7 +392,40 @@ class TemplateGenerator(ABC):
         pass
 ```
 
-### 3.4 模型模块 (models/)
+### 3.4 迁移管理模块 (db/migrations/)（2026-03 新增）
+
+**MigrationExecutor** - 迁移执行器：
+
+```python
+class MigrationExecutor:
+    def migrate(self) -> List[str]:
+        """执行所有待执行的迁移，返回已执行的迁移列表"""
+        pass
+
+    def get_pending_migrations(self) -> List[str]:
+        """获取待执行的迁移文件列表"""
+        pass
+
+    def get_migration_history(self) -> List[dict]:
+        """获取迁移历史记录"""
+        pass
+```
+
+**CLI 命令** (migrations_cli.py):
+```bash
+python -m db.migrations_cli status     # 查看迁移状态
+python -m db.migrations_cli migrate    # 执行迁移
+python -m db.migrations_cli pending    # 查看待执行迁移
+python -m db.migrations_cli history    # 查看迁移历史
+```
+
+**同步脚本** (sync_migration_records.py):
+```python
+# 用于补全已执行但未记录的迁移
+python sync_migration_records.py
+```
+
+### 3.6 模型模块 (models/)
 
 #### user.py
 ```python
@@ -527,24 +565,47 @@ def init_database():
 
 ### 4.3 迁移管理
 
-```
-db/migrations/
-├── 001_add_questions_table.sql       # 题目表结构
-└── 002_add_question_templates.sql    # 模板系统表（2026-03 新增）
+自 2026-03 起，使用数据库迁移系统管理结构变更：
+
+```bash
+# 执行迁移
+python -m db.migrations_cli migrate
+
+# 查看状态
+python -m db.migrations_cli status
+
+# 查看迁移历史
+python -m db.migrations_cli history
 ```
 
-**迁移脚本使用**:
-```bash
-cd backend
-python -c "
-import sqlite3
-with open('db/migrations/002_add_question_templates.sql', 'r') as f:
-    conn = sqlite3.connect('data/users.db')
-    conn.executescript(f.read())
-    conn.commit()
-    conn.close()
-"
+**迁移目录结构**:
 ```
+db/migrations/
+├── 000_create_schema_migrations_table.sql  # 迁移元数据表
+├── 001_add_questions_table.sql             # 题目表结构
+├── 002_add_question_templates.sql          # 模板系统表
+├── 005_add_volume_conversion_template.sql  # 单位换算模板
+├── ...
+└── 015_add_multiplication_practice_template.sql
+```
+
+**部署流程** (restart_backend.sh):
+```bash
+# 1. 拉取代码
+git pull
+
+# 2. 代码检查
+python3 -m py_compile main.py
+
+# 3. 执行迁移（失败则停止部署）
+python -m db.migrations_cli migrate
+
+# 4. 重启服务
+kill <old_pid>
+uvicorn main:app &
+```
+
+详见 [数据库迁移系统文档](./database-migrations.md)。
 
 ### 4.4 模板系统数据库（2026-03 新增）
 
@@ -753,3 +814,4 @@ pytest tests/
 ### C. 相关文档
 - [后端系统架构](./backend-system-architecture.md)
 - [前后端交互逻辑](./frontend-backend-interaction-logic.md)
+- [数据库迁移系统](./database-migrations.md) (2026-03 新增)
