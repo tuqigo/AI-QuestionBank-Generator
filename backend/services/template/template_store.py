@@ -13,6 +13,7 @@ from models.question_template import (
 )
 from utils.logger import api_logger
 from config import DB_PATH
+from services.question.question_type_store import QuestionTypeStore
 
 
 def _utc_now() -> str:
@@ -25,6 +26,40 @@ def _get_connection() -> sqlite3.Connection:
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def _validate_question_type(conn: sqlite3.Connection, question_type: str) -> bool:
+    """
+    验证题型是否有效
+
+    Args:
+        conn: 数据库连接
+        question_type: 题型名称（如 SINGLE_CHOICE, CALCULATION 等）
+
+    Returns:
+        True 如果题型有效
+
+    Raises:
+        ValueError: 如果题型无效
+    """
+    if not question_type:
+        raise ValueError("题型不能为空")
+
+    # 检查题型是否存在于 question_types 表且处于启用状态
+    row = conn.execute(
+        "SELECT 1 FROM question_types WHERE en_name = ? AND is_active = 1",
+        (question_type,)
+    ).fetchone()
+
+    if not row:
+        # 获取所有有效题型名称用于错误提示
+        all_types = conn.execute(
+            "SELECT en_name, zh_name FROM question_types WHERE is_active = 1"
+        ).fetchall()
+        valid_types = ", ".join([f"{r['en_name']}({r['zh_name']})" for r in all_types])
+        raise ValueError(f"无效的题型 '{question_type}'，有效题型包括：{valid_types}")
+
+    return True
 
 
 # ==================== 创建/更新/删除 ====================
@@ -49,6 +84,9 @@ def create_template(
     """
     conn = _get_connection()
     try:
+        # 验证题型
+        _validate_question_type(conn, question_type)
+
         cursor = conn.execute(
             """
             INSERT INTO question_templates
@@ -92,6 +130,10 @@ def update_template(
     """
     conn = _get_connection()
     try:
+        # 如果提供了 question_type，需要验证
+        if question_type is not None:
+            _validate_question_type(conn, question_type)
+
         updates = []
         values = []
 

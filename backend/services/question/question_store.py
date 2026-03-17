@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from utils.logger import api_logger
 from utils.short_id import generate_short_id
 from config import DB_PATH
+from services.question.question_type_store import QuestionTypeStore
 
 
 def _utc_now() -> str:
@@ -21,6 +22,50 @@ def _get_connection() -> sqlite3.Connection:
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def _validate_question_type(conn: sqlite3.Connection, question_type: str, auto_fix: bool = False) -> str:
+    """
+    验证题型是否有效
+
+    Args:
+        conn: 数据库连接
+        question_type: 题型名称（如 SINGLE_CHOICE, CALCULATION 等）
+        auto_fix: 是否自动修复无效题型（设为 False 时抛出异常，设为 True 时返回默认题型）
+
+    Returns:
+        验证通过的题型名称，或 auto_fix=True 时的默认题型
+
+    Raises:
+        ValueError: 如果题型无效且 auto_fix=False
+    """
+    if not question_type:
+        if auto_fix:
+            api_logger.warning("题型为空，使用默认题型 'SINGLE_CHOICE'")
+            return "SINGLE_CHOICE"
+        raise ValueError("题型不能为空")
+
+    # 检查题型是否存在于 question_types 表且处于启用状态
+    row = conn.execute(
+        "SELECT en_name FROM question_types WHERE en_name = ? AND is_active = 1",
+        (question_type,)
+    ).fetchone()
+
+    if row:
+        return question_type
+
+    # 题型无效
+    if auto_fix:
+        # 记录警告并返回默认题型
+        api_logger.warning(f"题型 '{question_type}' 无效，使用默认题型 'SINGLE_CHOICE'")
+        return "SINGLE_CHOICE"
+
+    # 不自动修复时，抛出异常并提供友好的错误信息
+    all_types = conn.execute(
+        "SELECT en_name, zh_name FROM question_types WHERE is_active = 1"
+    ).fetchall()
+    valid_types = ", ".join([f"{r['en_name']}({r['zh_name']})" for r in all_types])
+    raise ValueError(f"无效的题型 '{question_type}'，有效题型包括：{valid_types}")
 
 
 def _generate_unique_short_id(conn: sqlite3.Connection) -> str:
@@ -86,6 +131,11 @@ def batch_insert_questions(
     try:
         results = []
         for q in questions:
+            # 验证题型（AI 生成的题目使用自动修复模式）
+            question_type = q.get("type", "")
+            validated_type = _validate_question_type(conn, question_type, auto_fix=True)
+            q["type"] = validated_type
+
             # 生成 short_id
             short_id = _generate_unique_short_id(conn)
 

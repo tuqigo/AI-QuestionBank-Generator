@@ -3,7 +3,7 @@
 改造说明：
 - 保留原有的 /api/configs/configs 接口保持向后兼容
 - 新增数据库配置数据的 CRUD 接口
-- 支持管理后台动态配置学科/年级/学期/教材版本/知识点
+- 支持管理后台动态配置学科/年级/学期/教材版本/知识点/题型
 """
 from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, HTTPException, Query
@@ -20,11 +20,17 @@ from models.config import (
     KnowledgePointCreate, KnowledgePointUpdate, KnowledgePointResponse,
     # 通用响应
     AllConfigsResponse, ConfigOptionsResponse, TextbookVersionOption, QuestionTypeOption,
+    # 题型模型
 )
 from services.config import (
     SubjectStore, GradeStore, SemesterStore, TextbookVersionStore, KnowledgePointStore,
 )
 from services.question.question_type_store import QuestionTypeStore
+from models.question_type import (
+    QuestionTypeCreate,
+    QuestionTypeUpdate,
+    QuestionTypeResponse,
+)
 from core.constants import SUPPORTED_GENERATOR_MODULES
 
 router = APIRouter()
@@ -283,4 +289,41 @@ def delete_knowledge_point(id: int):
     success = KnowledgePointStore.delete(id)
     if not success:
         raise HTTPException(status_code=404, detail=f"知识点 ID {id} 不存在")
+    return {"message": "删除成功"}
+
+
+# ==================== 题型管理接口 ====================
+
+@router.get("/question-types", response_model=List[QuestionTypeResponse])
+def list_question_types(active_only: bool = True, subject: Optional[str] = None):
+    """获取题型列表（可按学科筛选）"""
+    return QuestionTypeStore.list_all(subject=subject, include_inactive=not active_only)
+
+
+@router.post("/admin/question-types/create", response_model=QuestionTypeResponse)
+def create_question_type(input_data: QuestionTypeCreate):
+    """创建题型（管理端）"""
+    # 检查 en_name 是否已存在
+    existing = QuestionTypeStore.get_by_en_name(input_data.en_name)
+    if existing:
+        raise HTTPException(status_code=400, detail=f"题型英文名称 '{input_data.en_name}' 已存在")
+
+    return QuestionTypeStore.create(input_data)
+
+
+@router.put("/admin/question-types/{id}/update", response_model=QuestionTypeResponse)
+def update_question_type(id: int, input_data: QuestionTypeUpdate):
+    """更新题型（管理端）"""
+    result = QuestionTypeStore.update(id, input_data)
+    if not result:
+        raise HTTPException(status_code=404, detail=f"题型 ID {id} 不存在")
+    return result
+
+
+@router.delete("/admin/question-types/{id}/delete")
+def delete_question_type(id: int):
+    """删除题型（软删除，管理端）"""
+    success = QuestionTypeStore.delete(id)
+    if not success:
+        raise HTTPException(status_code=404, detail=f"题型 ID {id} 不存在")
     return {"message": "删除成功"}

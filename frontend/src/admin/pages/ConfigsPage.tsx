@@ -1,6 +1,6 @@
 /**
  * 配置管理页面
- * 管理学科、年级、学期、教材版本、知识点等配置数据
+ * 管理学科、年级、学期、教材版本、知识点、题型等配置数据
  */
 import React, { useState, useEffect } from 'react'
 import {
@@ -9,6 +9,7 @@ import {
   getSemesters,
   getTextbookVersions,
   getKnowledgePoints,
+  getQuestionTypes,
   createSubject,
   updateSubject,
   deleteSubject,
@@ -24,15 +25,21 @@ import {
   createKnowledgePoint,
   updateKnowledgePoint,
   deleteKnowledgePoint,
+  createQuestionType,
+  updateQuestionType,
+  deleteQuestionType,
   type Subject,
   type Grade,
   type Semester,
   type TextbookVersion,
   type KnowledgePoint,
+  type QuestionType,
+  type QuestionTypeCreate,
+  type QuestionTypeUpdate,
 } from '@/api/config'
 import './ConfigsPage.css'
 
-type ConfigTab = 'subject' | 'grade' | 'semester' | 'textbook' | 'knowledge'
+type ConfigTab = 'subject' | 'grade' | 'semester' | 'textbook' | 'knowledge' | 'questionType'
 
 export default function ConfigsPage() {
   const [activeTab, setActiveTab] = useState<ConfigTab>('subject')
@@ -44,11 +51,12 @@ export default function ConfigsPage() {
   const [semesters, setSemesters] = useState<Semester[]>([])
   const [textbookVersions, setTextbookVersions] = useState<TextbookVersion[]>([])
   const [knowledgePoints, setKnowledgePoints] = useState<KnowledgePoint[]>([])
+  const [questionTypes, setQuestionTypes] = useState<QuestionType[]>([])
 
   // 弹窗状态
   const [modalVisible, setModalVisible] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
-  const [currentItem, setCurrentItem] = useState<Subject | Grade | Semester | TextbookVersion | KnowledgePoint | null>(null)
+  const [currentItem, setCurrentItem] = useState<Subject | Grade | Semester | TextbookVersion | KnowledgePoint | QuestionType | null>(null)
 
   // 表单数据
   const [formData, setFormData] = useState<Record<string, any>>({})
@@ -75,6 +83,9 @@ export default function ConfigsPage() {
           break
         case 'knowledge':
           setKnowledgePoints(await getKnowledgePoints())
+          break
+        case 'questionType':
+          setQuestionTypes(await getQuestionTypes(false))
           break
       }
     } catch (error) {
@@ -123,6 +134,8 @@ export default function ConfigsPage() {
           name: '',
           sort_order: 0,
         }
+      case 'questionType':
+        return { en_name: '', zh_name: '', subjects: [], sort_order: 0 }
     }
   }
 
@@ -201,6 +214,22 @@ export default function ConfigsPage() {
             is_active: formData.is_active,
           })
         }
+      } else if (activeTab === 'questionType') {
+        if (modalMode === 'create') {
+          await createQuestionType({
+            en_name: formData.en_name,
+            zh_name: formData.zh_name,
+            subjects: formData.subjects || [],
+            sort_order: formData.sort_order || 0,
+          } as QuestionTypeCreate)
+        } else {
+          await updateQuestionType((currentItem as QuestionType).id, {
+            zh_name: formData.zh_name,
+            subjects: formData.subjects || [],
+            sort_order: formData.sort_order || 0,
+            is_active: formData.is_active,
+          } as QuestionTypeUpdate)
+        }
       }
       alert('保存成功')
       handleCloseModal()
@@ -231,6 +260,9 @@ export default function ConfigsPage() {
         case 'knowledge':
           await deleteKnowledgePoint(id)
           break
+        case 'questionType':
+          await deleteQuestionType(id)
+          break
       }
       alert('删除成功')
       loadConfigData()
@@ -258,6 +290,9 @@ export default function ConfigsPage() {
           break
         case 'knowledge':
           await updateKnowledgePoint(item.id, { is_active: newStatus })
+          break
+        case 'questionType':
+          await updateQuestionType(item.id, { is_active: newStatus })
           break
       }
       loadConfigData()
@@ -525,6 +560,58 @@ export default function ConfigsPage() {
             </tbody>
           </table>
         )
+      case 'questionType':
+        return (
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>英文名称</th>
+                <th>中文名称</th>
+                <th>适用学科</th>
+                <th>排序</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {questionTypes.map((type) => (
+                <tr key={type.id}>
+                  <td>#{type.id}</td>
+                  <td>{type.en_name}</td>
+                  <td>{type.zh_name}</td>
+                  <td>{type.subjects?.join('、') || '-'}</td>
+                  <td>{type.sort_order}</td>
+                  <td>
+                    <span className={`admin-badge ${type.is_active ? 'admin-badge-success' : 'admin-badge-error'}`}>
+                      {type.is_active ? '启用' : '禁用'}
+                    </span>
+                  </td>
+                  <td className="action-buttons">
+                    <button
+                      className="admin-btn admin-btn-sm admin-btn-secondary"
+                      onClick={() => openEditModal(type)}
+                    >
+                      编辑
+                    </button>
+                    <button
+                      className="admin-btn admin-btn-sm"
+                      onClick={() => handleToggleActive(type)}
+                    >
+                      {type.is_active ? '禁用' : '启用'}
+                    </button>
+                    <button
+                      className="admin-btn admin-btn-sm admin-btn-danger"
+                      onClick={() => handleDelete(type.id)}
+                    >
+                      删除
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )
       default:
         return null
     }
@@ -738,6 +825,47 @@ export default function ConfigsPage() {
             </div>
           </>
         )
+      case 'questionType':
+        return (
+          <>
+            <div className="form-group">
+              <label>英文名称 *</label>
+              <input
+                type="text"
+                value={formData.en_name || ''}
+                onChange={(e) => setFormData({ ...formData, en_name: e.target.value })}
+                placeholder="例如：SINGLE_CHOICE"
+                disabled={modalMode === 'edit'}
+              />
+            </div>
+            <div className="form-group">
+              <label>中文名称 *</label>
+              <input
+                type="text"
+                value={formData.zh_name || ''}
+                onChange={(e) => setFormData({ ...formData, zh_name: e.target.value })}
+                placeholder="例如：单选题"
+              />
+            </div>
+            <div className="form-group">
+              <label>适用学科（逗号分隔）</label>
+              <input
+                type="text"
+                value={formData.subjects?.join(',') || ''}
+                onChange={(e) => setFormData({ ...formData, subjects: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean) })}
+                placeholder="例如：math, chinese"
+              />
+            </div>
+            <div className="form-group">
+              <label>排序</label>
+              <input
+                type="number"
+                value={formData.sort_order || 0}
+                onChange={(e) => setFormData({ ...formData, sort_order: parseInt(e.target.value) || 0 })}
+              />
+            </div>
+          </>
+        )
       default:
         return null
     }
@@ -747,12 +875,16 @@ export default function ConfigsPage() {
     if (activeTab === 'knowledge') {
       return modalMode === 'create' ? '添加知识点' : '编辑知识点'
     }
+    if (activeTab === 'questionType') {
+      return modalMode === 'create' ? '添加题型' : '编辑题型'
+    }
     const titles: Record<ConfigTab, string> = {
       subject: '学科',
       grade: '年级',
       semester: '学期',
       textbook: '教材版本',
       knowledge: '知识点',
+      questionType: '题型',
     }
     return modalMode === 'create' ? `添加${titles[activeTab]}` : `编辑${titles[activeTab]}`
   }
@@ -762,7 +894,7 @@ export default function ConfigsPage() {
       <div className="page-header">
         <h1>配置管理</h1>
         <button className="admin-btn admin-btn-primary" onClick={openCreateModal}>
-          + 添加{activeTab === 'knowledge' ? '知识点' : activeTab === 'subject' ? '学科' : activeTab === 'grade' ? '年级' : activeTab === 'semester' ? '学期' : '教材版本'}
+          + 添加{activeTab === 'knowledge' ? '知识点' : activeTab === 'questionType' ? '题型' : activeTab === 'subject' ? '学科' : activeTab === 'grade' ? '年级' : activeTab === 'semester' ? '学期' : '教材版本'}
         </button>
       </div>
 
@@ -797,6 +929,12 @@ export default function ConfigsPage() {
         >
           知识点配置
         </button>
+        <button
+          className={`config-tab ${activeTab === 'questionType' ? 'active' : ''}`}
+          onClick={() => setActiveTab('questionType')}
+        >
+          题型配置
+        </button>
       </div>
 
       <div className="admin-card">
@@ -808,6 +946,12 @@ export default function ConfigsPage() {
               <div className="admin-empty-icon">📚</div>
               <p>暂无知识点数据</p>
               <p className="admin-empty-hint">点击"添加知识点"按钮创建新的知识点</p>
+            </div>
+          ) : activeTab === 'questionType' && questionTypes.length === 0 ? (
+            <div className="admin-empty">
+              <div className="admin-empty-icon">📝</div>
+              <p>暂无题型数据</p>
+              <p className="admin-empty-hint">点击"添加题型"按钮创建新的题型</p>
             </div>
           ) : (
             renderTable()

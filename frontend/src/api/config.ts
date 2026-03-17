@@ -471,3 +471,92 @@ export async function deleteKnowledgePoint(id: number): Promise<void> {
     throw new Error(error.detail || '删除失败')
   }
 }
+
+// ==================== 题型管理 CRUD 接口 ====================
+
+export interface QuestionType {
+  id: number
+  en_name: string
+  zh_name: string
+  subjects: string[]
+  sort_order: number
+  is_active: number
+  created_at: string
+  updated_at: string
+}
+
+export interface QuestionTypeCreate {
+  en_name: string
+  zh_name: string
+  subjects?: string[]
+  sort_order?: number
+}
+
+export interface QuestionTypeUpdate {
+  zh_name?: string
+  subjects?: string[]
+  sort_order?: number
+  is_active?: number
+}
+
+/**
+ * 获取题型列表
+ */
+export async function getQuestionTypes(active_only: boolean = true, subject?: string): Promise<QuestionType[]> {
+  const searchParams = new URLSearchParams()
+  if (subject) searchParams.set('subject', subject)
+  const response = await fetch(`${API_BASE}/question-types?active_only=${active_only}${subject ? `&subject=${subject}` : ''}`)
+  if (!response.ok) {
+    throw new Error('获取题型列表失败')
+  }
+  return response.json()
+}
+
+/**
+ * 创建题型
+ */
+export async function createQuestionType(data: QuestionTypeCreate): Promise<QuestionType> {
+  const response = await fetch(`${API_BASE}/admin/question-types/create`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: '创建失败' }))
+    throw new Error(error.detail || '创建失败')
+  }
+  return response.json()
+}
+
+/**
+ * 更新题型
+ */
+export async function updateQuestionType(id: number, data: QuestionTypeUpdate): Promise<QuestionType> {
+  const response = await fetch(`${API_BASE}/admin/question-types/${id}/update`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: '更新失败' }))
+    throw new Error(error.detail || '更新失败')
+  }
+  return response.json()
+}
+
+/**
+ * 删除题型
+ */
+export async function deleteQuestionType(id: number): Promise<void> {
+  const response = await fetch(`${API_BASE}/admin/question-types/${id}/delete`, {
+    method: 'DELETE',
+  })
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: '删除失败' }))
+    throw new Error(error.detail || '删除失败')
+  }
+}

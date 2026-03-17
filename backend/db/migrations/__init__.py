@@ -187,7 +187,6 @@ class MigrationExecutor:
 
             # 连接数据库
             conn = self._get_connection()
-            conn.execute("PRAGMA foreign_keys = ON")
 
             # 确保迁移表存在（首先执行 000_迁移）
             self._ensure_migrations_table(conn)
