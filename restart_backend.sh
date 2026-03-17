@@ -94,8 +94,52 @@ else
     echo -e "${YELLOW}⚠️  无旧日志可备份${NC}"
 fi
 
-# 6. 代码没问题了，再杀旧进程
-echo -e "\n6. 停止旧服务..."
+# 6. 【新增】执行数据库迁移
+echo -e "\n6. 执行数据库迁移..."
+cd "${BACKEND_DIR}"
+MIGRATION_OUTPUT=$(python3 -m db.migrations_cli json 2>&1)
+MIGRATION_STATUS=$?
+
+if [ ${MIGRATION_STATUS} -ne 0 ]; then
+    echo -e "${RED}❌ 迁移命令执行失败！${NC}"
+    echo -e "${RED}👉 已终止部署，旧服务继续运行${NC}"
+    exit 1
+fi
+
+# 解析迁移结果
+PENDING_COUNT=$(echo "${MIGRATION_OUTPUT}" | python3 -c "import sys, json; d=json.load(sys.stdin); print(d.get('pending', 0))" 2>/dev/null || echo "-1")
+FAILED_COUNT=$(echo "${MIGRATION_OUTPUT}" | python3 -c "import sys, json; d=json.load(sys.stdin); print(d.get('failed', 0))" 2>/dev/null || echo "-1")
+
+if [ "${FAILED_COUNT}" -gt 0 ] 2>/dev/null; then
+    echo -e "${RED}❌ 存在失败的迁移记录！请先手动修复${NC}"
+    echo -e "${RED}👉 已终止部署，旧服务继续运行${NC}"
+    echo -e "${YELLOW}失败的迁移：${FAILED_COUNT}${NC}"
+    exit 1
+fi
+
+# 执行迁移
+MIGRATE_OUTPUT=$(python3 -m db.migrations_cli migrate 2>&1)
+MIGRATE_STATUS=$?
+
+if [ ${MIGRATE_STATUS} -ne 0 ]; then
+    echo -e "${RED}❌ 数据库迁移执行失败！${NC}"
+    echo -e "${MIGRATE_OUTPUT}"
+    echo -e "${RED}👉 已终止部署，旧服务继续运行${NC}"
+    exit 1
+fi
+
+# 检查迁移是否实际执行了新的脚本
+if echo "${MIGRATE_OUTPUT}" | grep -q "成功执行.*个迁移"; then
+    EXECUTED_COUNT=$(echo "${MIGRATE_OUTPUT}" | grep "成功执行" | sed 's/.*成功执行 \([0-9]*\) 个迁移.*/\1/')
+    echo -e "${GREEN}✅ 执行了 ${EXECUTED_COUNT} 个迁移${NC}"
+elif echo "${MIGRATE_OUTPUT}" | grep -q "数据库已是最新版本"; then
+    echo -e "${GREEN}✅ 数据库已是最新版本，无需迁移${NC}"
+else
+    echo -e "${YELLOW}⚠️  迁移执行结果未知${NC}"
+fi
+
+# 7. 代码没问题了，再杀旧进程
+echo -e "\n7. 停止旧服务..."
 # 使用 ps aux | grep uvicorn 查找进程
 OLD_PID=$(ps aux | grep "[u]vicorn.*main:app" | awk '{print $2}' | head -1)
 
@@ -113,8 +157,8 @@ else
     echo -e "${YELLOW}⚠️  未找到 uvicorn 进程${NC}"
 fi
 
-# 7. 启动新服务
-echo -e "\n7. 启动新服务..."
+# 8. 启动新服务
+echo -e "\n8. 启动新服务..."
 > "${LOG_FILE}"
 nohup python3 -m uvicorn main:app --host 0.0.0.0 --port ${PORT} > "${LOG_FILE}" 2>&1 &
 NEW_PID=$!

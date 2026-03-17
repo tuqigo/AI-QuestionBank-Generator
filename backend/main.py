@@ -5,11 +5,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 
-from db import init_database
 from utils.logger import api_logger
 
-# 初始化数据库
-init_database()
+# 注意：数据库迁移不再自动执行
+# 启动前请手动执行：python -m db.migrations_cli migrate
+# 或者在 CI/CD 部署流程中执行迁移
 
 from api.v1 import questions, auth, extend, history, admin, users, templates, configs
 
