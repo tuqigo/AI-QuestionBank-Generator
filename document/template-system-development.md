@@ -138,19 +138,44 @@ INSERT INTO question_templates (
 
 ### 步骤 4：执行迁移
 
+**方式：使用迁移管理命令（推荐）**
+
 ```bash
 cd backend
-# 使用 Python 执行 SQL
-python -c "
-import sqlite3
-with open('db/migrations/005_add_my_template.sql', 'r', encoding='utf-8') as f:
-    conn = sqlite3.connect('data/tixiaobao.db')
-    conn.execute(f.read())
-    conn.commit()
-    conn.close()
-print('迁移成功')
-"
+
+# 执行所有待执行的迁移
+python -m db.migrations_cli migrate
+
+# 查看迁移状态
+python -m db.migrations_cli status
 ```
+
+
+```
+
+**生产环境部署**
+
+生产环境使用 `restart_backend.sh` 脚本自动执行迁移：
+
+```bash
+# 重启脚本会自动执行以下步骤
+./restart_backend.sh
+
+# 脚本内部流程：
+# 1. git pull 拉取代码
+# 2. python3 -m py_compile main.py 代码检查
+# 3. python -m db.migrations_cli migrate 执行迁移（失败则停止部署）
+# 4. kill <old_pid> 停止旧服务
+# 5. uvicorn main:app & 启动新服务
+```
+
+**注意**：
+- 迁移脚本按版本号顺序执行（001, 002, 003...）
+- 每个迁移脚本只执行一次（通过 `schema_migrations` 表记录）
+- 迁移失败时会标记为 `failed` 状态，需手动修复后重新执行
+- 生产环境切勿手动执行 SQL，应使用迁移命令
+
+详见 [数据库迁移系统文档](./database-migrations.md)。
 
 ### 步骤 5：添加或更新规则（如需要）
 
@@ -1340,77 +1365,12 @@ def test_template_generation_end_to_end(client, auth_headers):
     assert len(questions) == 5
 ```
 
----
 
-## 8. 数据库迁移
 
-### 8.1 创建模板表
-
-```sql
--- db/migrations/002_add_question_templates.sql
-
--- 题目模板表
-CREATE TABLE question_templates (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    subject TEXT NOT NULL,
-    grade TEXT NOT NULL,
-    semester TEXT NOT NULL,       -- 学期：upper/lower
-    textbook_version TEXT NOT NULL, -- 教材版本：人教版/人教版 (新)/北师大版/苏教版/西师版/沪教版/北京版/青岛六三/青岛五四
-    question_type TEXT NOT NULL,
-    template_pattern TEXT NOT NULL,
-    variables_config TEXT NOT NULL,
-    example TEXT,
-    generator_module TEXT,
-    sort_order INTEGER DEFAULT 0,
-    is_active INTEGER DEFAULT 1,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- 模板使用记录表
-CREATE TABLE template_usage_logs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    template_id INTEGER NOT NULL,
-    user_id INTEGER NOT NULL,
-    generated_params TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (template_id) REFERENCES question_templates(id),
-    FOREIGN KEY (user_id) REFERENCES users(id)
-);
-
--- 索引
-CREATE INDEX idx_templates_active ON question_templates(is_active);
-CREATE INDEX idx_templates_semester_version ON question_templates(semester, textbook_version, is_active);
-CREATE INDEX idx_logs_template_id ON template_usage_logs(template_id);
-CREATE INDEX idx_logs_user_id ON template_usage_logs(user_id);
-
--- 初始化数据
-INSERT INTO question_templates (name, subject, grade, semester, textbook_version, question_type, template_pattern, variables_config, example, generator_module, sort_order) VALUES
-('比一比大小', 'math', 'grade1', 'upper', '人教版', 'COMPARE', '{a}（）{b}', '{"a": {"min": 1, "max": 10}, "b": {"min": 1, "max": 10}, "rules": ["ensure_different"]}', '4（）5', 'compare_number', 1),
-('10 以内加减法', 'math', 'grade1', 'upper', '人教版', 'CALCULATION', '{a}+{b}=( )', '{"a": {"min": 1, "max": 10}, "b": {"min": 1, "max": 10}, "op": {"values": ["+", "-"]}, "rules": ["ensure_positive"]}', '2+3=( )', 'addition_subtraction', 2),
-('连加减法', 'math', 'grade1', 'upper', '人教版', 'CALCULATION', '{a}+{b}+{c}=( )', '{"a": {"min": 1, "max": 10}, "b": {"min": 1, "max": 10}, "c": {"min": 1, "max": 10}, "op1_values": ["+", "-"], "op2_values": ["+", "-"], "rules": ["ensure_positive"]}', '2+3+4=( )', 'consecutive_addition_subtraction', 3),
-('认识人民币 - 元角分换算', 'math', 'grade1', 'lower', '人教版', 'CALCULATION', '换算题', '{"yuan": {"max": 50}, "jiao": {"max": 50}, "fen": {"max": 50}, "convert_types": ["yuan_to_jiao", "jiao_to_fen", "fen_to_jiao", "yuan_to_fen", "fen_to_yuan", "yuan_jiao_to_jiao", "yuan_fen_to_fen", "yuan_jiao_fen_to_fen"]}', '50 分=（）角', 'currency_conversion', 4),
-('九九乘法表练习', 'math', 'grade3', 'upper', '人教版', 'CALCULATION', '生成 1-9 的乘法算式', '{"min_factor": 1, "max_factor": 9, "allow_commute": false}', '3 × 4 = （ ）', 'multiplication_table', 5);
-```
-
-### 8.2 执行迁移
-
-```bash
-cd backend
-python -c "
-import sqlite3
-with open('db/migrations/002_add_question_templates.sql', 'r') as f:
-    conn = sqlite3.connect('data/users.db')
-    conn.executescript(f.read())
-    conn.commit()
-    conn.close()
-"
-```
 
 ---
 
-## 9. 常见问题
+## 8. 常见问题
 
 ### Q1: 生成器返回空列表怎么办？
 
