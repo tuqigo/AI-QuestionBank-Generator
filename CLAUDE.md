@@ -1,204 +1,210 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+本文件为 Claude Code (claude.ai/code) 在此代码库中工作提供指导。
 
-## Project Overview
+## 项目概述
 
-**题小宝 (TiXiaoBao)** - AI-powered question bank generator for K12 education (grades 1-9). Generates math, Chinese, and English exercises using AI (DashScope/Qwen) and rule-based template systems.
+**题小宝 (TiXiaoBao)** - AI 驱动的题库生成器，面向 K12 教育（1-9 年级）。使用 AI（DashScope/Qwen）和基于规则的系统生成数学、语文和英语练习题。
 
-## Quick Start
+## 快速开始
 
-### Backend (FastAPI + SQLite)
+### 后端 (FastAPI + SQLite)
 
 ```bash
 cd backend
 
-# Install dependencies
+# 安装依赖
 pip install -r requirements.txt
 
-# Configure environment
+# 配置环境
 cp .env.example .env
-# Edit .env with your DASHSCOPE_API_KEY, JWT_SECRET, etc.
+# 在 .env 中配置 DASHSCOPE_API_KEY、JWT_SECRET 等
 
-# Run database migrations
+# 运行数据库迁移
 python -m db.migrations_cli migrate
 
-# Start server
+# 启动服务
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### Frontend (React 19 + Vite)
+### 前端 (React 19 + Vite)
 
 ```bash
 cd frontend
 
-# Install dependencies
+# 安装依赖
 npm install
 
-# Start dev server
+# 启动开发服务器
 npm run dev
 
-# Build for production
+# 生产环境构建
 npm run build
 
-# Deploy to Cloudflare Pages
+# 部署到 Cloudflare Pages
 npm run deploy
 ```
 
-## Architecture
+## 架构
 
-### Backend Structure (`backend/`)
+### 后端结构 (`backend/`)
 
 ```
 backend/
-├── main.py                 # FastAPI app entry point
-├── config.py               # Unified config (DB_PATH, JWT, API keys)
-├── api/v1/                 # API routes
-│   ├── auth.py            # User authentication (OTP + JWT)
-│   ├── questions.py       # AI question generation
-│   ├── questions_structured.py  # Structured JSON generation
-│   ├── history.py         # User history + sharing
-│   ├── templates.py       # Template-based generation
-│   └── admin.py           # Admin operations
-├── services/               # Business logic layer
-│   ├── ai/                # Qwen client, vision, data cleaner
-│   ├── user/              # User service + store
-│   ├── question/          # Question service + stores
-│   ├── admin/             # Admin auth + operation logs
-│   └── template/          # Template system + generators
+├── main.py                 # FastAPI 应用入口
+├── config.py               # 统一配置（DB_PATH、JWT、API 密钥）
+├── api/v1/                 # API 路由
+│   ├── auth.py            # 用户认证（OTP + JWT）
+│   ├── questions.py       # AI 题目生成
+│   ├── questions_structured.py  # 结构化 JSON 生成
+│   ├── history.py         # 用户历史 + 分享
+│   ├── templates.py       # 基于模板的生成
+│   └── admin.py           # 管理员操作
+├── services/               # 业务逻辑层
+│   ├── ai/                # Qwen 客户端、视觉识别、数据清洗
+│   ├── user/              # 用户服务 + 存储
+│   ├── question/          # 题目服务 + 存储
+│   ├── admin/             # 管理员认证 + 操作日志
+│   └── template/          # 模板系统 + 生成器
 ├── db/
-│   ├── schema.sql         # Full database schema
-│   └── migrations/        # Incremental migration scripts
-└── data/                  # SQLite database (tixiaobao.db)
+│   ├── schema.sql         # 完整数据库架构
+│   └── migrations/        # 增量迁移脚本
+└── data/                  # SQLite 数据库 (tixiaobao.db)
 ```
 
-### Frontend Structure (`frontend/`)
+### 前端结构 (`frontend/`)
 
 ```
 frontend/
 ├── src/
-│   ├── App.tsx            # Main app with React Router
-│   ├── features/          # Feature modules
+│   ├── App.tsx            # 主应用（含 React Router）
+│   ├── features/          # 功能模块
 │   │   ├── question-generator/
 │   │   ├── history/
 │   │   └── auth/
 │   ├── components/
-│   │   ├── questions/     # Question type components
-│   │   └── shared/        # Reusable UI components
-│   ├── hooks/             # Custom hooks (useMathJax, useToast)
-│   ├── api/               # API client modules
-│   └── utils/             # Utilities (printUtils, markdownProcessor)
+│   │   ├── questions/     # 题目类型组件
+│   │   └── shared/        # 可复用 UI 组件
+│   ├── hooks/             # 自定义 hooks（useMathJax, useToast）
+│   ├── api/               # API 客户端模块
+│   └── utils/             # 工具函数（printUtils, markdownProcessor）
 └── public/
 ```
 
-## Key Technologies
+## 核心技术栈
 
-| Layer | Technology |
+| 层级 | 技术 |
 |-------|------------|
-| Backend | FastAPI (Python 3.8+), SQLite, JWT |
-| Frontend | React 19, TypeScript, Vite 7 |
+| 后端 | FastAPI (Python 3.8+), SQLite, JWT |
+| 前端 | React 19, TypeScript, Vite 7 |
 | AI | DashScope (Qwen-plus, Qwen-vision) |
-| Rendering | MathJax (LaTeX), marked (Markdown) |
-| Deployment | Cloudflare Pages (frontend), uvicorn (backend) |
+| 渲染 | MathJax (LaTeX), marked (Markdown) |
+| 部署 | Cloudflare Pages (前端), uvicorn (后端) |
 
-## Core Features
+## 核心功能
 
-### 1. AI Question Generation
-- **Endpoint**: `POST /api/questions/structured`
-- Uses Batch system for efficient API calls (10 requests/batch, 3s timeout)
-- Supports text prompts and image uploads (vision recognition)
-- Returns structured JSON with meta + questions array
+### 1. AI 题目生成
+- **端点**: `POST /api/questions/structured`
+- 使用 Batch 系统高效调用 API（10 请求/批，3 秒超时）
+- 支持文本提示和图片上传（视觉识别）
+- 返回包含 meta + questions 数组的结构化 JSON
 
-### 2. Template-Based Generation
-- **Endpoint**: `POST /api/templates/generate`
-- Rule-based generators (no AI cost, instant response)
-- Generator registry pattern in `services/template/generators/`
-- Implemented: number comparison, addition/subtraction, consecutive operations, currency conversion
+### 2. 基于模板的生成
+- **端点**: `POST /api/templates/generate`
+- 基于规则的生成器（无 AI 成本，即时响应）
+- `services/template/generators/` 中的生成器注册模式
+- 已实现：数字比较、加减法、连加连减、货币转换
 
-### 3. Authentication
-- OTP email verification (5min expiry, 5 attempts, rate limited)
-- JWT tokens (7 days for users, 2hrs for admin)
-- Grade selection required for new users
+### 3. 认证系统
+- OTP 邮箱验证（5 分钟过期，5 次尝试限制，速率限制）
+- JWT Token（用户 7 天，管理员 2 小时）
+- 新用户必须选择年级
 
-### 4. History & Sharing
-- User question records with soft delete
-- Share tokens for public links
-- Cursor-based pagination
+### 4. 历史与分享
+- 用户题目记录（软删除）
+- 分享 Token 用于公开链接
+- 基于游标的分页
 
-## Testing
+## 测试
 
 ```bash
-# Backend tests (pytest)
+# 后端测试 (pytest)
 cd backend
 python -m pytest tests/
 
-# Frontend - no test framework configured yet
+# 前端 - 尚未配置测试框架
 ```
 
-## Deployment
+## 部署
 
-### Backend (Production)
+### 后端（生产环境）
 ```bash
-# Use the restart script (includes version check, migrations, health check)
+# 使用重启脚本（包含版本检查、迁移、健康检查）
 ./restart_backend.sh
 ```
 
-### Frontend (Cloudflare Pages)
+### 前端（Cloudflare Pages）
 ```bash
 cd frontend
+
+# 方式一：使用 deploy 脚本（推荐）
 npm run deploy
+
+# 方式二：手动部署（指定项目名称）
+npm run build:cf
+npx wrangler pages deploy dist --project-name=zyb-frontend --commit-dirty=true
 ```
 
-## Environment Variables
+## 环境变量
 
-### Required (.env)
+### 必需配置 (.env)
 ```bash
-DASHSCOPE_API_KEY=sk-xxx          # No default
-JWT_SECRET=your-random-secret     # No default, use secrets.token_urlsafe(32)
-ADMIN_PASSWORD_HASH=$2b$12$...    # bcrypt hash
+DASHSCOPE_API_KEY=sk-xxx          # 无默认值
+JWT_SECRET=your-random-secret     # 无默认值，使用 secrets.token_urlsafe(32)
+ADMIN_PASSWORD_HASH=$2b$12$...    # bcrypt 哈希
 
 SMTP_HOST=smtp.163.com
 SMTP_USER=your-email@163.com
 SMTP_PASS=your-auth-code
 ```
 
-See `.env.example` for full list.
+完整列表见 `.env.example`。
 
-## Database Migrations
+## 数据库迁移
 
 ```bash
-# Check status
+# 检查状态
 python -m db.migrations_cli status
 
-# Run pending migrations
+# 运行待处理迁移
 python -m db.migrations_cli migrate
 
-# View history
+# 查看历史
 python -m db.migrations_cli history
 ```
 
-Migrations are stored in `db/migrations/` and tracked in `schema_migrations` table.
+迁移脚本存储在 `db/migrations/`，并在 `schema_migrations` 表中跟踪。
 
-## Code Style & Conventions
+## 代码风格与规范
 
-- **Backend**: PEP 8, type hints encouraged
-- **Frontend**: TypeScript strict mode, functional components with hooks
-- **Commits**: Conventional Commits format (`feat:`, `fix:`, `refactor:`, etc.)
+- **后端**: PEP 8，鼓励使用类型提示
+- **前端**: TypeScript 严格模式，使用 Hooks 的函数式组件
+- **提交**: Conventional Commits 格式（`feat:`, `fix:`, `refactor:`, 等）
 
-## Common Tasks
+## 常见任务
 
-### Add new question type generator
-1. Create generator class in `backend/services/template/generators/`
-2. Extend `TemplateGenerator` base class
-3. Register in `generators/__init__.py`
-4. Add migration for template config
+### 添加新的题目类型生成器
+1. 在 `backend/services/template/generators/` 中创建生成器类
+2. 继承 `TemplateGenerator` 基类
+3. 在 `generators/__init__.py` 中注册
+4. 添加模板配置的迁移
 
-### Add new题型 component
-1. Create component in `frontend/src/components/questions/`
-2. Follow `QuestionRendererProps` interface
-3. Register in `QuestionRenderer.tsx`
+### 添加新的题型组件
+1. 在 `frontend/src/components/questions/` 中创建组件
+2. 遵循 `QuestionRendererProps` 接口
+3. 在 `QuestionRenderer.tsx` 中注册
 
-### Debug AI generation issues
-1. Check `backend/logs/` for API logs
-2. Verify `DASHSCOPE_API_KEY` in `.env`
-3. Check `ai_generation_records` table for error messages
+### 调试 AI 生成问题
+1. 检查 `backend/logs/` 中的 API 日志
+2. 验证 `.env` 中的 `DASHSCOPE_API_KEY`
+3. 检查 `ai_generation_records` 表中的错误消息

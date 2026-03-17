@@ -8,7 +8,7 @@
     "build": "tsc && vite build",
     "build:cf": "node build-worker.cjs",
     "preview": "vite preview",
-    "deploy": "npm run build && wrangler pages deploy dist"
+    "deploy": "npm run build:cf && wrangler pages deploy dist --project-name=zyb-frontend --commit-dirty=true"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20241230.0",
