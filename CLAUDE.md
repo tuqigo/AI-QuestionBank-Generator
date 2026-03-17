@@ -1,112 +1,204 @@
-# 项目概述
+# CLAUDE.md
 
-**小学生 AI 题库生成器** - 为学生家长老师生成数学、语文等学科练习题的 Web 应用。
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 技术栈
+## Project Overview
 
-### 后端
-- **框架**: FastAPI  python版本3.8
-- **AI API**: 通义千问 (DashScope) - `qwen-plus-latest` / `qwen-vl-plus`
-- **认证**: JWT (python-jose + bcrypt)
-- **包管理**: pip + requirements.txt
+**题小宝 (TiXiaoBao)** - AI-powered question bank generator for K12 education (grades 1-9). Generates math, Chinese, and English exercises using AI (DashScope/Qwen) and rule-based template systems.
 
-### 前端
-- **框架**: React 19 + TypeScript
-- **构建工具**: Vite 7
-- **核心依赖**:
-  - `marked` - Markdown 渲染
-  - `html2pdf.js` - PDF 导出
-- **包管理**: npm
-- **前端页面设计准则**: 遵循frontend-design 准则，frontend-design为我安装的plugin
+## Quick Start
 
-## 项目结构
+### Backend (FastAPI + SQLite)
 
-```
-zuoyebang/
-├── backend/
-│   ├── main.py              # FastAPI 入口，CORS 配置
-│   ├── config.py            # 环境变量配置
-│   ├── routers/
-│   │   ├── auth.py          # 登录/注册接口
-│   │   ├── questions.py     # 题目生成接口
-│   │   └── extend.py        # 图片扩展题接口
-│   ├── services/
-│   │   ├── qwen_client.py   # 通义千问文本生成
-│   │   ├── qwen_vision.py   # 通义千问视觉识别
-│   │   ├── auth.py          # JWT 认证
-│   │   └── user_store.py    # 用户数据存储
-│   ├── models/
-│   │   └── user.py          # 用户数据模型
-│   └── utils/
-│       └── logger.py        # 日志配置
-├── frontend/
-│   ├── src/
-│   │   ├── App.tsx          # 应用入口，认证逻辑
-│   │   ├── MainContent.tsx  # 主界面（题目生成/预览）
-│   │   ├── LoginPage.tsx    # 登录/注册页面
-│   │   ├── auth.ts          # Token 管理工具
-│   │   ├── types.ts         # TypeScript 类型定义
-│   │   └── main.tsx         # React 入口
-│   └── package.json
-└── README.md
-```
-
-## 开发命令
-
-### 后端
 ```bash
 cd backend
+
+# Install dependencies
 pip install -r requirements.txt
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your DASHSCOPE_API_KEY, JWT_SECRET, etc.
+
+# Run database migrations
+python -m db.migrations_cli migrate
+
+# Start server
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### 前端
+### Frontend (React 19 + Vite)
+
 ```bash
 cd frontend
+
+# Install dependencies
 npm install
-npm run dev        # 开发模式
-npm run build      # 生产构建
+
+# Start dev server
+npm run dev
+
+# Build for production
+npm run build
+
+# Deploy to Cloudflare Pages
+npm run deploy
 ```
 
-## 环境变量
+## Architecture
 
-复制 `backend/.env.example` 为 `backend/.env`：
+### Backend Structure (`backend/`)
 
 ```
-DASHSCOPE_API_KEY=sk-your-api-key
-QWEN_MODEL=qwen-plus-latest
-QWEN_VISION_MODEL=qwen-vl-plus
-JWT_SECRET=your-random-secret
+backend/
+├── main.py                 # FastAPI app entry point
+├── config.py               # Unified config (DB_PATH, JWT, API keys)
+├── api/v1/                 # API routes
+│   ├── auth.py            # User authentication (OTP + JWT)
+│   ├── questions.py       # AI question generation
+│   ├── questions_structured.py  # Structured JSON generation
+│   ├── history.py         # User history + sharing
+│   ├── templates.py       # Template-based generation
+│   └── admin.py           # Admin operations
+├── services/               # Business logic layer
+│   ├── ai/                # Qwen client, vision, data cleaner
+│   ├── user/              # User service + store
+│   ├── question/          # Question service + stores
+│   ├── admin/             # Admin auth + operation logs
+│   └── template/          # Template system + generators
+├── db/
+│   ├── schema.sql         # Full database schema
+│   └── migrations/        # Incremental migration scripts
+└── data/                  # SQLite database (tixiaobao.db)
 ```
 
-## API 接口
+### Frontend Structure (`frontend/`)
 
-| 端点 | 方法 | 认证 | 说明 |
-|------|------|------|------|
-| `/api/auth/register` | POST | 否 | 用户注册 |
-| `/api/auth/login` | POST | 否 | 用户登录 |
-| `/api/auth/me` | GET | 是 | 获取当前用户 |
-| `/api/questions/generate` | POST | 是 | 根据提示词生成题目 |
-| `/api/questions/extend-from-image` | POST | 是 | 上传图片生成扩展题 |
+```
+frontend/
+├── src/
+│   ├── App.tsx            # Main app with React Router
+│   ├── features/          # Feature modules
+│   │   ├── question-generator/
+│   │   ├── history/
+│   │   └── auth/
+│   ├── components/
+│   │   ├── questions/     # Question type components
+│   │   └── shared/        # Reusable UI components
+│   ├── hooks/             # Custom hooks (useMathJax, useToast)
+│   ├── api/               # API client modules
+│   └── utils/             # Utilities (printUtils, markdownProcessor)
+└── public/
+```
 
-## 核心业务逻辑
+## Key Technologies
 
-### 题目生成 Prompt 规则 (qwen_client.py)
-- 默认年级：一年级（若用户未指定）
-- 默认数量：15 道题
-- 输出格式：Markdown，题号用 `1.` `2.` 格式
-- 选择题选项：`A.` `B.` `C.` `D.` 每行一个
-- 填空题：使用 `______` (至少 6 个下划线) 或 `[  ]` (3 个空格)
-- 比较大小：`13 [ ] 17` 或 `13 ____ 17`
-- 答案页：用 `<!-- PAGE_BREAK -->` 分隔，便于 PDF 分页
+| Layer | Technology |
+|-------|------------|
+| Backend | FastAPI (Python 3.8+), SQLite, JWT |
+| Frontend | React 19, TypeScript, Vite 7 |
+| AI | DashScope (Qwen-plus, Qwen-vision) |
+| Rendering | MathJax (LaTeX), marked (Markdown) |
+| Deployment | Cloudflare Pages (frontend), uvicorn (backend) |
 
-## 代码风格约定
+## Core Features
 
-- **Python**: 遵循 PEP 8，使用 f-string，类型注解
-- **TypeScript/React**: 函数组件 + Hooks，箭头函数
-- **命名**:
-  - Python - snake_case
-  - TypeScript - camelCase/PascalCase
+### 1. AI Question Generation
+- **Endpoint**: `POST /api/questions/structured`
+- Uses Batch system for efficient API calls (10 requests/batch, 3s timeout)
+- Supports text prompts and image uploads (vision recognition)
+- Returns structured JSON with meta + questions array
 
-## 重要 python版本3.8
+### 2. Template-Based Generation
+- **Endpoint**: `POST /api/templates/generate`
+- Rule-based generators (no AI cost, instant response)
+- Generator registry pattern in `services/template/generators/`
+- Implemented: number comparison, addition/subtraction, consecutive operations, currency conversion
 
+### 3. Authentication
+- OTP email verification (5min expiry, 5 attempts, rate limited)
+- JWT tokens (7 days for users, 2hrs for admin)
+- Grade selection required for new users
+
+### 4. History & Sharing
+- User question records with soft delete
+- Share tokens for public links
+- Cursor-based pagination
+
+## Testing
+
+```bash
+# Backend tests (pytest)
+cd backend
+python -m pytest tests/
+
+# Frontend - no test framework configured yet
+```
+
+## Deployment
+
+### Backend (Production)
+```bash
+# Use the restart script (includes version check, migrations, health check)
+./restart_backend.sh
+```
+
+### Frontend (Cloudflare Pages)
+```bash
+cd frontend
+npm run deploy
+```
+
+## Environment Variables
+
+### Required (.env)
+```bash
+DASHSCOPE_API_KEY=sk-xxx          # No default
+JWT_SECRET=your-random-secret     # No default, use secrets.token_urlsafe(32)
+ADMIN_PASSWORD_HASH=$2b$12$...    # bcrypt hash
+
+SMTP_HOST=smtp.163.com
+SMTP_USER=your-email@163.com
+SMTP_PASS=your-auth-code
+```
+
+See `.env.example` for full list.
+
+## Database Migrations
+
+```bash
+# Check status
+python -m db.migrations_cli status
+
+# Run pending migrations
+python -m db.migrations_cli migrate
+
+# View history
+python -m db.migrations_cli history
+```
+
+Migrations are stored in `db/migrations/` and tracked in `schema_migrations` table.
+
+## Code Style & Conventions
+
+- **Backend**: PEP 8, type hints encouraged
+- **Frontend**: TypeScript strict mode, functional components with hooks
+- **Commits**: Conventional Commits format (`feat:`, `fix:`, `refactor:`, etc.)
+
+## Common Tasks
+
+### Add new question type generator
+1. Create generator class in `backend/services/template/generators/`
+2. Extend `TemplateGenerator` base class
+3. Register in `generators/__init__.py`
+4. Add migration for template config
+
+### Add new题型 component
+1. Create component in `frontend/src/components/questions/`
+2. Follow `QuestionRendererProps` interface
+3. Register in `QuestionRenderer.tsx`
+
+### Debug AI generation issues
+1. Check `backend/logs/` for API logs
+2. Verify `DASHSCOPE_API_KEY` in `.env`
+3. Check `ai_generation_records` table for error messages
