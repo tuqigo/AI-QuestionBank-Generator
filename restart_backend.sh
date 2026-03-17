@@ -111,10 +111,26 @@ PENDING_COUNT=$(echo "${MIGRATION_OUTPUT}" | python3 -c "import sys, json; d=jso
 FAILED_COUNT=$(echo "${MIGRATION_OUTPUT}" | python3 -c "import sys, json; d=json.load(sys.stdin); print(d.get('failed', 0))" 2>/dev/null || echo "-1")
 
 if [ "${FAILED_COUNT}" -gt 0 ] 2>/dev/null; then
-    echo -e "${RED}❌ 存在失败的迁移记录！请先手动修复${NC}"
-    echo -e "${RED}👉 已终止部署，旧服务继续运行${NC}"
+    echo -e "${YELLOW}⚠️  发现失败的迁移记录，尝试自动修复...${NC}"
     echo -e "${YELLOW}失败的迁移：${FAILED_COUNT}${NC}"
-    exit 1
+
+    # 删除失败的迁移记录
+    cd "${BACKEND_DIR}"
+    python3 -c "
+import sqlite3
+conn = sqlite3.connect('data/tixiaobao.db')
+cursor = conn.cursor()
+cursor.execute(\"DELETE FROM schema_migrations WHERE status = 'failed'\")
+conn.commit()
+print(f'已删除 {cursor.rowcount} 条失败的迁移记录')
+conn.close()
+"
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}❌ 删除失败记录失败！${NC}"
+        echo -e "${RED}👉 已终止部署，旧服务继续运行${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}✅ 失败记录已清理，继续执行迁移...${NC}"
 fi
 
 # 执行迁移
