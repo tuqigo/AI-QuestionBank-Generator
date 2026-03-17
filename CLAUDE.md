@@ -170,6 +170,12 @@ SMTP_PASS=your-auth-code
 
 完整列表见 `.env.example`。
 
+## 数据库操作规范
+```
+操作语句撰写
+1.DDL在schema.sql 2.DML 在migrations文件夹下面
+```
+
 ## 数据库迁移
 
 ```bash
