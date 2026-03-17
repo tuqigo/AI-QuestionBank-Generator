@@ -42,8 +42,8 @@ class CompareNumberGenerator(TemplateGenerator):
                 # 50 次尝试后仍未生成有效题目，跳过
                 continue
 
-            # 构建题干（使用 LaTeX 格式）
-            stem = f"${a} （    ） {b}$"
+            # 构建题干
+            stem = f"{a}（    ）{b}"
 
             questions.append({
                 "type": question_type,

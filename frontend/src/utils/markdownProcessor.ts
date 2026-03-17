@@ -53,14 +53,11 @@ function processSpecialFormats(content: string): string {
   processed = processed.replace(/\[ {2,}\]/g, '<span class="blank-box"></span>')
 
   // 处理带空格的括号（全角）- 使用 span 包裹空白区域，通过 CSS 控制宽度
-  processed = processed.replace(/（ {2,}）/g, () => {
-    return '（<span class="answer-blank"></span>）'
-  })
+  // 支持 2 个或以上空格，兼容后端生成的 `（    ）` 格式
+  processed = processed.replace(/（ {2,}）/g, '（<span class="answer-blank"></span>）')
 
   // 处理带空格的半角括号
-  processed = processed.replace(/\( {2,}\)/g, () => {
-    return '(<span class="answer-blank"></span>)'
-  })
+  processed = processed.replace(/\( {2,}\)/g, '(<span class="answer-blank"></span>)')
 
   // 处理完全空的括号（全角和半角）
   processed = processed.replace(/（）/g, '<span class="blank-parentheses"></span>')

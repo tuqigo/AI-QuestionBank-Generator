@@ -239,6 +239,18 @@
   background: white;
 }
 
+/* 答案空白区域（用于全角/半角括号内的填空） */
+.answer-blank {
+  display: inline-block;
+  min-width: 36px;
+  height: 24px;
+  border: 1px solid var(--gray-500);
+  border-radius: var(--radius-sm);
+  margin: 0 var(--space-1);
+  vertical-align: baseline;
+  background: white;
+}
+
 /* 题号样式 */
 .question-number {
   display: inline-block;

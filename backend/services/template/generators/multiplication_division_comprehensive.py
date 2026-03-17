@@ -120,7 +120,7 @@ class MultiplicationDivisionComprehensiveGenerator(TemplateGenerator):
                     if not self._check_result_limit(result, result_limit, result_within_10, result_within_20, result_within_100, result_within_1000):
                         continue
 
-                    stem = f"${a} \\times {b} = （    ）$"
+                    stem = f"{a} × {b} = （    ）"
 
                 elif q_type == "multiply_fill_first":
                     # 乘法填空（求第一个因子）：（ ）× 4 = 12
@@ -130,7 +130,7 @@ class MultiplicationDivisionComprehensiveGenerator(TemplateGenerator):
                     if result > dividend_max:
                         continue
 
-                    stem = f"$（    ） \\times {b} = {result}$"
+                    stem = f"（    ）× {b} = {result}"
 
                 elif q_type == "multiply_fill_second":
                     # 乘法填空（求第二个因子）：3 × （ ） = 12
@@ -140,7 +140,7 @@ class MultiplicationDivisionComprehensiveGenerator(TemplateGenerator):
                     if result > dividend_max:
                         continue
 
-                    stem = f"${a} \\times （    ） = {result}$"
+                    stem = f"{a} × （    ） = {result}"
 
                 elif q_type == "multiply_fill_both":
                     # 乘法填空（两个因子都未知，较难）：（ ）×（ ） = 12（多解）
@@ -150,9 +150,9 @@ class MultiplicationDivisionComprehensiveGenerator(TemplateGenerator):
                     result = a * b
                     # 给出一个因子，求另一个
                     if random.choice([True, False]):
-                        stem = f"${a} \\times （    ） = {result}$"
+                        stem = f"{a} × （    ） = {result}"
                     else:
-                        stem = f"$（    ） \\times {b} = {result}$"
+                        stem = f"（    ）× {b} = {result}"
 
                 elif q_type == "multiply_add":
                     # 乘加混合：3 × 4 + 5 = （ ）
@@ -167,7 +167,7 @@ class MultiplicationDivisionComprehensiveGenerator(TemplateGenerator):
                     if not self._check_result_limit(result, result_limit, result_within_10, result_within_20, result_within_100, result_within_1000):
                         continue
 
-                    stem = f"${a} \\times {b} + {extra} = （    ）$"
+                    stem = f"{a} × {b} + {extra} = （    ）"
 
                 elif q_type == "multiply_subtract":
                     # 乘减混合：3 × 4 - 5 = （ ）
@@ -181,7 +181,7 @@ class MultiplicationDivisionComprehensiveGenerator(TemplateGenerator):
                     if not self._check_result_limit(result, result_limit, result_within_10, result_within_20, result_within_100, result_within_1000):
                         continue
 
-                    stem = f"${a} \\times {b} - {extra} = （    ）$"
+                    stem = f"{a} × {b} - {extra} = （    ）"
 
                 elif q_type == "multiply_chain":
                     # 连乘：2 × 3 × 4 = （ ）
@@ -200,8 +200,7 @@ class MultiplicationDivisionComprehensiveGenerator(TemplateGenerator):
                     if not self._check_result_limit(result, result_limit, result_within_10, result_within_20, result_within_100, result_within_1000):
                         continue
 
-                    stem = " \\times ".join(map(str, factors)) + " = （    ）"
-                    stem = f"${stem}$"
+                    stem = " × ".join(map(str, factors)) + " = （    ）"
 
                 # ==================== 除法题型 ====================
                 elif q_type == "simple_divide":
@@ -217,7 +216,7 @@ class MultiplicationDivisionComprehensiveGenerator(TemplateGenerator):
                     if dividend > dividend_max or dividend < dividend_min:
                         continue
 
-                    stem = f"${dividend} \\div {divisor} = （    ）$"
+                    stem = f"{dividend} ÷ {divisor} = （    ）"
 
                 elif q_type == "divide_fill_dividend":
                     # 除法填空（求被除数）：（ ）÷ 3 = 4
@@ -228,7 +227,7 @@ class MultiplicationDivisionComprehensiveGenerator(TemplateGenerator):
                     if dividend > dividend_max:
                         continue
 
-                    stem = f"$（    ） \\div {divisor} = {quotient}$"
+                    stem = f"（    ）÷ {divisor} = {quotient}"
 
                 elif q_type == "divide_fill_divisor":
                     # 除法填空（求除数）：12 ÷ （ ） = 4
@@ -239,7 +238,7 @@ class MultiplicationDivisionComprehensiveGenerator(TemplateGenerator):
                     if dividend > dividend_max:
                         continue
 
-                    stem = f"${dividend} \\div （    ） = {quotient}$"
+                    stem = f"{dividend} ÷ （    ） = {quotient}"
 
                 elif q_type == "divide_fill_quotient_remainder":
                     # 带余数除法填空：（ ）÷ 3 = 4 …… 2
@@ -254,7 +253,7 @@ class MultiplicationDivisionComprehensiveGenerator(TemplateGenerator):
                     if dividend > dividend_max:
                         continue
 
-                    stem = f"$（    ） \\div {divisor} = {quotient} \\dots \\dots （    ）$"
+                    stem = f"（    ）÷ {divisor} = {quotient} …… （    ）"
 
                 elif q_type == "divide_add":
                     # 除加混合：12 ÷ 3 + 5 = （ ）
@@ -270,7 +269,7 @@ class MultiplicationDivisionComprehensiveGenerator(TemplateGenerator):
                     if not self._check_result_limit(result, result_limit, result_within_10, result_within_20, result_within_100, result_within_1000):
                         continue
 
-                    stem = f"${dividend} \\div {divisor} + {extra} = （    ）$"
+                    stem = f"{dividend} ÷ {divisor} + {extra} = （    ）"
 
                 elif q_type == "divide_subtract":
                     # 除减混合：12 ÷ 3 - 2 = （ ）
@@ -286,7 +285,7 @@ class MultiplicationDivisionComprehensiveGenerator(TemplateGenerator):
                     if ensure_positive and result < 0:
                         continue
 
-                    stem = f"${dividend} \\div {divisor} - {extra} = （    ）$"
+                    stem = f"{dividend} ÷ {divisor} - {extra} = （    ）"
 
                 elif q_type == "remainder_division":
                     # 带余数除法：11 ÷ 2 = （ ）  学生填写 5……1
@@ -299,7 +298,7 @@ class MultiplicationDivisionComprehensiveGenerator(TemplateGenerator):
                     if dividend > dividend_max:
                         continue
 
-                    stem = f"${dividend} \\div {divisor} = （    ）$"
+                    stem = f"{dividend} ÷ {divisor} = （    ）"
 
                 # ==================== 比较题型 ====================
                 elif q_type == "compare_multiply":
@@ -319,7 +318,7 @@ class MultiplicationDivisionComprehensiveGenerator(TemplateGenerator):
                         if compare_num < 0:
                             compare_num = result + offset
 
-                    stem = f"${a} \\times {b} （    ） {compare_num}$"
+                    stem = f"{a} × {b} （    ） {compare_num}"
 
                 elif q_type == "compare_division":
                     # 除法比较：12 ÷ 3 （ ） 4
@@ -341,7 +340,7 @@ class MultiplicationDivisionComprehensiveGenerator(TemplateGenerator):
                         if compare_num < 0:
                             compare_num = quotient + offset
 
-                    stem = f"${dividend} \\div {divisor} （    ） {compare_num}$"
+                    stem = f"{dividend} ÷ {divisor} （    ） {compare_num}"
 
                 elif q_type == "compare_multiply_division":
                     # 乘除混合比较：3 × 4 （ ） 12 ÷ 2
@@ -369,7 +368,7 @@ class MultiplicationDivisionComprehensiveGenerator(TemplateGenerator):
                         if right_result >= left_result:
                             right_result = max(1, left_result - random.randint(1, 10))
 
-                    stem = f"${a} \\times {b} （    ） {right_result}$"
+                    stem = f"{a} × {b} （    ） {right_result}"
 
                 elif q_type == "mixed_compare":
                     # 混合运算比较：3 × 4 + 2 （ ） 15
@@ -392,13 +391,13 @@ class MultiplicationDivisionComprehensiveGenerator(TemplateGenerator):
                         if compare_num < 0:
                             compare_num = result + offset
 
-                    stem = f"${a} \\times {b} + {extra} （    ） {compare_num}$"
+                    stem = f"{a} × {b} + {extra} （    ） {compare_num}"
 
                 else:
                     # 默认：简单乘法
                     a = random.randint(factor_min, factor_max)
                     b = random.randint(factor_min, factor_max)
-                    stem = f"${a} \\times {b} = （    ）$"
+                    stem = f"{a} × {b} = （    ）"
 
                 if stem in used_stems:
                     continue
