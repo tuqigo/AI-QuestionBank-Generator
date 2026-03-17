@@ -46,7 +46,8 @@
       "Bash(cd:*)",
       "Bash(netstat:*)",
       "Bash(xargs -r kill)",
-      "Bash(python -c \"import sys; sys.path.insert\\(0, ''''.''''\\); from main import app; print\\(''''Backend started successfully''''\\)\")"
+      "Bash(python -c \"import sys; sys.path.insert\\(0, ''''.''''\\); from main import app; print\\(''''Backend started successfully''''\\)\")",
+      "Bash(taskkill /F /IM python.exe)"
     ]
   }
 }

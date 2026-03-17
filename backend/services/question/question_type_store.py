@@ -1,7 +1,7 @@
 """题型数据存储库"""
 
 import sqlite3
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
 from models.question_type import (
     QuestionTypeCreate,
@@ -32,7 +32,7 @@ class QuestionTypeStore:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     en_name TEXT UNIQUE NOT NULL,
                     zh_name TEXT NOT NULL,
-                    subject TEXT NOT NULL DEFAULT 'all',
+                    subjects TEXT NOT NULL DEFAULT 'math,chinese,english',
                     is_active INTEGER DEFAULT 1,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -86,8 +86,9 @@ class QuestionTypeStore:
                 query += " AND is_active = 1"
 
             if subject:
-                query += " AND (subject = ? OR subject = 'all')"
-                params.append(subject)
+                query += " AND (subjects LIKE ? OR subjects LIKE ?)"
+                params.append(f'%{subject}%')
+                params.append('%all%')
 
             query += " ORDER BY id"
 
@@ -102,12 +103,15 @@ class QuestionTypeStore:
         """创建新题型"""
         conn = QuestionTypeStore.get_connection()
         try:
+            # 将 subjects 列表转换为逗号分隔的字符串
+            subjects_str = ','.join(question_type.subjects) if hasattr(question_type, 'subjects') and question_type.subjects else 'math,chinese,english'
+
             cursor = conn.execute(
                 """
-                INSERT INTO question_types (en_name, zh_name, subject)
+                INSERT INTO question_types (en_name, zh_name, subjects)
                 VALUES (?, ?, ?)
                 """,
-                (question_type.en_name, question_type.zh_name, question_type.subject)
+                (question_type.en_name, question_type.zh_name, subjects_str)
             )
             conn.commit()
 
@@ -131,9 +135,10 @@ class QuestionTypeStore:
                 update_fields.append("zh_name = ?")
                 params.append(update_data.zh_name)
 
-            if update_data.subject is not None:
-                update_fields.append("subject = ?")
-                params.append(update_data.subject)
+            # 将 subjects 列表转换为逗号分隔的字符串
+            if hasattr(update_data, 'subjects') and update_data.subjects is not None:
+                update_fields.append("subjects = ?")
+                params.append(','.join(update_data.subjects))
 
             if update_data.is_active is not None:
                 update_fields.append("is_active = ?")
@@ -166,5 +171,45 @@ class QuestionTypeStore:
             )
             conn.commit()
             return conn.total_changes > 0
+        finally:
+            conn.close()
+
+    @staticmethod
+    def get_all_with_subjects() -> List[Dict[str, Any]]:
+        """
+        获取所有题型及其关联的学科列表
+
+        Returns:
+            题型列表，每个题型包含 en_name, zh_name, subjects 字段
+            subjects 为逗号分隔的字符串解析为列表
+        """
+        conn = QuestionTypeStore.get_connection()
+        try:
+            # 获取所有启用的题型
+            cursor = conn.execute(
+                "SELECT * FROM question_types WHERE is_active = 1 ORDER BY id"
+            )
+            rows = cursor.fetchall()
+
+            result = []
+            for row in rows:
+                qt_dict = dict(row)
+
+                # 从 subjects 字段解析学科列表（逗号分隔）
+                subjects_str = qt_dict.get('subjects', 'math,chinese,english')
+                subjects = [s.strip() for s in subjects_str.split(',') if s.strip()]
+
+                # 如果为空，使用默认值
+                if not subjects:
+                    subjects = ['math', 'chinese', 'english']
+
+                result.append({
+                    "id": qt_dict['id'],
+                    "en_name": qt_dict['en_name'],
+                    "zh_name": qt_dict['zh_name'],
+                    "subjects": subjects,
+                })
+
+            return result
         finally:
             conn.close()

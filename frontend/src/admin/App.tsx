@@ -10,6 +10,7 @@ import AiRecordsPage from './pages/AiRecordsPage'
 import AiRecordDetailPage from './pages/AiRecordDetailPage'
 import UserRecordDetailPage from './pages/UserRecordDetailPage'
 import TemplatesPage from './pages/TemplatesPage'
+import ConfigsPage from './pages/ConfigsPage'
 import './App.css'
 
 // 受保护的路由组件
@@ -116,6 +117,14 @@ function AdminLayout() {
             用户管理
           </a>
           <a
+            href="/admin/configs"
+            className={isActive('/admin/configs') ? 'active' : ''}
+            onClick={(e) => { e.preventDefault(); handleNavClick('/admin/configs') }}
+          >
+            <span className="nav-icon">⚙️</span>
+            配置管理
+          </a>
+          <a
             href="/admin/templates"
             className={isActive('/admin/templates') ? 'active' : ''}
             onClick={(e) => { e.preventDefault(); handleNavClick('/admin/templates') }}
@@ -167,6 +176,7 @@ export default function AdminApp() {
           <Route path="" element={<Navigate to="users" replace />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="users/:id" element={<UserDetailPage />} />
+          <Route path="configs" element={<ConfigsPage />} />
           <Route path="templates" element={<TemplatesPage />} />
           <Route path="ai-records" element={<AiRecordsPage />} />
           <Route path="ai-records/:id" element={<AiRecordDetailPage />} />

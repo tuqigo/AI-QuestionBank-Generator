@@ -1,6 +1,9 @@
 """
 项目全局配置常量
 所有学科、年级、学期、教材版本、题型等配置在此统一维护
+
+注意：本文件中的常量现在作为数据库不可用时的 fallback。
+优先从数据库加载配置数据。
 """
 from typing import Dict, List, TypedDict
 
@@ -200,3 +203,62 @@ KNOWLEDGE_POINTS: Dict[str, Dict[str, Dict[str, Dict[str, List[str]]]]] = {
         },
     },
 }
+
+
+# ==================== 数据库 fallback 辅助函数 ====================
+# 当数据库不可用时，使用 constants.py 中定义的常量作为 fallback
+
+def get_subjects_from_db_or_cache() -> List[Dict]:
+    """从数据库加载学科，失败时返回常量定义"""
+    try:
+        from services.config import SubjectStore
+        return SubjectStore.get_as_options()
+    except Exception:
+        return [{"value": k, "label": v} for k, v in SUPPORTED_SUBJECTS.items()]
+
+
+def get_grades_from_db_or_cache() -> List[Dict]:
+    """从数据库加载年级，失败时返回常量定义"""
+    try:
+        from services.config import GradeStore
+        return GradeStore.get_as_options()
+    except Exception:
+        return [{"value": k, "label": v} for k, v in SUPPORTED_GRADES.items()]
+
+
+def get_semesters_from_db_or_cache() -> List[Dict]:
+    """从数据库加载学期，失败时返回常量定义"""
+    try:
+        from services.config import SemesterStore
+        return SemesterStore.get_as_options()
+    except Exception:
+        return [{"value": k, "label": v} for k, v in SUPPORTED_SEMESTERS.items()]
+
+
+def get_textbook_versions_from_db_or_cache() -> List[Dict]:
+    """从数据库加载教材版本，失败时返回常量定义"""
+    try:
+        from services.config import TextbookVersionStore
+        return TextbookVersionStore.get_as_options()
+    except Exception:
+        return [
+            {"id": vid, "name": vdata["name"], "sort": vdata["sort"]}
+            for vid, vdata in sorted(SUPPORTED_TEXTBOOK_VERSIONS.items(),
+                                      key=lambda x: x[1]["sort"])
+        ]
+
+
+def get_question_types_from_db_or_cache() -> List[Dict]:
+    """从数据库加载题型，失败时返回常量定义"""
+    try:
+        from services.question.question_type_store import QuestionTypeStore
+        return QuestionTypeStore.get_all_with_subjects()
+    except Exception:
+        result = []
+        for en_name, (zh_name, subjects) in SUPPORTED_QUESTION_TYPES.items():
+            result.append({
+                "value": en_name,
+                "label": zh_name,
+                "subjects": subjects
+            })
+        return result

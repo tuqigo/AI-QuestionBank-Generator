@@ -19,7 +19,3 @@ ALTER TABLE question_templates ADD COLUMN knowledge_point TEXT;
 -- 添加索引以优化查询
 CREATE INDEX IF NOT EXISTS idx_question_templates_knowledge_point
     ON question_templates(knowledge_point, is_active);
-
--- 记录迁移
-INSERT INTO schema_migrations (version, filename)
-VALUES ('016', '016_add_knowledge_point_to_templates.sql');

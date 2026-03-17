@@ -288,6 +288,89 @@ CREATE INDEX IF NOT EXISTS idx_user_question_records_share_token
 CREATE INDEX IF NOT EXISTS idx_user_question_records_short_id
     ON user_question_records(short_id);
 
+-- ============================================
+-- 配置表 - 学科/年级/学期/教材版本
+-- ============================================
+-- 用途：存储系统配置常量，支持管理后台动态配置
+-- 说明：这些表的数据通过迁移脚本 018 初始化
+-- ============================================
+
+-- 1. subjects - 学科表
+CREATE TABLE IF NOT EXISTS subjects (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code TEXT UNIQUE NOT NULL,      -- "math", "chinese", "english"
+    name_zh TEXT NOT NULL,          -- "数学", "语文", "英语"
+    sort_order INTEGER DEFAULT 0,
+    is_active INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_subjects_code ON subjects(code, is_active);
+
+-- 2. grades - 年级表
+CREATE TABLE IF NOT EXISTS grades (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code TEXT UNIQUE NOT NULL,      -- "grade1" ~ "grade9"
+    name_zh TEXT NOT NULL,          -- "一年级" ~ "九年级"
+    sort_order INTEGER DEFAULT 0,
+    is_active INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_grades_code ON grades(code, is_active);
+
+-- 3. semesters - 学期表
+CREATE TABLE IF NOT EXISTS semesters (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code TEXT UNIQUE NOT NULL,      -- "upper", "lower"
+    name_zh TEXT NOT NULL,          -- "上学期", "下学期"
+    sort_order INTEGER DEFAULT 0,
+    is_active INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_semesters_code ON semesters(code, is_active);
+
+-- 4. textbook_versions - 教材版本表
+CREATE TABLE IF NOT EXISTS textbook_versions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    version_code TEXT NOT NULL,     -- "rjb", "bsd", "sj" 等
+    name_zh TEXT NOT NULL,          -- "人教版", "北师大版" 等
+    sort_order INTEGER DEFAULT 0,
+    is_active INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_textbook_versions_code ON textbook_versions(version_code, is_active);
+
+-- ============================================
+-- 知识点表 (knowledge_points)
+-- ============================================
+-- 说明：扁平结构，直接存储学科/年级/学期/教材版本代码
+-- 用于模板化题目生成时关联知识点
+CREATE TABLE IF NOT EXISTS knowledge_points (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    subject_code TEXT NOT NULL,
+    grade_code TEXT NOT NULL,
+    semester_code TEXT NOT NULL,
+    textbook_version_code TEXT NOT NULL,
+    sort_order INTEGER DEFAULT 0,
+    is_active INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_kp_filters
+    ON knowledge_points(subject_code, grade_code, semester_code, textbook_version_code);
+
+CREATE INDEX IF NOT EXISTS idx_kp_active
+    ON knowledge_points(is_active, name);
+
 -- AI 生成记录表索引：
 --   - idx_ai_generation_records_user_id: 用户记录筛选
 --   - idx_ai_generation_records_success: 成功/失败统计
@@ -321,22 +404,23 @@ CREATE INDEX IF NOT EXISTS idx_admin_logs_target
 -- ============================================
 -- 10. 题型表 (question_types)
 -- ============================================
+-- 说明：subjects 字段使用逗号分隔存储多个学科，如 "math,chinese,english"
 CREATE TABLE IF NOT EXISTS question_types (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     en_name TEXT UNIQUE NOT NULL,
     zh_name TEXT NOT NULL,
-    subject TEXT NOT NULL DEFAULT 'all',
+    subjects TEXT NOT NULL DEFAULT 'math,chinese,english',
     is_active INTEGER DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX IF NOT EXISTS idx_question_types_subject
-    ON question_types(subject, is_active);
-
 CREATE INDEX IF NOT EXISTS idx_question_types_en_name
     ON question_types(en_name);
 
+-- 创建索引
+CREATE INDEX IF NOT EXISTS idx_question_types_en_name
+    ON question_types(en_name);
 
 -- ============================================
 -- 11：创建 schema_migrations 元数据表

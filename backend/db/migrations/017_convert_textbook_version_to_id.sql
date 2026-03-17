@@ -54,9 +54,5 @@ WHERE textbook_version IN (SELECT old_name FROM textbook_version_mapping);
 -- 删除临时表
 DROP TABLE textbook_version_mapping;
 
--- 记录迁移
-INSERT INTO schema_migrations (version, filename)
-VALUES ('017', '017_convert_textbook_version_to_id.sql');
-
 -- 提交事务
 COMMIT;

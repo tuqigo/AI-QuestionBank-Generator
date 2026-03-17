@@ -1,32 +1,46 @@
 from typing import List, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class QuestionTypeBase(BaseModel):
     """题型基础模型"""
     en_name: str
     zh_name: str
-    subject: str = "all"
 
 
-class QuestionTypeCreate(QuestionTypeBase):
+class QuestionTypeCreate(BaseModel):
     """创建题型请求模型"""
-    pass
+    en_name: str
+    zh_name: str
+    subjects: List[str] = ["math", "chinese", "english"]
 
 
 class QuestionTypeUpdate(BaseModel):
     """更新题型请求模型"""
     zh_name: Optional[str] = None
-    subject: Optional[str] = None
+    subjects: Optional[List[str]] = None
     is_active: Optional[int] = None
 
 
-class QuestionTypeInDB(QuestionTypeBase):
+class QuestionTypeInDB(BaseModel):
     """数据库中的题型模型"""
     id: int
+    en_name: str
+    zh_name: str
+    subjects: List[str]  # 数据库中是逗号分隔的字符串，validator 会解析为列表
     is_active: int = 1
     created_at: str
     updated_at: str
+
+    @field_validator('subjects', mode='before')
+    @classmethod
+    def parse_subjects(cls, v):
+        """将逗号分隔的字符串转换为列表"""
+        if isinstance(v, list):
+            return v
+        if isinstance(v, str):
+            return [s.strip() for s in v.split(',') if s.strip()]
+        return ["math", "chinese", "english"]
 
 
 class QuestionTypeResponse(QuestionTypeInDB):

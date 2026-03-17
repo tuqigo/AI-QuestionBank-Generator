@@ -174,6 +174,8 @@ SMTP_PASS=your-auth-code
 ```
 操作语句撰写
 1.DDL在schema.sql 2.DML 在migrations文件夹下面
+操作语句执行
+1.DDL启动时自动执行 2.DML 通过命令   python -m db.migrations_cli migrate 执行
 ```
 
 ## 数据库迁移
