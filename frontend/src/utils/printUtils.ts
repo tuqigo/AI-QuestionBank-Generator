@@ -420,7 +420,7 @@ export function getPrintStyles(): string {
     /* 口算题作答区域 - 括号中间的空白区域 */
     .answer-blank {
       display: inline-block;
-      min-width: 50px;
+      min-width: 40px;
     }
 
     /* 答案区域 */
