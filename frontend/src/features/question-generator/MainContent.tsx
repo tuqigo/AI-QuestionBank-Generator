@@ -183,6 +183,36 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
   // 使用全部模板计算筛选选项
   const filterOptions = getFilterOptionsFromTemplates(allTemplates)
 
+  // 计算当前筛选条件摘要
+  const getFilterSummary = () => {
+    const parts: string[] = []
+    if (templateFilter.grade) {
+      // 年级：如 "二年级"
+      const gradeLabel = grades.find(g => g.value === templateFilter.grade)?.label || templateFilter.grade
+      parts.push(gradeLabel)
+    }
+    if (templateFilter.semester) {
+      // 学期：只需要括号内容，如 "(下)"
+      const semesterLabel = semesters.find(s => s.value === templateFilter.semester)?.label || templateFilter.semester
+      // 如果 label 是 "下学期"，转换成 "(下)"
+      if (semesterLabel.includes('上')) {
+        parts.push('(上)')
+      } else if (semesterLabel.includes('下')) {
+        parts.push('(下)')
+      }
+    }
+    if (templateFilter.textbook_version) {
+      // 版本：如 "沪教版"
+      const versionName = textbookVersions.find(v => v.id === templateFilter.textbook_version)?.name ||
+                         textbookVersions.find(v => v.value === templateFilter.textbook_version)?.name ||
+                         templateFilter.textbook_version
+      parts.push(versionName)
+    }
+    return parts.length > 0 ? parts.join('') : ''
+  }
+
+  const filterSummary = getFilterSummary()
+
   // 加载并筛选模板（点击"查找模板"按钮时调用）
   const applyFilter = async () => {
     // 如果还没有加载过模板，先调用 API 加载
@@ -713,6 +743,10 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                       }}
                       title="筛选模板"
                     >
+                      {/* 筛选条件摘要 */}
+                      {filterSummary && (
+                        <span className="filter-summary">{filterSummary}</span>
+                      )}
                       <svg
                         className={`filter-toggle-icon ${showFilterModal || filterOpen ? 'open' : ''}`}
                         viewBox="0 0 24 24"

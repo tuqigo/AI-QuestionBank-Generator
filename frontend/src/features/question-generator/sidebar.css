@@ -448,6 +448,7 @@
   border-radius: 4px;
   transition: all var(--transition-base);
   color: var(--gray-500);
+  gap: 6px;
 }
 
 .btn-filter-icon:hover {
@@ -457,6 +458,14 @@
 
 .btn-filter-icon:active {
   transform: scale(0.95);
+}
+
+/* ===== 筛选条件摘要 ===== */
+.filter-summary {
+  font-size: 0.8125rem;
+  color: var(--gray-500);
+  font-weight: 400;
+  white-space: nowrap;
 }
 
 .filter-toggle-icon {
