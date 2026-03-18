@@ -5,6 +5,47 @@ import '@/types/mathjax'
 import type { LayoutConfig } from '@/config/questionConfig'
 import { QUESTION_TYPE_CONFIGS } from '@/config/questionConfig'
 
+// 动态加载 html2canvas 和 jsPDF
+function loadPdfLibs(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (window.html2canvas && window.jspdf) {
+      resolve()
+      return
+    }
+
+    let scriptsLoaded = 0
+    const checkDone = () => {
+      scriptsLoaded++
+      if (scriptsLoaded >= 2) {
+        console.log('[PDF] 所有库加载完成')
+        resolve()
+      }
+    }
+
+    // 加载 html2canvas
+    if (!window.html2canvas) {
+      const script1 = document.createElement('script')
+      script1.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
+      script1.onload = checkDone
+      script1.onerror = () => reject(new Error('Failed to load html2canvas'))
+      document.head.appendChild(script1)
+    } else {
+      checkDone()
+    }
+
+    // 加载 jsPDF
+    if (!window.jspdf) {
+      const script2 = document.createElement('script')
+      script2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
+      script2.onload = checkDone
+      script2.onerror = () => reject(new Error('Failed to load jsPDF'))
+      document.head.appendChild(script2)
+    } else {
+      checkDone()
+    }
+  })
+}
+
 // 扩展 Window 类型，支持 mathJaxReady
 declare global {
   interface Window {
@@ -713,4 +754,149 @@ export const handlePrint = async (
       document.body.removeChild(printFrame)
     }
   }, 500)
+}
+
+/**
+ * 下载 PDF - 使用 html2canvas + jsPDF 将渲染后的 HTML 转换为 PDF
+ *
+ * @param questions - 结构化题目数据
+ * @param titleText - 试卷标题
+ * @param answers - 答案 markdown（可选）
+ */
+export const handleDownloadPDF = async (
+  questions: StructuredQuestion[],
+  titleText?: string,
+  answers?: string | null
+) => {
+  if (!questions || questions.length === 0) {
+    toast.error('没有可下载的内容')
+    return
+  }
+
+  try {
+    // 1. 加载 html2pdf.js (包含 html2canvas 和 jsPDF)
+    await loadPdfLibs()
+
+    const defaultTitleText = titleText || '练习题'
+
+    // 2. 生成 HTML 内容
+    let contentHtml = renderStructuredQuestions(questions, defaultTitleText)
+
+    // 如果有答案，添加到后面
+    if (answers) {
+      const answersHtml = renderMarkdown(cleanAnswerText(answers))
+      contentHtml += `<div class="answers-section" style="page-break-before: always; margin-top: 30px;"></div>`
+      contentHtml += `<h2 class="answers-title" style="font-size: 14pt; font-weight: bold; margin-top: 30px;">${defaultTitleText}-答案</h2>`
+      contentHtml += `<div class="answers-content">${answersHtml}</div>`
+    }
+
+    // 3. 创建临时容器 - 使用可见的方式，添加四周内边距
+    const container = document.createElement('div')
+    container.className = 'question-print-mode pdf-container'
+    container.innerHTML = contentHtml
+    // 使用固定宽度确保内容正确换行，添加四周内边距（顶部预留页眉位置，左右边距，底部边距）
+    container.style.cssText = 'position: fixed; left: 0; top: 0; width: 794px; padding: 20px; background: white; z-index: 9999;'
+    document.body.appendChild(container)
+
+    console.log('[PDF] 容器已创建，innerHTML length:', container.innerHTML.length)
+    console.log('[PDF] 题目数量:', questions.length)
+
+    // 4. 等待 MathJax 渲染
+    await new Promise<void>((resolve) => {
+      const checkMathJax = () => {
+        if (window.MathJax?.typesetPromise) {
+          window.MathJax.typesetPromise([container])
+            .then(() => {
+              console.log('[PDF] MathJax 渲染完成')
+              resolve()
+            })
+            .catch((err) => {
+              console.error('[PDF] MathJax 渲染失败:', err)
+              resolve()
+            })
+        } else {
+          setTimeout(checkMathJax, 50)
+        }
+      }
+      // 最多等待 10 秒
+      const timeout = setTimeout(() => {
+        console.warn('[PDF] MathJax 等待超时')
+        resolve()
+      }, 10000)
+      checkMathJax()
+    })
+
+    // 额外延迟确保内容完全渲染
+    await new Promise(resolve => setTimeout(resolve, 1500))
+
+    // 检查容器内容
+    console.log('[PDF] 渲染后容器内容:', container.innerHTML.substring(0, 200))
+    console.log('[PDF] 容器子元素数量:', container.children.length)
+
+    // 5. 使用 html2canvas 捕获容器
+    console.log('[PDF] 开始 html2canvas 捕获...')
+
+    if (!window.html2canvas) {
+      throw new Error('html2canvas 未加载')
+    }
+
+    const canvas = await window.html2canvas(container, {
+      scale: 2,
+      useCORS: true,
+      letterRendering: true,
+      allowTaint: false,
+      logging: false,
+      backgroundColor: '#ffffff'
+    })
+
+    console.log('[PDF] html2canvas 完成，canvas 尺寸:', canvas.width, 'x', canvas.height)
+
+    // 6. 创建 PDF
+    const imgData = canvas.toDataURL('image/jpeg', 0.95)
+
+    if (!window.jspdf) {
+      throw new Error('jsPDF 未加载')
+    }
+
+    const pdf = new window.jspdf.jsPDF({
+      unit: 'mm',
+      format: 'a4',
+      orientation: 'portrait'
+    })
+
+    const pdfWidth = 210 // A4 宽度 (mm)
+    const pdfHeight = 297 // A4 高度 (mm)
+    const imgWidth = pdfWidth - 20 // 减去左右各 10mm 边距
+    const imgHeight = (canvas.height / canvas.width) * imgWidth
+
+    let heightLeft = imgHeight
+    let position = 10 // 从顶部 10mm 开始（留出页眉位置）
+
+    // 第一页 - 添加 10mm 左边距
+    pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight, undefined, 'FAST')
+    heightLeft -= pdfHeight
+
+    // 如果内容超出一页，添加更多页面
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight
+      pdf.addPage()
+      pdf.addImage(imgData, 'JPEG', 10, position, imgWidth, imgHeight, undefined, 'FAST')
+      heightLeft -= pdfHeight
+    }
+
+    // 7. 保存 PDF
+    pdf.save(`${defaultTitleText}.pdf`)
+    console.log('[PDF] PDF 保存完成')
+
+    toast.success('PDF 下载成功')
+  } catch (error) {
+    console.error('[PDF] 下载失败:', error)
+    toast.error('PDF 下载失败：' + (error as Error).message)
+  } finally {
+    // 8. 清理临时容器
+    const container = document.querySelector('.pdf-container')
+    if (container) {
+      document.body.removeChild(container)
+    }
+  }
 }
