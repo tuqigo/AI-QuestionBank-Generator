@@ -3,38 +3,20 @@
 /* 此文件仅包含预览容器的展示样式 */
 
 .print-preview-wrapper {
-  padding: 8px;
+  padding: 0;
   background: transparent;
   border-radius: 0;
   box-shadow: none;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* 打印预览容器 - 屏幕预览时的内边距 */
 .print-preview-container {
-  padding: 8px;
-  max-width: 900px;
-  margin: 0 auto;
-}
-
-/* 移动端适配 */
-@media (max-width: 768px) {
-  .print-preview-wrapper {
-    padding: 4px;
-  }
-
-  .print-preview-container {
-    padding: 4px;
-  }
-}
-
-@media (max-width: 640px) {
-  .print-preview-wrapper {
-    padding: 2px;
-  }
-
-  .print-preview-container {
-    padding: 2px;
-  }
+  padding: 0;
+  max-width: 100%;
+  margin: 0;
 }
 
 /* 打印时移除 wrapper 样式 */
@@ -45,10 +27,12 @@
     box-shadow: none !important;
     border-radius: 0 !important;
     background: transparent !important;
+    overflow: visible !important;
   }
 
   .print-preview-container {
     display: block !important;
     padding: 0 !important;
+    width: auto !important;
   }
 }

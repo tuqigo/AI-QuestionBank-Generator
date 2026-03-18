@@ -65,6 +65,20 @@
   margin: 0 auto;
 }
 
+/* 移动端：允许内容横向滚动，保持 PC 端布局 */
+@media (max-width: 768px) {
+  .preview-content {
+    max-width: none;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .questions-container {
+    width: 800px;
+    max-width: none;
+  }
+}
+
 /* 提示词输入区域 */
 .prompt-input-container {
   background: white;
@@ -267,5 +281,15 @@
   .btn-back {
     flex: 1;
     justify-content: center;
+  }
+
+  .preview-content {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .questions-container {
+    max-width: 100%;
+    overflow-x: hidden;
   }
 }

@@ -281,6 +281,52 @@ export function getPrintStyles(): string {
     /* 打印预览容器 - 屏幕预览时的内边距 */
     .print-preview-container {
       padding: 12px;
+      max-width: 100%;
+    }
+
+    /* 移动端适配 - 调整网格列数和字体，适应小屏幕 */
+    @media (max-width: 768px) {
+      .print-preview-container {
+        padding: 8px;
+      }
+
+      .question-grid-container {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+      }
+
+      .question-stem,
+      .option-text,
+      .option-label,
+      .question-number {
+        font-size: 9pt;
+      }
+
+      .question-options {
+        padding-left: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .print-preview-container {
+        padding: 4px;
+      }
+
+      .question-grid-container {
+        grid-template-columns: 1fr !important;
+        gap: 6px !important;
+      }
+
+      .question-stem,
+      .option-text,
+      .option-label,
+      .question-number {
+        font-size: 8.5pt;
+      }
+
+      .question-options {
+        padding-left: 16px;
+      }
     }
 
     /* CSS 变量定义 - 统一预览和打印的样式 */
@@ -491,51 +537,6 @@ export function getPrintStyles(): string {
       margin-bottom: 30px;
       font-size: 18pt;
       font-weight: bold;
-    }
-
-    /* 移动端适配 - 预览模式下使用更紧凑的样式 */
-    @media (max-width: 768px) {
-      .print-preview-container {
-        padding: 8px;
-      }
-
-      .question-stem,
-      .option-text,
-      .option-label,
-      .question-number {
-        font-size: 9.5pt;
-      }
-
-      .question-options {
-        padding-left: 28px;
-      }
-
-      .question-grid-container {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .print-preview-container {
-        padding: 4px;
-      }
-
-      .question-stem,
-      .option-text,
-      .option-label,
-      .question-number {
-        font-size: 9pt;
-      }
-
-      .question-options {
-        padding-left: 24px;
-      }
-
-      .question-grid-container {
-        grid-template-columns: 1fr;
-        gap: 6px;
-      }
     }
 
     /* 答案部分 */
