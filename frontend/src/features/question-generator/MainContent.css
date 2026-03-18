@@ -404,6 +404,15 @@ body {
   height: 20px;
 }
 
+.btn-download-pdf-modal .spinner-icon {
+  animation: spin 1s linear infinite;
+}
+
+.btn-download-pdf-modal:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

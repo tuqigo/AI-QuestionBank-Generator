@@ -897,7 +897,12 @@ export const handleDownloadPDF = async (
       return true  // 分享成功后直接返回，不再执行下载
     }
 
-    // 用户取消、不支持或失败，执行下载
+    if (shareResult === 'cancelled') {
+      console.log('[PDF] 用户取消分享')
+      return false  // 用户取消，不执行下载
+    }
+
+    // unsupported: 桌面端或不支持分享，执行下载
     pdf.save(filename)
     console.log('[PDF] PDF 保存完成')
 
