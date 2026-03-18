@@ -129,6 +129,9 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
   const [progressStage, setProgressStage] = useState<'preparing' | 'connecting' | 'generating' | 'processing' | 'complete'>('preparing')
   const [showProgress, setShowProgress] = useState(false)
 
+  // 预览模态框状态（仅移动端）
+  const [showPreviewModal, setShowPreviewModal] = useState(false)
+
   // 从模板列表中提取唯一的筛选选项
   const getFilterOptionsFromTemplates = (templateList: TemplateItem[]) => {
     if (templateList.length === 0) {
@@ -322,7 +325,10 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
       setTimeout(() => {
         setShowProgress(false)
         // 滚动到打印按钮（仅移动端）- 让按钮位于屏幕中间偏上位置
-        if (isMobile && printButtonRef.current) {
+        if (isMobile) {
+          // 移动端打开预览模态框
+          setShowPreviewModal(true)
+        } else if (printButtonRef.current) {
           const buttonRect = printButtonRef.current.getBoundingClientRect()
           const scrollTop = window.scrollY + buttonRect.top - 80 // 减去顶部导航栏和一点余量
           window.scrollTo({
@@ -409,7 +415,10 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
       // 500ms 后关闭进度条并滚动到打印按钮（仅移动端）
       setTimeout(() => {
         setShowProgress(false)
-        if (isMobile && printButtonRef.current) {
+        // 移动端打开预览模态框
+        if (isMobile) {
+          setShowPreviewModal(true)
+        } else if (printButtonRef.current) {
           printButtonRef.current.scrollIntoView({
             behavior: 'smooth',
             block: 'center'
@@ -446,10 +455,52 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
     await handlePrint(undefined, meta.title, questions, null)
   }
 
+  /**
+   * 打开预览模态框（仅移动端）
+   */
+  const handleOpenPreviewModal = () => {
+    if (!questions.length || !meta) return
+    setShowPreviewModal(true)
+  }
+
   return (
     <div className="app">
       {/* 进度条 Modal */}
       <ProgressModal isOpen={showProgress} stage={progressStage} />
+
+      {/* 预览模态框（仅移动端） */}
+      {isMobile && showPreviewModal && (
+        <div className="preview-modal-overlay" onClick={() => setShowPreviewModal(false)}>
+          <div className="preview-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="preview-modal-header">
+              <h3>{meta?.title || '题目练习'}</h3>
+              <button className="preview-modal-close" onClick={() => setShowPreviewModal(false)}>×</button>
+            </div>
+            <div className="preview-modal-body">
+              <PrintPreview
+                questions={questions}
+                meta={meta}
+              />
+            </div>
+            <div className="preview-modal-footer">
+              <button
+                type="button"
+                className="btn-print-modal"
+                onClick={async () => {
+                  await handlePrintWrapper()
+                }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <polyline points="6,9 6,2 18,2 18,9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M6 18H4C3.46957 18 2.96086 17.7893 2.58579 17.4142C2.21071 17.0391 2 16.5304 2 16V10C2 9.46957 2.21071 8.96086 2.58579 8.58579C2.96086 8.21071 3.46957 8 4 8H20C20.5304 8 21.0391 8.21071 21.4142 8.58579C21.7893 8.96086 22 9.46957 22 10V16C22 16.5304 21.7893 17.0391 21.4142 17.4142C21.0391 17.7893 20.5304 18 20 18H18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <rect x="6" y="14" width="12" height="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                打印题目
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 顶部导航栏 */}
       <header className="header">
@@ -736,94 +787,159 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
               </>
             )}
 
-
-            <div className="action-buttons">
-
-
-              {/* 打印按钮 - 仅在生成成功后显示 */}
-              {questions.length > 0 && meta && (
-                <button
-                  type="button"
-                  className="btn-print-sidebar"
-                  onClick={handlePrintWrapper}
-                  title="打印题目（可另存为 PDF）"
-                  aria-label="打印题目"
-                  ref={printButtonRef}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <polyline points="6,9 6,2 18,2 18,9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M6 18H4C3.46957 18 2.96086 17.7893 2.58579 17.4142C2.21071 17.0391 2 16.5304 2 16V10C2 9.46957 2.21071 8.96086 2.58579 8.58579C2.96086 8.21071 3.46957 8 4 8H20C20.5304 8 21.0391 8.21071 21.4142 8.58579C21.7893 8.96086 22 9.46957 22 10V16C22 16.5304 21.7893 17.0391 21.4142 17.4142C21.0391 17.7893 20.5304 18 20 18H18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    <rect x="6" y="14" width="12" height="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  打印题目
-                </button>
-              )}
-              {/* 生成按钮 */}
-              {mode === 'prompt' ? (
-                <button
-                  type="button"
-                  className="btn-generate"
-                  onClick={generate}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <span className="spinner"></span>
-                      生成中...
-                    </>
-                  ) : (
-                    <>
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M12 20V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M4.92999 4.92999L6.33999 6.33999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M17.66 17.66L19.07 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M2 12H4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M20 12H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M6.33999 17.66L4.92999 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M19.07 4.92999L17.66 6.33999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
-                      </svg>
-                      生成题目
-                    </>
-                  )}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  className="btn-generate"
-                  onClick={generateFromTemplateWrapper}
-                  disabled={loading || !selectedTemplate}
-                >
-                  {loading ? (
-                    <>
-                      <span className="spinner"></span>
-                      生成中...
-                    </>
-                  ) : (
-                    <>
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M12 20V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M4.92999 4.92999L6.33999 6.33999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M17.66 17.66L19.07 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M2 12H4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M20 12H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M6.33999 17.66L4.92999 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M19.07 4.92999L17.66 6.33999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
-                      </svg>
-                      {selectedTemplate ? '生成题目' : '请选择模板'}
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
+            {/* 动作按钮区域（PC 端） */}
+            {!isMobile && (
+              <div className="action-buttons">
+                {/* 打印按钮 - 仅在生成成功后显示 */}
+                {questions.length > 0 && meta && (
+                  <button
+                    type="button"
+                    className="btn-print-sidebar"
+                    onClick={handlePrintWrapper}
+                    title="打印题目（可另存为 PDF）"
+                    aria-label="打印题目"
+                    ref={printButtonRef}
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <polyline points="6,9 6,2 18,2 18,9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M6 18H4C3.46957 18 2.96086 17.7893 2.58579 17.4142C2.21071 17.0391 2 16.5304 2 16V10C2 9.46957 2.21071 8.96086 2.58579 8.58579C2.96086 8.21071 3.46957 8 4 8H20C20.5304 8 21.0391 8.21071 21.4142 8.58579C21.7893 8.96086 22 9.46957 22 10V16C22 16.5304 21.7893 17.0391 21.4142 17.4142C21.0391 17.7893 20.5304 18 20 18H18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <rect x="6" y="14" width="12" height="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    打印题目
+                  </button>
+                )}
+                {/* 生成按钮 */}
+                {mode === 'prompt' ? (
+                  <button
+                    type="button"
+                    className="btn-generate"
+                    onClick={generate}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <span className="spinner"></span>
+                        生成中...
+                      </>
+                    ) : (
+                      <>
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12 2V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M12 20V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M4.92999 4.92999L6.33999 6.33999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M17.66 17.66L19.07 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M2 12H4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M20 12H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M6.33999 17.66L4.92999 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M19.07 4.92999L17.66 6.33999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+                        </svg>
+                        生成题目
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="btn-generate"
+                    onClick={generateFromTemplateWrapper}
+                    disabled={loading || !selectedTemplate}
+                  >
+                    {loading ? (
+                      <>
+                        <span className="spinner"></span>
+                        生成中...
+                      </>
+                    ) : (
+                      <>
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12 2V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M12 20V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M4.92999 4.92999L6.33999 6.33999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M17.66 17.66L19.07 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M2 12H4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M20 12H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M6.33999 17.66L4.92999 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <path d="M19.07 4.92999L17.66 6.33999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+                        </svg>
+                        {selectedTemplate ? '生成题目' : '请选择模板'}
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </aside>
 
+        {/* 移动端底部固定按钮 */}
+        {isMobile && (
+          <div className="mobile-fixed-footer">
+            {mode === 'prompt' ? (
+              <button
+                type="button"
+                className="btn-generate"
+                onClick={generate}
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <span className="spinner spinner-small"></span>
+                    生成中...
+                  </>
+                ) : (
+                  <>
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 2V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M12 20V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M4.92999 4.92999L6.33999 6.33999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M17.66 17.66L19.07 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M2 12H4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M20 12H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M6.33999 17.66L4.92999 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M19.07 4.92999L17.66 6.33999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+                    </svg>
+                    生成题目
+                  </>
+                )}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn-generate"
+                onClick={generateFromTemplateWrapper}
+                disabled={loading || !selectedTemplate}
+              >
+                {loading ? (
+                  <>
+                    <span className="spinner spinner-small"></span>
+                    生成中...
+                  </>
+                ) : (
+                  <>
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 2V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M12 20V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M4.92999 4.92999L6.33999 6.33999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M17.66 17.66L19.07 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M2 12H4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M20 12H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M6.33999 17.66L4.92999 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M19.07 4.92999L17.66 6.33999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+                    </svg>
+                    {selectedTemplate ? '生成题目' : '请选择模板'}
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        )}
+
         {/* 右侧预览区 */}
-        <section className="preview" ref={previewRef}>
+        <section className={`preview ${isMobile ? 'mobile-hidden' : ''}`} ref={previewRef}>
           <div className="preview-card">
             {questions.length > 0 ? (
               <div className="preview-body">
