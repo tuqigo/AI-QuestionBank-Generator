@@ -302,8 +302,8 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  padding: 10px var(--space-4);
-  font-size: 0.9375rem;
+  padding: 14px var(--space-4);
+  font-size: 1rem;
   font-weight: 600;
   color: white;
   background: linear-gradient(135deg, #ff6b4a 0%, #ff8a65 100%);
@@ -314,7 +314,7 @@
   box-shadow: 0 4px 16px rgba(255, 107, 74, 0.4);
   position: relative;
   overflow: hidden;
-  height: 40px;
+  height: 52px;
 }
 
 .btn-generate::before {
@@ -357,8 +357,8 @@
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  padding: 10px var(--space-4);
-  font-size: 0.9375rem;
+  padding: 14px var(--space-4);
+  font-size: 1rem;
   font-weight: 600;
   color: white;
   background: linear-gradient(135deg, #ff6b4a 0%, #ff8a65 100%);
@@ -369,7 +369,7 @@
   box-shadow: 0 4px 16px rgba(255, 107, 74, 0.4);
   position: relative;
   overflow: hidden;
-  height: 40px;
+  height: 52px;
 }
 
 .btn-print-sidebar::before {

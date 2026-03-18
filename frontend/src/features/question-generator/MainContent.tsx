@@ -482,7 +482,7 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
         <div className="preview-modal-overlay" onClick={() => setShowPreviewModal(false)}>
           <div className="preview-modal" onClick={(e) => e.stopPropagation()}>
             <div className="preview-modal-header">
-              <h3>{meta?.title || '题目练习'}</h3>
+              <h3>打印预览</h3>
               <button className="preview-modal-close" onClick={() => setShowPreviewModal(false)}>×</button>
             </div>
             <div className="preview-modal-body">
@@ -521,50 +521,98 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
             </div>
             <div className="filter-modal-body">
               <div className="filter-modal-content">
-                <label className="filter-modal-label">年级</label>
-                <select
-                  value={templateFilter.grade || ''}
-                  onChange={(e) => setTemplateFilter({ ...templateFilter, grade: e.target.value as any })}
-                  className="filter-modal-select"
-                >
-                  <option value="">全部年级</option>
-                  {filterOptions.grades.map(g => (
-                    <option key={g.value} value={g.value}>{g.label}</option>
-                  ))}
-                </select>
-                <label className="filter-modal-label">学科</label>
-                <select
-                  value={templateFilter.subject || ''}
-                  onChange={(e) => setTemplateFilter({ ...templateFilter, subject: e.target.value as any })}
-                  className="filter-modal-select"
-                >
-                  <option value="">全部学科</option>
-                  {filterOptions.subjects.map(s => (
-                    <option key={s.value} value={s.value}>{s.label}</option>
-                  ))}
-                </select>
-                <label className="filter-modal-label">学期</label>
-                <select
-                  value={templateFilter.semester || ''}
-                  onChange={(e) => setTemplateFilter({ ...templateFilter, semester: e.target.value as any })}
-                  className="filter-modal-select"
-                >
-                  <option value="">全部学期</option>
-                  {filterOptions.semesters.map(s => (
-                    <option key={s.value} value={s.value}>{s.label}</option>
-                  ))}
-                </select>
-                <label className="filter-modal-label">版本</label>
-                <select
-                  value={templateFilter.textbook_version || ''}
-                  onChange={(e) => setTemplateFilter({ ...templateFilter, textbook_version: e.target.value })}
-                  className="filter-modal-select"
-                >
-                  <option value="">全部版本</option>
-                  {filterOptions.textbook_versions.map(v => (
-                    <option key={v.value} value={v.value}>{v.label}</option>
-                  ))}
-                </select>
+                {/* 学科 */}
+                <div className="filter-modal-section">
+                  <label className="filter-modal-label">学科</label>
+                  <div className="filter-modal-options">
+                    <button
+                      type="button"
+                      className={`filter-modal-option ${!templateFilter.subject ? 'selected' : ''}`}
+                      onClick={() => setTemplateFilter({ ...templateFilter, subject: '' })}
+                    >
+                      全部
+                    </button>
+                    {filterOptions.subjects.map(s => (
+                      <button
+                        key={s.value}
+                        type="button"
+                        className={`filter-modal-option ${templateFilter.subject === s.value ? 'selected' : ''}`}
+                        onClick={() => setTemplateFilter({ ...templateFilter, subject: s.value })}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {/* 年级 */}
+                <div className="filter-modal-section">
+                  <label className="filter-modal-label">年级</label>
+                  <div className="filter-modal-options">
+                    <button
+                      type="button"
+                      className={`filter-modal-option ${!templateFilter.grade ? 'selected' : ''}`}
+                      onClick={() => setTemplateFilter({ ...templateFilter, grade: '' })}
+                    >
+                      全部
+                    </button>
+                    {filterOptions.grades.map(g => (
+                      <button
+                        key={g.value}
+                        type="button"
+                        className={`filter-modal-option ${templateFilter.grade === g.value ? 'selected' : ''}`}
+                        onClick={() => setTemplateFilter({ ...templateFilter, grade: g.value })}
+                      >
+                        {g.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {/* 学期 */}
+                <div className="filter-modal-section">
+                  <label className="filter-modal-label">学期</label>
+                  <div className="filter-modal-options">
+                    <button
+                      type="button"
+                      className={`filter-modal-option ${!templateFilter.semester ? 'selected' : ''}`}
+                      onClick={() => setTemplateFilter({ ...templateFilter, semester: '' })}
+                    >
+                      全部
+                    </button>
+                    {filterOptions.semesters.map(s => (
+                      <button
+                        key={s.value}
+                        type="button"
+                        className={`filter-modal-option ${templateFilter.semester === s.value ? 'selected' : ''}`}
+                        onClick={() => setTemplateFilter({ ...templateFilter, semester: s.value })}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {/* 版本 */}
+                <div className="filter-modal-section">
+                  <label className="filter-modal-label">版本</label>
+                  <div className="filter-modal-options">
+                    <button
+                      type="button"
+                      className={`filter-modal-option ${!templateFilter.textbook_version ? 'selected' : ''}`}
+                      onClick={() => setTemplateFilter({ ...templateFilter, textbook_version: '' })}
+                    >
+                      全部
+                    </button>
+                    {filterOptions.textbook_versions.map(v => (
+                      <button
+                        key={v.value}
+                        type="button"
+                        className={`filter-modal-option ${templateFilter.textbook_version === v.value ? 'selected' : ''}`}
+                        onClick={() => setTemplateFilter({ ...templateFilter, textbook_version: v.value })}
+                      >
+                        {v.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
             <div className="filter-modal-footer">
