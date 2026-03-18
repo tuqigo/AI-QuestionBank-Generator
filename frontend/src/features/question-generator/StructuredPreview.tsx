@@ -57,7 +57,7 @@ export default function StructuredPreview() {
 
     const script = document.createElement('script')
     script.type = 'text/javascript'
-    script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js'
+    script.src = '/mathjax@4.1.1/tex-mml-chtml.js'
     script.async = true
     script.id = 'mathjax-script'
 

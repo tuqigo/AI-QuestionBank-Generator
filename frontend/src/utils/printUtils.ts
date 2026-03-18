@@ -4,53 +4,13 @@ import type { StructuredQuestion } from '@/types/question'
 import '@/types/mathjax'
 import type { LayoutConfig } from '@/config/questionConfig'
 import { QUESTION_TYPE_CONFIGS } from '@/config/questionConfig'
+import html2canvas from 'html2canvas'
+import { jsPDF } from 'jspdf'
 
-// 动态加载 html2canvas 和 jsPDF
-function loadPdfLibs(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (window.html2canvas && window.jspdf) {
-      resolve()
-      return
-    }
-
-    let scriptsLoaded = 0
-    const checkDone = () => {
-      scriptsLoaded++
-      if (scriptsLoaded >= 2) {
-        console.log('[PDF] 所有库加载完成')
-        resolve()
-      }
-    }
-
-    // 加载 html2canvas
-    if (!window.html2canvas) {
-      const script1 = document.createElement('script')
-      script1.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
-      script1.onload = checkDone
-      script1.onerror = () => reject(new Error('Failed to load html2canvas'))
-      document.head.appendChild(script1)
-    } else {
-      checkDone()
-    }
-
-    // 加载 jsPDF
-    if (!window.jspdf) {
-      const script2 = document.createElement('script')
-      script2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
-      script2.onload = checkDone
-      script2.onerror = () => reject(new Error('Failed to load jsPDF'))
-      document.head.appendChild(script2)
-    } else {
-      checkDone()
-    }
-  })
-}
-
-// 扩展 Window 类型，支持 mathJaxReady
-declare global {
-  interface Window {
-    mathJaxReady?: boolean
-  }
+// 挂载到 window 供后续使用
+if (typeof window !== 'undefined') {
+  ;(window as any).html2canvas = html2canvas
+  ;(window as any).jspdf = { jsPDF }
 }
 
 /**
@@ -693,7 +653,7 @@ export const handlePrint = async (
             }
           };
         <\/script>
-        <script id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"><\/script>
+        <script id="MathJax-script" src="/mathjax@4.1.1/tex-mml-chtml.js"><\/script>
       </head>
       <body class="question-print-mode">
         ${contentHtml}
@@ -774,9 +734,6 @@ export const handleDownloadPDF = async (
   }
 
   try {
-    // 1. 加载 html2pdf.js (包含 html2canvas 和 jsPDF)
-    await loadPdfLibs()
-
     const defaultTitleText = titleText || '练习题'
 
     // 2. 生成 HTML 内容

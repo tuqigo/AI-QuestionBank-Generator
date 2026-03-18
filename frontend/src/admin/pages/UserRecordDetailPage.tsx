@@ -28,7 +28,7 @@ const loadMathJax = (): Promise<void> => {
       }
     }
     const script = document.createElement('script')
-    script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js'
+    script.src = '/mathjax@4.1.1/tex-svg.js'
     script.async = true
     script.onload = () => resolve()
     script.onerror = () => reject(new Error('Failed to load MathJax SVG'))
