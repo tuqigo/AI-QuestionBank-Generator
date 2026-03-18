@@ -315,17 +315,21 @@ body {
 .preview-modal-close {
   background: none;
   border: none;
-  font-size: 1.5rem;
   color: #737373;
   cursor: pointer;
   padding: 0;
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 6px;
   transition: all 0.2s;
+}
+
+.preview-modal-close svg {
+  width: 33;
+  height: 33px;
 }
 
 .preview-modal-close:hover {
@@ -450,17 +454,21 @@ body {
 .filter-modal-close {
   background: none;
   border: none;
-  font-size: 1.5rem;
   color: #737373;
   cursor: pointer;
   padding: 0;
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 6px;
   transition: all 0.2s;
+}
+
+.filter-modal-close svg {
+  width: 33px;
+  height: 33px;
 }
 
 .filter-modal-close:hover {

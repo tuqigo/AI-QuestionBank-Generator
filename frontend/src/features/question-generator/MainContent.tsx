@@ -10,6 +10,7 @@ import { generateStructuredQuestions, getTemplates, generateFromTemplate } from 
 import { getConfigs, type ConfigOption, type TextbookVersionOption } from '@/api/config'
 import type { StructuredQuestion, MetaData, TemplateItem, TemplateFilter } from '@/types/question'
 import { useMathJaxSimple } from '@/hooks/useMathJax'
+import { useSwipeToClose } from '@/hooks/useSwipeToClose'
 import './MainContent.css'
 
 /**
@@ -61,7 +62,6 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
   const [templateLoading, setTemplateLoading] = useState(false)
   const [templateQuantity, setTemplateQuantity] = useState(15)
   const [filterOpen, setFilterOpen] = useState(false)
-  const [showFilterModal, setShowFilterModal] = useState(false)
 
   // 配置常量状态
   const [grades, setGrades] = useState<ConfigOption[]>([])
@@ -129,6 +129,22 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
 
   // 预览模态框状态（仅移动端）
   const [showPreviewModal, setShowPreviewModal] = useState(false)
+
+  // 筛选模态框状态（仅移动端）
+  const [showFilterModal, setShowFilterModal] = useState(false)
+
+  // 滑动手势关闭模态框
+  useSwipeToClose({
+    isOpen: showPreviewModal,
+    onClose: () => setShowPreviewModal(false),
+    threshold: 80
+  })
+
+  useSwipeToClose({
+    isOpen: showFilterModal,
+    onClose: () => setShowFilterModal(false),
+    threshold: 80
+  })
 
   // 从模板列表中提取唯一的筛选选项
   const getFilterOptionsFromTemplates = (templateList: TemplateItem[]) => {
@@ -502,7 +518,12 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
           <div className="preview-modal" onClick={(e) => e.stopPropagation()}>
             <div className="preview-modal-header">
               <h3>打印预览</h3>
-              <button className="preview-modal-close" onClick={() => setShowPreviewModal(false)}>×</button>
+              <button className="preview-modal-close" onClick={() => setShowPreviewModal(false)}>
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
             </div>
             <div className="preview-modal-body">
               <PrintPreview
@@ -544,7 +565,12 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
           <div className="filter-modal" onClick={(e) => e.stopPropagation()}>
             <div className="filter-modal-header">
               <h3>筛选模板</h3>
-              <button className="filter-modal-close" onClick={() => setShowFilterModal(false)}>×</button>
+              <button className="filter-modal-close" onClick={() => setShowFilterModal(false)}>
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
             </div>
             <div className="filter-modal-body">
               <div className="filter-modal-content">
