@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchWithAuth, clearToken } from '@/core/auth/userAuth'
 import { validatePrompt } from '@/utils/promptValidator'
-import { handlePrint } from '@/utils/printUtils'
+import { handlePrint, handleDownloadPDF } from '@/utils/printUtils'
 import HistoryDropdown from '../history/HistoryList'
 import ProgressModal from './ProgressModal'
 import PrintPreview from '@/components/PrintPreview'
@@ -494,6 +494,14 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
   }
 
   /**
+   * 下载 PDF 功能
+   */
+  const handleDownloadPDFWrapper = async () => {
+    if (!questions.length || !meta) return
+    await handleDownloadPDF(questions, meta.title, null)
+  }
+
+  /**
    * 打开预览模态框（仅移动端）
    */
   const handleOpenPreviewModal = () => {
@@ -534,6 +542,20 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                   <rect x="6" y="14" width="12" height="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 打印题目
+              </button>
+              <button
+                type="button"
+                className="btn-download-pdf-modal"
+                onClick={async () => {
+                  await handleDownloadPDFWrapper()
+                }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <polyline points="7 10 12 15 17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                下载 PDF
               </button>
             </div>
           </div>
@@ -934,21 +956,38 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
               <div className="action-buttons">
                 {/* 打印按钮 - 仅在生成成功后显示 */}
                 {questions.length > 0 && meta && (
-                  <button
-                    type="button"
-                    className="btn-print-sidebar"
-                    onClick={handlePrintWrapper}
-                    title="打印题目（可另存为 PDF）"
-                    aria-label="打印题目"
-                    ref={printButtonRef}
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <polyline points="6,9 6,2 18,2 18,9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M6 18H4C3.46957 18 2.96086 17.7893 2.58579 17.4142C2.21071 17.0391 2 16.5304 2 16V10C2 9.46957 2.21071 8.96086 2.58579 8.58579C2.96086 8.21071 3.46957 8 4 8H20C20.5304 8 21.0391 8.21071 21.4142 8.58579C21.7893 8.96086 22 9.46957 22 10V16C22 16.5304 21.7893 17.0391 21.4142 17.4142C21.0391 17.7893 20.5304 18 20 18H18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <rect x="6" y="14" width="12" height="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    打印题目
-                  </button>
+                  <>
+                    <button
+                      type="button"
+                      className="btn-print-sidebar"
+                      onClick={handlePrintWrapper}
+                      title="打印题目（可另存为 PDF）"
+                      aria-label="打印题目"
+                      ref={printButtonRef}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <polyline points="6,9 6,2 18,2 18,9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M6 18H4C3.46957 18 2.96086 17.7893 2.58579 17.4142C2.21071 17.0391 2 16.5304 2 16V10C2 9.46957 2.21071 8.96086 2.58579 8.58579C2.96086 8.21071 3.46957 8 4 8H20C20.5304 8 21.0391 8.21071 21.4142 8.58579C21.7893 8.96086 22 9.46957 22 10V16C22 16.5304 21.7893 17.0391 21.4142 17.4142C21.0391 17.7893 20.5304 18 20 18H18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <rect x="6" y="14" width="12" height="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      打印题目
+                    </button>
+                    {/* 下载 PDF 按钮 */}
+                    <button
+                      type="button"
+                      className="btn-download-pdf"
+                      onClick={handleDownloadPDFWrapper}
+                      title="下载 PDF"
+                      aria-label="下载 PDF"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <polyline points="7 10 12 15 17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      下载 PDF
+                    </button>
+                  </>
                 )}
                 {/* 生成按钮 */}
                 {mode === 'prompt' ? (

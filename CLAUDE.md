@@ -95,7 +95,7 @@ frontend/
 
 | 层级 | 技术 |
 |-------|------------|
-| 后端 | FastAPI (Python 3.8+), SQLite, JWT |
+| 后端 | FastAPI (Python 3.8+ 且机械后端代码要兼容), SQLite, JWT |
 | 前端 | React 19, TypeScript, Vite 7 |
 | AI | DashScope (Qwen-plus, Qwen-vision) |
 | 渲染 | MathJax (LaTeX), marked (Markdown) |
@@ -120,20 +120,6 @@ frontend/
 - JWT Token（用户 7 天，管理员 2 小时）
 - 新用户必须选择年级
 
-### 4. 历史与分享
-- 用户题目记录（软删除）
-- 分享 Token 用于公开链接
-- 基于游标的分页
-
-## 测试
-
-```bash
-# 后端测试 (pytest)
-cd backend
-python -m pytest tests/
-
-# 前端 - 尚未配置测试框架
-```
 
 ## 部署
 
@@ -239,8 +225,8 @@ python -m db.migrations_cli history
 3. 检查 `ai_generation_records` 表中的错误消息
 
 
-### 必要说明
-1. 如果有图的需求请使用 Mermaid 语法表示
+### 重要说明
+1. 不要轻易push以及部署代码，除非收到我明确指令，我让你提交代码，你只需要commit无需push
 2. **Web Search 代理配置**：当需要访问外网（如 GitHub、Google 搜索等）时，必须使用以下代理配置：
    ```bash
    HTTPS_PROXY="http://127.0.0.1:10808"
