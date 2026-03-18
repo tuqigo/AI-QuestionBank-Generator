@@ -22,26 +22,32 @@ function isMobileDevice(): boolean {
 
 /**
  * 移动端分享文件
+ * @returns 'shared' 分享成功，'cancelled' 用户取消，'unsupported' 不支持
  */
-async function shareFileOnMobile(file: Blob, filename: string): Promise<boolean> {
-  if (!isMobileDevice()) return false
+async function shareFileOnMobile(file: Blob, filename: string): Promise<'shared' | 'cancelled' | 'unsupported'> {
+  if (!isMobileDevice()) return 'unsupported'
 
   // 检查是否支持 Web Share API Level 2
-  if (!navigator.share || !navigator.canShare) return false
+  if (!navigator.share || !navigator.canShare) return 'unsupported'
 
   const fileToShare = new File([file], filename, { type: file.type })
   const shareData: ShareData = { files: [fileToShare] }
 
   // 检查是否可以分享
-  if (!navigator.canShare(shareData)) return false
+  if (!navigator.canShare(shareData)) return 'unsupported'
 
   try {
     await navigator.share(shareData)
-    return true
+    return 'shared'
   } catch (err) {
-    // 用户取消分享或其他错误
-    console.log('[Share] 分享失败或取消:', err)
-    return false
+    // 用户取消分享
+    if ((err as Error).name === 'AbortError') {
+      console.log('[Share] 用户取消分享')
+      return 'cancelled'
+    }
+    // 其他错误
+    console.log('[Share] 分享失败:', err)
+    return 'unsupported'
   }
 }
 
@@ -884,14 +890,16 @@ export const handleDownloadPDF = async (
 
     // 8. 尝试移动端分享
     const pdfBlob = new Blob([pdfData], { type: 'application/pdf' })
-    const shared = await shareFileOnMobile(pdfBlob, filename)
-    if (shared) {
+    const shareResult = await shareFileOnMobile(pdfBlob, filename)
+
+    if (shareResult === 'shared') {
       console.log('[PDF] 已通过系统分享')
-    } else {
-      // 桌面端或分享失败，直接下载
-      pdf.save(filename)
-      console.log('[PDF] PDF 保存完成')
+      return true  // 分享成功后直接返回，不再执行下载
     }
+
+    // 用户取消、不支持或失败，执行下载
+    pdf.save(filename)
+    console.log('[PDF] PDF 保存完成')
 
     return true
   } catch (error) {
