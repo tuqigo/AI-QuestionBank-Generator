@@ -144,15 +144,36 @@ python -m pytest tests/
 ```
 
 ### 前端（Cloudflare Pages）
+
+**注意**：在中国大陆部署时需要配置代理，否则可能遇到连接问题。
+
 ```bash
 cd frontend
 
-# 方式一：使用 deploy 脚本（推荐）
-npm run deploy
+# 配置代理（中国大陆地区必需）
+export HTTPS_PROXY="http://127.0.0.1:10808"
+```
 
-# 方式二：手动部署（指定项目名称）
-npm run build:cf
-npx wrangler pages deploy dist --project-name=zyb-frontend --commit-dirty=true
+#### 部署方式
+
+**方式一：使用 deploy 脚本**
+```bash
+npm run deploy
+```
+
+**方式二：wrangler 部署（绕过 UTF-8 bug，推荐）**
+```bash
+npx wrangler pages deploy dist \
+  --project-name=zyb-frontend \
+  --branch=main \
+  --commit-hash=$(git rev-parse HEAD) \
+  --commit-message="redeploy"
+```
+
+**git push 也需要代理**：
+```bash
+export HTTPS_PROXY="http://127.0.0.1:10808"
+git push origin main
 ```
 
 ## 环境变量
