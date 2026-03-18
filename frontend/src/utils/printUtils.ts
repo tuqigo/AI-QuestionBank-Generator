@@ -14,28 +14,6 @@ if (typeof window !== 'undefined') {
 }
 
 /**
- * 显示 loading 状态
- */
-let loadingEl: HTMLElement | null = null
-
-function showLoading() {
-  if (loadingEl) return
-  loadingEl = document.createElement('div')
-  loadingEl.className = 'pdf-loading-overlay'
-  loadingEl.innerHTML = '<div class="pdf-loading-spinner"><div class="spinner"></div><p>正在生成 PDF...</p></div>'
-  document.body.appendChild(loadingEl)
-  console.log('[Loading] Loading 已显示')
-}
-
-function hideLoading() {
-  if (loadingEl) {
-    document.body.removeChild(loadingEl)
-    console.log('[Loading] Loading 已隐藏')
-    loadingEl = null
-  }
-}
-
-/**
  * 检测是否为移动设备
  */
 function isMobileDevice(): boolean {
@@ -776,19 +754,17 @@ export const handlePrint = async (
  * @param questions - 结构化题目数据
  * @param titleText - 试卷标题
  * @param answers - 答案 markdown（可选）
+ * @returns 是否成功
  */
 export const handleDownloadPDF = async (
   questions: StructuredQuestion[],
   titleText?: string,
   answers?: string | null
-) => {
+): Promise<boolean> => {
   if (!questions || questions.length === 0) {
     toast.error('没有可下载的内容')
-    return
+    return false
   }
-
-  // 显示 loading
-  showLoading()
 
   try {
     const defaultTitleText = titleText || '练习题'
@@ -911,23 +887,22 @@ export const handleDownloadPDF = async (
     const shared = await shareFileOnMobile(pdfBlob, filename)
     if (shared) {
       console.log('[PDF] 已通过系统分享')
-      toast.success('已打开分享')
     } else {
       // 桌面端或分享失败，直接下载
       pdf.save(filename)
       console.log('[PDF] PDF 保存完成')
-      toast.success('PDF 下载成功')
     }
+
+    return true
   } catch (error) {
     console.error('[PDF] 下载失败:', error)
     toast.error('PDF 下载失败：' + (error as Error).message)
+    return false
   } finally {
     // 9. 清理临时容器
     const container = document.querySelector('.pdf-container')
     if (container) {
       document.body.removeChild(container)
     }
-    // 隐藏 loading
-    hideLoading()
   }
 }
