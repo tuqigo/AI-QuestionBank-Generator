@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchWithAuth, clearToken } from '@/core/auth/userAuth'
 import { validatePrompt } from '@/utils/promptValidator'
-import { handlePrint, handleDownloadPDF } from '@/utils/printUtils'
+import { handleDownloadPDF } from '@/utils/printUtils'
 import HistoryDropdown from '../history/HistoryList'
 import ProgressModal from './ProgressModal'
 import PrintPreview from '@/components/PrintPreview'
@@ -122,9 +122,6 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
 
   // 预览区 ref，用于自动滚动
   const previewRef = useRef<HTMLDivElement>(null)
-
-  // 打印按钮 ref，用于移动端滚动定位
-  const printButtonRef = useRef<HTMLButtonElement>(null)
 
   // 进度条状态
   const [progressStage, setProgressStage] = useState<'preparing' | 'connecting' | 'generating' | 'processing' | 'complete'>('preparing')
@@ -362,17 +359,9 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
 
       setTimeout(() => {
         setShowProgress(false)
-        // 滚动到打印按钮（仅移动端）- 让按钮位于屏幕中间偏上位置
+        // 移动端打开预览模态框
         if (isMobile) {
-          // 移动端打开预览模态框
           setShowPreviewModal(true)
-        } else if (printButtonRef.current) {
-          const buttonRect = printButtonRef.current.getBoundingClientRect()
-          const scrollTop = window.scrollY + buttonRect.top - 80 // 减去顶部导航栏和一点余量
-          window.scrollTo({
-            top: scrollTop,
-            behavior: 'smooth'
-          })
         }
       }, 500)
     } catch (e) {
@@ -456,11 +445,6 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
         // 移动端打开预览模态框
         if (isMobile) {
           setShowPreviewModal(true)
-        } else if (printButtonRef.current) {
-          printButtonRef.current.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
-          })
         }
       }, 500)
     } catch (e) {
@@ -482,15 +466,6 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
       // 清除所有定时器
       stageTimers.forEach(clearTimeout)
     }
-  }
-
-  /**
-   * 打印功能 - 使用 printUtils 中的 handlePrint
-   */
-  const handlePrintWrapper = async () => {
-    if (!questions.length || !meta) return
-    // 使用 printUtils 中的 handlePrint，传入结构化题目数据
-    await handlePrint(undefined, meta.title, questions, null)
   }
 
   const [downloadingPDF, setDownloadingPDF] = useState(false)
@@ -536,20 +511,6 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
               />
             </div>
             <div className="preview-modal-footer">
-              <button
-                type="button"
-                className="btn-print-modal"
-                onClick={async () => {
-                  await handlePrintWrapper()
-                }}
-              >
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <polyline points="6,9 6,2 18,2 18,9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M6 18H4C3.46957 18 2.96086 17.7893 2.58579 17.4142C2.21071 17.0391 2 16.5304 2 16V10C2 9.46957 2.21071 8.96086 2.58579 8.58579C2.96086 8.21071 3.46957 8 4 8H20C20.5304 8 21.0391 8.21071 21.4142 8.58579C21.7893 8.96086 22 9.46957 22 10V16C22 16.5304 21.7893 17.0391 21.4142 17.4142C21.0391 17.7893 20.5304 18 20 18H18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  <rect x="6" y="14" width="12" height="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                打印题目
-              </button>
               <button
                 type="button"
                 className="btn-download-pdf-modal"
@@ -876,37 +837,6 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                     ))}
                   </div>
                 </section>
-
-                {/* 数量选择 */}
-                {selectedTemplate && (
-                  <section className="panel-section">
-                    <div className="section-header">
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 20V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M16 20V8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M8 20V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      <label>题目数量</label>
-                    </div>
-                    <div className="quantity-selector">
-                      <button
-                        type="button"
-                        className="quantity-btn"
-                        onClick={() => setTemplateQuantity(Math.max(5, templateQuantity - 5))}
-                      >
-                        -
-                      </button>
-                      <span className="quantity-value">{templateQuantity} 道</span>
-                      <button
-                        type="button"
-                        className="quantity-btn"
-                        onClick={() => setTemplateQuantity(Math.min(100, templateQuantity + 5))}
-                      >
-                        +
-                      </button>
-                    </div>
-                  </section>
-                )}
               </>
             )}
 
@@ -969,48 +899,50 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
             {/* 动作按钮区域（PC 端） */}
             {!isMobile && (
               <div className="action-buttons">
-                {/* 打印按钮 - 仅在生成成功后显示 */}
+                {/* 题目数量控制 - 模板模式下显示 */}
+                {mode === 'template' && selectedTemplate && (
+                  <div className="quantity-control-inline">
+                    <button
+                      type="button"
+                      className="quantity-btn-inline"
+                      onClick={() => setTemplateQuantity(Math.max(5, templateQuantity - 5))}
+                    >
+                      -
+                    </button>
+                    <span className="quantity-value-inline">{templateQuantity} 道</span>
+                    <button
+                      type="button"
+                      className="quantity-btn-inline"
+                      onClick={() => setTemplateQuantity(Math.min(100, templateQuantity + 5))}
+                    >
+                      +
+                    </button>
+                  </div>
+                )}
+                {/* 下载 PDF 按钮 - 仅在生成成功后显示 */}
                 {questions.length > 0 && meta && (
-                  <>
-                    <button
-                      type="button"
-                      className="btn-print-sidebar"
-                      onClick={handlePrintWrapper}
-                      title="打印题目（可另存为 PDF）"
-                      aria-label="打印题目"
-                      ref={printButtonRef}
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <polyline points="6,9 6,2 18,2 18,9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M6 18H4C3.46957 18 2.96086 17.7893 2.58579 17.4142C2.21071 17.0391 2 16.5304 2 16V10C2 9.46957 2.21071 8.96086 2.58579 8.58579C2.96086 8.21071 3.46957 8 4 8H20C20.5304 8 21.0391 8.21071 21.4142 8.58579C21.7893 8.96086 22 9.46957 22 10V16C22 16.5304 21.7893 17.0391 21.4142 17.4142C21.0391 17.7893 20.5304 18 20 18H18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <rect x="6" y="14" width="12" height="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <button
+                    type="button"
+                    className="btn-download-pdf"
+                    onClick={handleDownloadPDFWrapper}
+                    disabled={downloadingPDF}
+                    title={downloadingPDF ? '生成中...' : '下载 PDF'}
+                    aria-label="下载 PDF"
+                  >
+                    {downloadingPDF ? (
+                      <svg className="spinner-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeDasharray="32 64" opacity="0.3" />
+                        <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
                       </svg>
-                      打印题目
-                    </button>
-                    {/* 下载 PDF 按钮 */}
-                    <button
-                      type="button"
-                      className="btn-download-pdf"
-                      onClick={handleDownloadPDFWrapper}
-                      disabled={downloadingPDF}
-                      title={downloadingPDF ? '生成中...' : '下载 PDF'}
-                      aria-label="下载 PDF"
-                    >
-                      {downloadingPDF ? (
-                        <svg className="spinner-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeDasharray="32 64" opacity="0.3" />
-                          <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                        </svg>
-                      ) : (
-                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          <polyline points="7 10 12 15 17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                          <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      )}
-                      {downloadingPDF ? '生成中...' : '下载 PDF'}
-                    </button>
-                  </>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <polyline points="7 10 12 15 17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                    {downloadingPDF ? '生成中...' : '下载 PDF'}
+                  </button>
                 )}
                 {/* 生成按钮 */}
                 {mode === 'prompt' ? (
@@ -1110,34 +1042,56 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                 )}
               </button>
             ) : (
-              <button
-                type="button"
-                className="btn-generate"
-                onClick={generateFromTemplateWrapper}
-                disabled={loading || !selectedTemplate}
-              >
-                {loading ? (
-                  <>
-                    <span className="spinner spinner-small"></span>
-                    生成中...
-                  </>
-                ) : (
-                  <>
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 2V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M12 20V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M4.92999 4.92999L6.33999 6.33999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M17.66 17.66L19.07 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M2 12H4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M20 12H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M6.33999 17.66L4.92999 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M19.07 4.92999L17.66 6.33999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
-                    </svg>
-                    {selectedTemplate ? '生成题目' : '请选择模板'}
-                  </>
+              <div className="mobile-generate-wrapper">
+                {/* 题目数量控制 */}
+                {selectedTemplate && (
+                  <div className="quantity-control-mobile">
+                    <button
+                      type="button"
+                      className="quantity-btn-mobile"
+                      onClick={() => setTemplateQuantity(Math.max(5, templateQuantity - 5))}
+                    >
+                      -
+                    </button>
+                    <span className="quantity-value-mobile">{templateQuantity} 道</span>
+                    <button
+                      type="button"
+                      className="quantity-btn-mobile"
+                      onClick={() => setTemplateQuantity(Math.min(100, templateQuantity + 5))}
+                    >
+                      +
+                    </button>
+                  </div>
                 )}
-              </button>
+                <button
+                  type="button"
+                  className="btn-generate"
+                  onClick={generateFromTemplateWrapper}
+                  disabled={loading || !selectedTemplate}
+                >
+                  {loading ? (
+                    <>
+                      <span className="spinner spinner-small"></span>
+                      生成中...
+                    </>
+                  ) : (
+                    <>
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M12 20V22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M4.92999 4.92999L6.33999 6.33999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M17.66 17.66L19.07 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M2 12H4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M20 12H22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M6.33999 17.66L4.92999 19.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M19.07 4.92999L17.66 6.33999" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+                      </svg>
+                      {selectedTemplate ? '生成题目' : '请选择模板'}
+                    </>
+                  )}
+                </button>
+              </div>
             )}
           </div>
         )}

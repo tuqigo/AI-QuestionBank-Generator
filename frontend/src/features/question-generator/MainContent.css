@@ -346,34 +346,6 @@ body {
   background: white;
 }
 
-.btn-print-modal {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 14px 20px;
-  font-size: 1rem;
-  font-weight: 600;
-  color: white;
-  background: linear-gradient(135deg, #ff6b4a 0%, #ff8a65 100%);
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 14px rgba(255, 107, 74, 0.3);
-  height: 50px;
-}
-
-.btn-print-modal:active {
-  transform: scale(0.98);
-}
-
-.btn-print-modal svg {
-  width: 20px;
-  height: 20px;
-}
-
 /* 下载 PDF 按钮（移动端） */
 .btn-download-pdf-modal {
   width: 100%;
@@ -651,5 +623,98 @@ body {
     padding: 10px 14px;
     font-size: 13px;
   }
+}
+
+/* ===== 题目数量控制器（生成按钮上方） ===== */
+.quantity-control-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  margin-bottom: var(--space-2);
+}
+
+.quantity-btn-inline {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--gray-300);
+  background: white;
+  color: var(--gray-700);
+  font-size: 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quantity-btn-inline:hover {
+  border-color: var(--primary-500);
+  color: var(--primary-500);
+  background: var(--primary-50);
+}
+
+.quantity-btn-inline:active {
+  transform: scale(0.95);
+}
+
+.quantity-value-inline {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  min-width: 60px;
+  text-align: center;
+}
+
+/* 移动端题目数量控制器 */
+.mobile-generate-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.quantity-control-mobile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+}
+
+.quantity-btn-mobile {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--gray-300);
+  background: white;
+  color: var(--gray-700);
+  font-size: 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quantity-btn-mobile:hover {
+  border-color: var(--primary-500);
+  color: var(--primary-500);
+  background: var(--primary-50);
+}
+
+.quantity-btn-mobile:active {
+  transform: scale(0.95);
+}
+
+.quantity-value-mobile {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  min-width: 60px;
+  text-align: center;
 }
 

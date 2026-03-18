@@ -351,8 +351,8 @@
   cursor: not-allowed;
 }
 
-/* 打印按钮样式 - 与生成按钮保持一致 */
-.btn-print-sidebar {
+/* 下载 PDF 按钮样式 - 与打印按钮保持一致 */
+.btn-download-pdf {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -367,56 +367,6 @@
   cursor: pointer;
   transition: all var(--transition-base);
   box-shadow: 0 4px 16px rgba(255, 107, 74, 0.4);
-  position: relative;
-  overflow: hidden;
-  height: 52px;
-}
-
-.btn-print-sidebar::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-  transition: left 0.5s;
-}
-
-.btn-print-sidebar:hover::before {
-  left: 100%;
-}
-
-.btn-print-sidebar svg {
-  width: 20px;
-  height: 20px;
-}
-
-.btn-print-sidebar:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(255, 107, 74, 0.5);
-}
-
-.btn-print-sidebar:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-/* 下载 PDF 按钮样式 */
-.btn-download-pdf {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: 14px var(--space-4);
-  font-size: 1rem;
-  font-weight: 600;
-  color: white;
-  background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
-  border: none;
-  border-radius: var(--radius-xl);
-  cursor: pointer;
-  transition: all var(--transition-base);
-  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.4);
   position: relative;
   overflow: hidden;
   height: 52px;
@@ -444,7 +394,7 @@
 
 .btn-download-pdf:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.5);
+  box-shadow: 0 8px 24px rgba(255, 107, 74, 0.5);
 }
 
 .btn-download-pdf:active:not(:disabled) {
