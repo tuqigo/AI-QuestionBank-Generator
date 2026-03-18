@@ -1,0 +1,61 @@
+1.模板列表 筛选模板 现在是个小漏斗的图标 我觉得上下翻转小箭头的图标更好  
+2.模态框 在移动端 底部按钮 距离屏幕底部远一点 太近用户不要操作  
+3.学科 年级 学期 版本 不要 全部 选项了 多余的  新的需求
+4.模态框的标头  比如 “筛选模板” 以及 “打印预览”   高度小一点  
+
+修改完不需要提交代码 也不需要部署  
+
+
+1.所有你新增的模态框的底部功能按钮高度高一点 并且距离底部远一点点  
+2.生成题目出来的模态框 左上角 不需要标题 应该固定为 “打印预览”
+3.MAin页面 生成题目 以及选择模板 在移动端 按钮高度也应该调大一点 距离底部也要远一点 太近用户不要操作
+4. 然后点击小箭头筛选出现筛选模板的模态框 里面的展示顺序 学科应该在年级上面  另外 年级 学科 学期  版本 模态框里不要下拉框了 直接平铺展示 用户选中有颜色效果 即可  
+5.模态框的标头  比如 “筛选模板” 以及 “打印预览”   高度小一点  
+
+
+1.筛选模板 点击充值按钮 模态框会自动自动关闭 点击查找模板也需要点击完自动关闭
+2.filter-toggle-icon 这个svg 我需要的是 ` ^ ` 这样的  点击翻转下  你改成啥样了 丑死了  
+
+
+二年级 (下) 沪教版
+
+ios 将网页 添加到主屏幕 主屏幕的图标没有 
+
+检查网站是否支持（开发者向）
+网站需在 <head> 加：
+html
+预览
+<link rel="apple-touch-icon" href="https://域名/icon-180x180.png">
+必须 180×180px、PNG、正方形、无透明
+必须 HTTPS、直接访问（无重定向）
+
+
+
+我现在需要下载PDF的功能
+整体技术方案：MathJax 渲染 + html2pdf.js (html2canvas + jsPDF)
+要点：
+1.必须等待 MathJax 完成渲染（MathJax.startup.promise 或 MathJax.typesetPromise()）
+2.html2pdf/html2canvas 会把页面转成位图，PDF 中公式通常是图片——不可搜索/不可复制。若需要可选文本/矢量，见“可搜索 PDF”部分。
+3.提升清晰度：html2canvas.scale = Math.min(3, devicePixelRatio*2)（一般 2~3 足够）
+4.处理长文档/分页：用 CSS page-break-before/after/inside 控制分页，必要时分片渲染合并。
+
+
+ @frontend/src/features/question-generator/MainContent.tsx  我现在需要下载PDF的功能
+  整体技术方案：MathJax 渲染 + html2pdf.js (html2canvas + jsPDF)
+  要点：
+  1.必须等待 MathJax 完成渲染（MathJax.startup.promise 或 MathJax.typesetPromise()）
+  2.html2pdf/html2canvas 会把页面转成位图，PDF
+  中公式通常是图片——不可搜索/不可复制。若需要可选文本/矢量，见“可搜索 PDF”部分。
+  3.提升清晰度：html2canvas.scale = Math.min(3, devicePixelRatio*2)（一般 2~3 足够）
+  4.处理长文档/分页：用 CSS page-break-before/after/inside 控制分页，必要时分片渲染合并。
+
+PDF下载
+  1.提升清晰度：html2canvas.scale = Math.min(3, devicePixelRatio*2)（一般 2~3 足够）。
+  2.下载PDF按钮在点击后 后台有个预览 下载成功后有自动消失了 这个需要隐藏了
+  3.下载PDF按钮 需要有个加载loading的画面有些PDF下载还是挺慢的 jiazailoading放在屏幕中间 小一点 注意移动端适配
+  4.移动端下载之后打开系统的分享 可以实现吗 
+
+
+   4. 移动端系统分享
+  - 检测移动设备和 Web Share API Level 2 支持
+  请问支持苹果safra浏览器吗
