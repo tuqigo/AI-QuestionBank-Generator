@@ -240,4 +240,8 @@ python -m db.migrations_cli history
 
 
 ### 必要说明
-1. 如果有图的需求请使用Mermaid语法表示
+1. 如果有图的需求请使用 Mermaid 语法表示
+2. **Web Search 代理配置**：当需要访问外网（如 GitHub、Google 搜索等）时，必须使用以下代理配置：
+   ```bash
+   HTTPS_PROXY="http://127.0.0.1:10808"
+   ```
