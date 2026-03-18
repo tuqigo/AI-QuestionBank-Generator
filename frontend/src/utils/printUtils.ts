@@ -14,7 +14,7 @@ if (typeof window !== 'undefined') {
 }
 
 /**
- * 显示/loading 状态
+ * 显示 loading 状态
  */
 let loadingEl: HTMLElement | null = null
 
@@ -22,18 +22,15 @@ function showLoading() {
   if (loadingEl) return
   loadingEl = document.createElement('div')
   loadingEl.className = 'pdf-loading-overlay'
-  loadingEl.innerHTML = `
-    <div class="pdf-loading-spinner">
-      <div class="spinner"></div>
-      <p>正在生成 PDF...</p>
-    </div>
-  `
+  loadingEl.innerHTML = '<div class="pdf-loading-spinner"><div class="spinner"></div><p>正在生成 PDF...</p></div>'
   document.body.appendChild(loadingEl)
+  console.log('[Loading] Loading 已显示')
 }
 
 function hideLoading() {
   if (loadingEl) {
     document.body.removeChild(loadingEl)
+    console.log('[Loading] Loading 已隐藏')
     loadingEl = null
   }
 }
