@@ -61,6 +61,7 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
   const [templateLoading, setTemplateLoading] = useState(false)
   const [templateQuantity, setTemplateQuantity] = useState(15)
   const [filterOpen, setFilterOpen] = useState(false)
+  const [showFilterModal, setShowFilterModal] = useState(false)
 
   // 配置常量状态
   const [grades, setGrades] = useState<ConfigOption[]>([])
@@ -182,8 +183,13 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
   // 使用全部模板计算筛选选项
   const filterOptions = getFilterOptionsFromTemplates(allTemplates)
 
-  // 前端筛选模板（点击"查找模板"按钮时调用）
-  const applyFilter = () => {
+  // 加载并筛选模板（点击"查找模板"按钮时调用）
+  const applyFilter = async () => {
+    // 如果还没有加载过模板，先调用 API 加载
+    if (allTemplates.length === 0) {
+      await loadAllTemplates()
+    }
+
     let result = allTemplates
 
     if (templateFilter.grade) {
@@ -205,7 +211,10 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
       setError('没有找到符合条件的模板')
     } else {
       setError('')
-      // 筛选后自动折叠
+    }
+
+    // PC 端筛选后自动折叠
+    if (!isMobile) {
       setFilterOpen(false)
     }
   }
@@ -502,6 +511,88 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
         </div>
       )}
 
+      {/* 筛选模态框（仅移动端） */}
+      {isMobile && showFilterModal && (
+        <div className="filter-modal-overlay" onClick={() => setShowFilterModal(false)}>
+          <div className="filter-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="filter-modal-header">
+              <h3>筛选模板</h3>
+              <button className="filter-modal-close" onClick={() => setShowFilterModal(false)}>×</button>
+            </div>
+            <div className="filter-modal-body">
+              <div className="filter-modal-content">
+                <label className="filter-modal-label">年级</label>
+                <select
+                  value={templateFilter.grade || ''}
+                  onChange={(e) => setTemplateFilter({ ...templateFilter, grade: e.target.value as any })}
+                  className="filter-modal-select"
+                >
+                  <option value="">全部年级</option>
+                  {filterOptions.grades.map(g => (
+                    <option key={g.value} value={g.value}>{g.label}</option>
+                  ))}
+                </select>
+                <label className="filter-modal-label">学科</label>
+                <select
+                  value={templateFilter.subject || ''}
+                  onChange={(e) => setTemplateFilter({ ...templateFilter, subject: e.target.value as any })}
+                  className="filter-modal-select"
+                >
+                  <option value="">全部学科</option>
+                  {filterOptions.subjects.map(s => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
+                  ))}
+                </select>
+                <label className="filter-modal-label">学期</label>
+                <select
+                  value={templateFilter.semester || ''}
+                  onChange={(e) => setTemplateFilter({ ...templateFilter, semester: e.target.value as any })}
+                  className="filter-modal-select"
+                >
+                  <option value="">全部学期</option>
+                  {filterOptions.semesters.map(s => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
+                  ))}
+                </select>
+                <label className="filter-modal-label">版本</label>
+                <select
+                  value={templateFilter.textbook_version || ''}
+                  onChange={(e) => setTemplateFilter({ ...templateFilter, textbook_version: e.target.value })}
+                  className="filter-modal-select"
+                >
+                  <option value="">全部版本</option>
+                  {filterOptions.textbook_versions.map(v => (
+                    <option key={v.value} value={v.value}>{v.label}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="filter-modal-footer">
+              <button
+                type="button"
+                className="btn-filter-reset"
+                onClick={() => {
+                  setTemplateFilter({})
+                  localStorage.removeItem('question-generator-filter')
+                  setFilteredTemplates(allTemplates)
+                  setShowFilterModal(false)
+                }}
+              >
+                重置
+              </button>
+              <button
+                type="button"
+                className="btn-filter-confirm"
+                onClick={applyFilter}
+                disabled={templateLoading}
+              >
+                查找模板
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 顶部导航栏 */}
       <header className="header">
         <div className="header-content">
@@ -579,34 +670,38 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
             {/* 模板出题模式 */}
             {mode === 'template' && (
               <>
-                {/* 筛选条件标题栏（可点击展开/收起） */}
+                {/* 模板列表 - 合并筛选条件和模板列表 */}
                 <section className="panel-section">
-                  <div
-                    className="section-header filter-header"
-                    onClick={() => setFilterOpen(!filterOpen)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        setFilterOpen(!filterOpen)
-                      }
-                    }}
-                  >
+                  <div className="section-header">
                     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M22 3H2L8 10.46V19L10 21H14V10.46L22 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M9 5H7C6.46957 5 5.96086 5.21071 5.58579 5.58579C5.21071 5.96086 5 6.46957 5 7V19C5 19.5304 5.21071 20.0391 5.58579 20.4142C5.96086 20.7893 6.46957 21 7 21H17C17.5304 21 18.0391 20.7893 18.4142 20.4142C18.7893 20.0391 19 19.5304 19 19V7C19 6.46957 18.7893 5.96086 18.4142 5.58579C18.0391 5.21071 17.5304 5 17 5H15C14.4696 5 14 5.44772 14 6V8C14 8.55228 14.4696 9 15 9H17V19H7V7H9C9.53043 7 10 6.55228 10 6V4C10 3.44772 9.53043 3 9 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
-                    <label>筛选条件</label>
-                    <svg
-                      className={`filter-toggle-icon ${filterOpen ? 'open' : ''}`}
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
+                    <label>模板列表</label>
+                    {/* 筛选按钮（小箭头） */}
+                    <button
+                      type="button"
+                      className="btn-filter-icon"
+                      onClick={() => {
+                        if (isMobile) {
+                          setShowFilterModal(true)
+                        } else {
+                          setFilterOpen(!filterOpen)
+                        }
+                      }}
+                      title="筛选模板"
                     >
-                      <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
+                      <svg
+                        className={`filter-toggle-icon ${filterOpen ? 'open' : ''}`}
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path d="M22 3H2L8 10.46V19L10 21H14V10.46L22 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
                   </div>
-                  {/* 筛选表单 */}
-                  {filterOpen && (
+                  {/* PC 端筛选表单 */}
+                  {!isMobile && filterOpen && (
                     <div className="template-filter">
                       <select
                         value={templateFilter.grade || ''}
@@ -658,16 +753,7 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                       </button>
                     </div>
                   )}
-                </section>
-
-                {/* 模板列表 */}
-                <section className="panel-section">
-                  <div className="section-header">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M9 5H7C6.46957 5 5.96086 5.21071 5.58579 5.58579C5.21071 5.96086 5 6.46957 5 7V19C5 19.5304 5.21071 20.0391 5.58579 20.4142C5.96086 20.7893 6.46957 21 7 21H17C17.5304 21 18.0391 20.7893 18.4142 20.4142C18.7893 20.0391 19 19.5304 19 19V7C19 6.46957 18.7893 5.96086 18.4142 5.58579C18.0391 5.21071 17.5304 5 17 5H15C14.4696 5 14 5.44772 14 6V8C14 8.55228 14.4696 9 15 9H17V19H7V7H9C9.53043 7 10 6.55228 10 6V4C10 3.44772 9.53043 3 9 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <label>模板列表</label>
-                  </div>
+                  {/* 模板列表 */}
                   <div className="template-list" ref={templateListRef}>
                     {templateLoading && (
                       <div className="template-loading">
@@ -677,7 +763,7 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                     )}
                     {!templateLoading && filteredTemplates.length === 0 && (
                       <div className="template-empty">
-                        点击"查找模板"加载模板列表
+                        点击筛选按钮加载模板列表
                       </div>
                     )}
                     {!templateLoading && filteredTemplates.map((template) => (
