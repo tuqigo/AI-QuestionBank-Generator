@@ -525,13 +525,6 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                 <div className="filter-modal-section">
                   <label className="filter-modal-label">学科</label>
                   <div className="filter-modal-options">
-                    <button
-                      type="button"
-                      className={`filter-modal-option ${!templateFilter.subject ? 'selected' : ''}`}
-                      onClick={() => setTemplateFilter({ ...templateFilter, subject: '' })}
-                    >
-                      全部
-                    </button>
                     {filterOptions.subjects.map(s => (
                       <button
                         key={s.value}
@@ -548,13 +541,6 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                 <div className="filter-modal-section">
                   <label className="filter-modal-label">年级</label>
                   <div className="filter-modal-options">
-                    <button
-                      type="button"
-                      className={`filter-modal-option ${!templateFilter.grade ? 'selected' : ''}`}
-                      onClick={() => setTemplateFilter({ ...templateFilter, grade: '' })}
-                    >
-                      全部
-                    </button>
                     {filterOptions.grades.map(g => (
                       <button
                         key={g.value}
@@ -571,13 +557,6 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                 <div className="filter-modal-section">
                   <label className="filter-modal-label">学期</label>
                   <div className="filter-modal-options">
-                    <button
-                      type="button"
-                      className={`filter-modal-option ${!templateFilter.semester ? 'selected' : ''}`}
-                      onClick={() => setTemplateFilter({ ...templateFilter, semester: '' })}
-                    >
-                      全部
-                    </button>
                     {filterOptions.semesters.map(s => (
                       <button
                         key={s.value}
@@ -594,13 +573,6 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                 <div className="filter-modal-section">
                   <label className="filter-modal-label">版本</label>
                   <div className="filter-modal-options">
-                    <button
-                      type="button"
-                      className={`filter-modal-option ${!templateFilter.textbook_version ? 'selected' : ''}`}
-                      onClick={() => setTemplateFilter({ ...templateFilter, textbook_version: '' })}
-                    >
-                      全部
-                    </button>
                     {filterOptions.textbook_versions.map(v => (
                       <button
                         key={v.value}
@@ -631,7 +603,10 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
               <button
                 type="button"
                 className="btn-filter-confirm"
-                onClick={applyFilter}
+                onClick={() => {
+                  applyFilter()
+                  setShowFilterModal(false)
+                }}
                 disabled={templateLoading}
               >
                 查找模板
@@ -739,12 +714,12 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                       title="筛选模板"
                     >
                       <svg
-                        className={`filter-toggle-icon ${filterOpen ? 'open' : ''}`}
+                        className={`filter-toggle-icon ${showFilterModal || filterOpen ? 'open' : ''}`}
                         viewBox="0 0 24 24"
                         fill="none"
                         xmlns="http://www.w3.org/2000/svg"
                       >
-                        <path d="M22 3H2L8 10.46V19L10 21H14V10.46L22 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M6 15L12 9L18 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </button>
                   </div>
