@@ -14,6 +14,63 @@ if (typeof window !== 'undefined') {
 }
 
 /**
+ * 显示/loading 状态
+ */
+let loadingEl: HTMLElement | null = null
+
+function showLoading() {
+  if (loadingEl) return
+  loadingEl = document.createElement('div')
+  loadingEl.className = 'pdf-loading-overlay'
+  loadingEl.innerHTML = `
+    <div class="pdf-loading-spinner">
+      <div class="spinner"></div>
+      <p>正在生成 PDF...</p>
+    </div>
+  `
+  document.body.appendChild(loadingEl)
+}
+
+function hideLoading() {
+  if (loadingEl) {
+    document.body.removeChild(loadingEl)
+    loadingEl = null
+  }
+}
+
+/**
+ * 检测是否为移动设备
+ */
+function isMobileDevice(): boolean {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+}
+
+/**
+ * 移动端分享文件
+ */
+async function shareFileOnMobile(file: Blob, filename: string): Promise<boolean> {
+  if (!isMobileDevice()) return false
+
+  // 检查是否支持 Web Share API Level 2
+  if (!navigator.share || !navigator.canShare) return false
+
+  const fileToShare = new File([file], filename, { type: file.type })
+  const shareData: ShareData = { files: [fileToShare] }
+
+  // 检查是否可以分享
+  if (!navigator.canShare(shareData)) return false
+
+  try {
+    await navigator.share(shareData)
+    return true
+  } catch (err) {
+    // 用户取消分享或其他错误
+    console.log('[Share] 分享失败或取消:', err)
+    return false
+  }
+}
+
+/**
  * 分割题目和答案
  */
 export function splitQuestionsAndAnswers(md: string): { questions: string; answers: string | null } {
@@ -733,6 +790,9 @@ export const handleDownloadPDF = async (
     return
   }
 
+  // 显示 loading
+  showLoading()
+
   try {
     const defaultTitleText = titleText || '练习题'
 
@@ -747,12 +807,12 @@ export const handleDownloadPDF = async (
       contentHtml += `<div class="answers-content">${answersHtml}</div>`
     }
 
-    // 3. 创建临时容器 - 使用可见的方式，添加四周内边距
+    // 3. 创建临时容器 - 隐藏在视口之外
     const container = document.createElement('div')
     container.className = 'question-print-mode pdf-container'
     container.innerHTML = contentHtml
-    // 使用固定宽度确保内容正确换行，添加四周内边距（顶部预留页眉位置，左右边距，底部边距）
-    container.style.cssText = 'position: fixed; left: 0; top: 0; width: 794px; padding: 20px; background: white; z-index: 9999;'
+    // 隐藏在视口外，避免闪烁
+    container.style.cssText = 'position: absolute; left: -9999px; top: -9999px; width: 794px; padding: 20px; background: white;'
     document.body.appendChild(container)
 
     console.log('[PDF] 容器已创建，innerHTML length:', container.innerHTML.length)
@@ -790,15 +850,19 @@ export const handleDownloadPDF = async (
     console.log('[PDF] 渲染后容器内容:', container.innerHTML.substring(0, 200))
     console.log('[PDF] 容器子元素数量:', container.children.length)
 
-    // 5. 使用 html2canvas 捕获容器
+    // 5. 使用 html2canvas 捕获容器 - 提升清晰度
     console.log('[PDF] 开始 html2canvas 捕获...')
 
     if (!window.html2canvas) {
       throw new Error('html2canvas 未加载')
     }
 
+    // 提升清晰度：scale = Math.min(3, devicePixelRatio * 2)
+    const scale = Math.min(3, (window.devicePixelRatio || 1) * 2)
+    console.log('[PDF] 使用 scale:', scale)
+
     const canvas = await window.html2canvas(container, {
-      scale: 2,
+      scale: scale,
       useCORS: true,
       letterRendering: true,
       allowTaint: false,
@@ -841,19 +905,32 @@ export const handleDownloadPDF = async (
       heightLeft -= pdfHeight
     }
 
-    // 7. 保存 PDF
-    pdf.save(`${defaultTitleText}.pdf`)
-    console.log('[PDF] PDF 保存完成')
+    // 7. 转换为 PDF 二进制数据
+    const pdfData = (pdf as any).output('arraybuffer') as ArrayBuffer
+    const filename = `${defaultTitleText}.pdf`
 
-    toast.success('PDF 下载成功')
+    // 8. 尝试移动端分享
+    const pdfBlob = new Blob([pdfData], { type: 'application/pdf' })
+    const shared = await shareFileOnMobile(pdfBlob, filename)
+    if (shared) {
+      console.log('[PDF] 已通过系统分享')
+      toast.success('已打开分享')
+    } else {
+      // 桌面端或分享失败，直接下载
+      pdf.save(filename)
+      console.log('[PDF] PDF 保存完成')
+      toast.success('PDF 下载成功')
+    }
   } catch (error) {
     console.error('[PDF] 下载失败:', error)
     toast.error('PDF 下载失败：' + (error as Error).message)
   } finally {
-    // 8. 清理临时容器
+    // 9. 清理临时容器
     const container = document.querySelector('.pdf-container')
     if (container) {
       document.body.removeChild(container)
     }
+    // 隐藏 loading
+    hideLoading()
   }
 }
