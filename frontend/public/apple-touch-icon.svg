@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180">
+  <defs>
+    <linearGradient id="bg-gradient" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#ff9a2a"/>
+      <stop offset="1" stop-color="#f26f21"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 橙色方形背景（满铺，无圆角） -->
+  <rect width="180" height="180" fill="url(#bg-gradient)"/>
+
+  <!-- 屏幕（奶白） -->
+  <rect x="46" y="71" width="88" height="54" rx="8" ry="8" fill="#fff7f2"/>
+
+  <!-- 屋顶（白）和中央暗色阴影 -->
+  <polygon points="38,71 90,42 142,71 90,65" fill="#fff7f2"/>
+  <polygon points="60,72 90,57 120,72 90,65" fill="#f7b06b"/>
+
+  <!-- 左右小黄点 -->
+  <circle cx="74" cy="98" r="5" fill="#ffd941"/>
+  <circle cx="106" cy="98" r="4" fill="#ffd941"/>
+
+  <!-- 中央字母 Q -->
+  <text x="90" y="112" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="40" fill="#f26f21">Q</text>
+</svg>
