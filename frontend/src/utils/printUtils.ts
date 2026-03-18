@@ -280,10 +280,10 @@ export function getPrintStyles(): string {
 
     /* 打印预览容器 - 屏幕预览时的内边距 */
     .print-preview-container {
-      padding: 16px;
+      padding: 12px;
     }
 
-    /* CSS 变量定义 */
+    /* CSS 变量定义 - 统一预览和打印的样式 */
     .question-print-mode {
       --question-padding: 0;
       --question-margin-bottom: 12px;
@@ -491,6 +491,51 @@ export function getPrintStyles(): string {
       margin-bottom: 30px;
       font-size: 18pt;
       font-weight: bold;
+    }
+
+    /* 移动端适配 - 预览模式下使用更紧凑的样式 */
+    @media (max-width: 768px) {
+      .print-preview-container {
+        padding: 8px;
+      }
+
+      .question-stem,
+      .option-text,
+      .option-label,
+      .question-number {
+        font-size: 9.5pt;
+      }
+
+      .question-options {
+        padding-left: 28px;
+      }
+
+      .question-grid-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .print-preview-container {
+        padding: 4px;
+      }
+
+      .question-stem,
+      .option-text,
+      .option-label,
+      .question-number {
+        font-size: 9pt;
+      }
+
+      .question-options {
+        padding-left: 24px;
+      }
+
+      .question-grid-container {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
     }
 
     /* 答案部分 */

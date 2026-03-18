@@ -131,9 +131,9 @@
 }
 
 .questions-container {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
+  display: block;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 /* 答案区域样式 */

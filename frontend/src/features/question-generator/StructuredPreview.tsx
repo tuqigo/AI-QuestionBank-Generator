@@ -2,14 +2,13 @@
  * StructuredPreview - 结构化题目预览页面
  * 在此页面输入提示词生成题目并渲染
  */
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getToken } from '@/core/auth/userAuth'
 import { toast } from '@/hooks'
 import { handlePrint } from '@/utils/printUtils'
-import QuestionRenderer from '@/components/QuestionRenderer'
+import PrintPreview from '@/components/PrintPreview'
 import { generateStructuredQuestions, getHistoryAnswers } from '@/core/api/history'
-import { renderInlineMarkdown } from '@/utils/markdownProcessor'
 import './StructuredPreview.css'
 import type { StructuredGenerateResponse, Question, MetaData } from '@/types/question'
 
@@ -29,9 +28,8 @@ export default function StructuredPreview() {
   }>>([])
   const [showAnswers, setShowAnswers] = useState(false)
   const [answersLoading, setAnswersLoading] = useState(false)
-  const questionsContainerRef = useRef<HTMLDivElement>(null)
 
-  // 加载 MathJax
+  // 加载 MathJax（PrintPreview 组件内部会处理）
   useEffect(() => {
     // 如果已经加载则跳过
     if (window.MathJax) {
@@ -52,53 +50,21 @@ export default function StructuredPreview() {
         ignoreHtmlClass: 'tex2jax_ignore'
       },
       startup: {
-        typeset: true,
-        ready: () => {
-          // @ts-ignore
-          window.MathJax?.startup?.defaultReady?.()
-        }
+        typeset: true
       }
     }
     window.MathJax = mathJaxConfig
 
     const script = document.createElement('script')
     script.type = 'text/javascript'
-    // 使用 MathJax 3.x 最新版本，避免 4.x 的 API 不兼容
     script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js'
     script.async = true
     script.id = 'mathjax-script'
 
-    script.onload = () => {
-      // MathJax 加载完成后，如果已经有题目，渲染它们
-      if (questions.length > 0 && questionsContainerRef.current) {
-        window.MathJax?.typesetPromise?.([questionsContainerRef.current!])
-      }
-    }
-
-    script.onerror = () => {
-      console.error('Failed to load MathJax')
-    }
-
     document.head.appendChild(script)
   }, [])
 
-  // 题目变化时，渲染 MathJax
-  useEffect(() => {
-    if (questions.length === 0 || !window.MathJax || !questionsContainerRef.current) {
-      return
-    }
-
-    const timer = setTimeout(() => {
-      if (window.MathJax?.typesetPromise) {
-        window.MathJax.typesetPromise([questionsContainerRef.current!])
-          .catch((err) => {
-            console.error('[MathJax] 渲染失败:', err)
-          })
-      }
-    }, 150)
-
-    return () => clearTimeout(timer)
-  }, [questions])
+  // 题目变化时，不需要再手动渲染 MathJax（PrintPreview 组件内部会处理）
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -223,21 +189,10 @@ export default function StructuredPreview() {
         </div>
       </div>
 
-      {/* 打印测试内容 - 仅用于调试 */}
-      <div className="print-test" style={{ display: 'none' }}>
-        PRINT TEST: 题目数量 {questions.length}
-      </div>
-
-      {/* 题目列表 */}
+      {/* 题目列表 - 使用 PrintPreview 组件确保预览和打印格式完全一致 */}
       {questions.length > 0 && (
-        <div className="preview-content" id="printable-content">
-          <div className="questions-container" ref={questionsContainerRef}>
-            {questions.map((question, index) => (
-              <div key={index} className="question-wrapper">
-                <QuestionRenderer question={question} index={index + 1} />
-              </div>
-            ))}
-          </div>
+        <div className="preview-content">
+          <PrintPreview questions={questions as any} meta={{ title }} recordTitle={title} />
 
           {/* 答案区域 */}
           {showAnswers && answers.length > 0 && (
