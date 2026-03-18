@@ -204,7 +204,6 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
     if (templateFilter.textbook_version) {
       // 版本：如 "沪教版"
       const versionName = textbookVersions.find(v => v.id === templateFilter.textbook_version)?.name ||
-                         textbookVersions.find(v => v.value === templateFilter.textbook_version)?.name ||
                          templateFilter.textbook_version
       parts.push(versionName)
     }
