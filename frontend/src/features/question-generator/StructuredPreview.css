@@ -74,8 +74,7 @@
   }
 
   .questions-container {
-    width: 800px;
-    max-width: none;
+    min-width: 900px;
   }
 }
 

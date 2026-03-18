@@ -284,51 +284,6 @@ export function getPrintStyles(): string {
       max-width: 100%;
     }
 
-    /* 移动端适配 - 调整网格列数和字体，适应小屏幕 */
-    @media (max-width: 768px) {
-      .print-preview-container {
-        padding: 8px;
-      }
-
-      .question-grid-container {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 8px !important;
-      }
-
-      .question-stem,
-      .option-text,
-      .option-label,
-      .question-number {
-        font-size: 9pt;
-      }
-
-      .question-options {
-        padding-left: 20px;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .print-preview-container {
-        padding: 4px;
-      }
-
-      .question-grid-container {
-        grid-template-columns: 1fr !important;
-        gap: 6px !important;
-      }
-
-      .question-stem,
-      .option-text,
-      .option-label,
-      .question-number {
-        font-size: 8.5pt;
-      }
-
-      .question-options {
-        padding-left: 16px;
-      }
-    }
-
     /* CSS 变量定义 - 统一预览和打印的样式 */
     .question-print-mode {
       --question-padding: 0;

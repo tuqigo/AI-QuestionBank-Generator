@@ -49,6 +49,26 @@ export default function PrintPreview({
 
   const title = recordTitle || meta?.title || '题目练习'
 
+  // 移动端动态缩放：根据屏幕宽度自动计算缩放比例
+  const [scale, setScale] = useState(1)
+
+  useEffect(() => {
+    const updateScale = () => {
+      const width = window.innerWidth
+      // 基准宽度 900px，根据实际屏幕宽度动态计算缩放比例
+      if (width < 900) {
+        const newScale = Math.max(0.4, Math.min(1, width / 900))
+        setScale(newScale)
+      } else {
+        setScale(1)
+      }
+    }
+
+    updateScale()
+    window.addEventListener('resize', updateScale)
+    return () => window.removeEventListener('resize', updateScale)
+  }, [])
+
   // 初始化时加载打印样式
   useEffect(() => {
     setPrintStyles(getPrintStyles())
@@ -173,8 +193,16 @@ export default function PrintPreview({
     return null
   }
 
+  // 移动端动态缩放样式
+  const wrapperStyle: React.CSSProperties = scale < 1 ? {
+    transform: `scale(${scale})`,
+    transformOrigin: 'top center',
+    width: `${100 / scale}%`,
+    marginLeft: `${(1/scale - 1) * -50}%`
+  } : {}
+
   return (
-    <div className="print-preview-wrapper">
+    <div className="print-preview-wrapper" style={wrapperStyle}>
       <style>{printStyles}</style>
       <PreviewContent htmlContent={htmlContent} containerRef={containerRef} />
     </div>

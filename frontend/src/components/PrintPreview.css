@@ -8,8 +8,6 @@
   border-radius: 0;
   box-shadow: none;
   width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 /* 打印预览容器 - 屏幕预览时的内边距 */
@@ -27,7 +25,9 @@
     box-shadow: none !important;
     border-radius: 0 !important;
     background: transparent !important;
-    overflow: visible !important;
+    transform: none !important;
+    width: auto !important;
+    margin: 0 !important;
   }
 
   .print-preview-container {
