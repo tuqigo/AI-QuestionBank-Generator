@@ -2,8 +2,18 @@
 模板：竖式加减法（两位数加减两位数，竖式填空）
 生成逻辑：生成竖式形式的加减法题目，个位或十位留空需要学生填写
 例题：
-  [ \begin{array}{r} \ \ \ \boxed{\phantom{0}}\ 6 \\[4pt] + \ \ 2\ \boxed{\phantom{0}} \\[4pt] \hline \ \ \ 4\ \ \ 5 \end{array} ]
-  [ \begin{array}{r} \ \ \ 5\ \boxed{\phantom{0}} \\[4pt] - \ \ \boxed{\phantom{0}}\ 4 \\[4pt] \hline \ \ \ 2\ \ \ 5 \end{array} ]
+  \[\begin{array}{@{}r@{}r@{}}
+    & \boxed{\phantom{0}}6 \\[4pt]
+  + & 2\boxed{\phantom{0}} \\[4pt]
+  \hline
+    & 45
+  \end{array}\]
+  \[\begin{array}{@{}r@{}r@{}}
+    & 5\boxed{\phantom{0}} \\[4pt]
+  - & \boxed{\phantom{0}}4 \\[4pt]
+  \hline
+    & 25
+  \end{array}\]
 """
 import random
 from typing import List, Dict, Any
@@ -112,40 +122,54 @@ class VerticalAdditionSubtractionGenerator(TemplateGenerator):
 
         op_symbol = "+" if operation == "addition" else "-"
 
-        # 根据空缺位置生成填空
+        # 使用\phantom{0}确保每个位置占据相同宽度
+        # 方框使用\boxed{\phantom{0}}
+        # 数字使用\phantom{0}+ 数字，确保和方框等宽（数字在右）
+        box = r"\boxed{\phantom{0}}"
+
+        # 十位
         if blank_pos == "top_tens":
-            num1_str = f"\\boxed{{\\phantom{{0}}}} {num1_ones}"
-        elif blank_pos == "top_ones":
-            num1_str = f" {num1_tens}\\boxed{{\\phantom{{0}}}}"
-        elif blank_pos == "bottom_tens":
-            num2_str = f"\\boxed{{\\phantom{{0}}}} {num2_ones}"
-        elif blank_pos == "bottom_ones":
-            num2_str = f" {num2_tens}\\boxed{{\\phantom{{0}}}}"
-        elif blank_pos == "result_tens":
-            result_str = f"\\boxed{{\\phantom{{0}}}} {result_ones}"
-        elif blank_pos == "result_ones":
-            result_str = f" {result_tens}\\boxed{{\\phantom{{0}}}}"
+            num1_tens_str = box
         else:
-            # 默认无空缺
-            num1_str = f" {num1_tens} {num1_ones}"
-            num2_str = f" {num2_tens} {num2_ones}"
-            result_str = f" {result_tens} {result_ones}"
+            num1_tens_str = r"\phantom{0}" + str(num1_tens)
 
-        # 确保变量已定义（如果空缺在 num1 或 num2）
-        if 'num1_str' not in dir():
-            num1_str = f" {num1_tens} {num1_ones}"
-        if 'num2_str' not in dir():
-            num2_str = f" {num2_tens} {num2_ones}"
-        if 'result_str' not in dir():
-            result_str = f" {result_tens} {result_ones}"
+        # 个位
+        if blank_pos == "top_ones":
+            num1_ones_str = box
+        else:
+            num1_ones_str = r"\phantom{0}" + str(num1_ones)
 
-        # 生成 LaTeX 竖式
-        latex = f"""\\[ \\begin{{array}}{{r}}
-  {num1_str} \\\\[4pt]
-{op_symbol} {num2_str} \\\\[4pt]
+        # 底部十位
+        if blank_pos == "bottom_tens":
+            num2_tens_str = box
+        else:
+            num2_tens_str = r"\phantom{0}" + str(num2_tens)
+
+        # 底部个位
+        if blank_pos == "bottom_ones":
+            num2_ones_str = box
+        else:
+            num2_ones_str = r"\phantom{0}" + str(num2_ones)
+
+        # 结果十位
+        if blank_pos == "result_tens":
+            result_tens_str = box
+        else:
+            result_tens_str = r"\phantom{0}" + str(result_tens)
+
+        # 结果个位
+        if blank_pos == "result_ones":
+            result_ones_str = box
+        else:
+            result_ones_str = r"\phantom{0}" + str(result_ones)
+
+        # 生成 LaTeX 竖式 - 使用 array 的列定义控制间距，每列之间加@{\,}添加小间距
+        latex = f"""\\[\\begin{{array}}{{@{{}}r@{{\\,}}r@{{}}}}
+  & {num1_tens_str}{num1_ones_str} \\\\[4pt]
+{op_symbol}& {num2_tens_str}{num2_ones_str} \\\\[4pt]
 \\hline
-  {result_str}
-\\end{{array}} \\]"""
+  & {result_tens_str}{result_ones_str}
+\\end{{array}}\\]"""
 
         return latex
 

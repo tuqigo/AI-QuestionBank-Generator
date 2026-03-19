@@ -403,6 +403,23 @@ export function getPrintStyles(): string {
       margin: 0 !important;
     }
 
+    /* 不要强制 MathJax 容器为 inline，否则竖式 array 对齐会乱掉 */
+    .question-stem > mjx-container {
+      display: inline-block !important;
+      vertical-align: middle !important;
+    }
+
+    /* MathJax 内部的 math 元素也确保正确显示 */
+    .question-stem > mjx-container > math {
+      display: block !important;
+    }
+
+    /* 保护 MathJax 内部元素不受强制 inline 和 margin 影响 */
+    .question-stem > mjx-container * {
+      display: revert !important;
+      margin: revert !important;
+    }
+
     .question-stem > * {
       display: inline !important;
       margin: 0 !important;

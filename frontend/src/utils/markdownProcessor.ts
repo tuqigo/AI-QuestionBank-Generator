@@ -1,30 +1,50 @@
 import MarkdownIt from 'markdown-it';
 
 // 创建 markdown-it 实例，配置选项
-// 启用 math 相关的转义保护
 const md = new MarkdownIt({
   html: true,
   breaks: true,
   linkify: true,
-  // 禁用某些可能导致 LaTeX 被错误解析的选项
   typographer: false,
   xhtmlOut: false,
 });
 
-// 禁用 backtick 和 math 冲突的处理
+// 禁用 smartquotes 避免干扰 LaTeX
 md.disable(['smartquotes']);
 
 /**
+ * 检查内容是否包含 Markdown 语法
+ * 如果没有 Markdown 语法，可以直接原样返回，让 MathJax 处理公式
+ */
+function hasMarkdownSyntax(content: string): boolean {
+  // 检查常见 Markdown 语法
+  const markdownPatterns = [
+    /^#{1,6}\s+/m,           // 标题 # ## ###
+    /^\s*[-*+]\s+/m,         // 无序列表
+    /^\s*\d+\.\s+/m,         // 有序列表
+    /^\s*>\s+/m,             // 引用
+    /^\s*```/m,              // 代码块
+    /^\s*\|.*\|/m,           // 表格
+    /\*\*[^*]+\*\*/g,        // 粗体 **text**
+    /\*[^*]+\*/g,            // 斜体 *text*
+    /__[^_]+__/g,            // 粗体 __text__
+    /_[^_]+_/g,              // 斜体 _text_
+    /\[([^\]]+)\]\([^)]+\)/g, // 链接 [text](url)
+    /!\[([^\]]+)\]\([^)]+\)/g, // 图片
+  ];
+
+  return markdownPatterns.some(pattern => pattern.test(content));
+}
+
+/**
  * 保护数学内容不被 markdown-it 处理
- * 返回：处理后的内容和占位符 Map
  */
 function protectMath(content: string): { content: string; placeholders: Map<string, string> } {
   const placeholders = new Map<string, string>()
   let idx = 0
 
-  // 保护 $$...$$ (display math) - 先处理 display math，避免被 inline 匹配
+  // 保护 $$...$$ (display math)
   content = content.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
-    // 在保护前，先将 math 内容中的 ___ 转换为安全的下划线占位符
     const processedMath = math.replace(/_{3,}/g, '\\underline{\\hspace{1.5cm}}')
     const placeholder = `MATH_DISPLAY_${idx++}`
     placeholders.set(placeholder, `$$${processedMath}$$`)
@@ -32,7 +52,6 @@ function protectMath(content: string): { content: string; placeholders: Map<stri
   })
 
   // 保护 \[...\] (display math) - 竖式加减法等使用的 LaTeX 格式
-  // 使用 [\s\S]*? 匹配包括换行符在内的任意字符
   content = content.replace(/\\\s*\[([\s\S]*?)\\\s*\]/g, (match, math) => {
     const placeholder = `MATH_DISPLAY_BRACKET_${idx++}`
     placeholders.set(placeholder, `\\[${math}\\]`)
@@ -41,7 +60,6 @@ function protectMath(content: string): { content: string; placeholders: Map<stri
 
   // 保护 $...$ (inline math)
   content = content.replace(/(?<!\\)\$([^$\n]+?)\$/g, (match, math) => {
-    // 在保护前，先将 math 内容中的 ___ 转换为安全的下划线占位符
     const trimmedMath = math.trim().replace(/_{3,}/g, '\\underline{\\hspace{1.5cm}}')
     const placeholder = `MATH_INLINE_${idx++}`
     placeholders.set(placeholder, `$${trimmedMath}$`)
@@ -60,7 +78,7 @@ function processSpecialFormats(content: string): string {
   // 处理 [   ] 方框填空（2 个空格以上）
   processed = processed.replace(/\[ {2,}\]/g, '<span class="blank-box"></span>')
 
-  // 处理带空格的括号（全角）- 使用 span 包裹空白区域，通过 CSS 控制宽度
+  // 处理带空格的括号（全角）
   processed = processed.replace(/（ {2,}）/g, () => {
     return '（<span class="answer-blank"></span>）'
   })
@@ -68,7 +86,7 @@ function processSpecialFormats(content: string): string {
   processed = processed.replace(/\( {2,}\)/g, () => {
     return '(<span class="answer-blank"></span>)'
   })
-  // 处理完全空的括号（全角和半角）
+  // 处理完全空的括号
   processed = processed.replace(/（）/g, '<span class="blank-parentheses"></span>')
   processed = processed.replace(/\(\)/g, '<span class="blank-parentheses"></span>')
 
@@ -89,44 +107,42 @@ function restoreMath(content: string, placeholders: Map<string, string>): string
 }
 
 /**
- * 完整的 Markdown 渲染函数，包含特殊格式处理和保护数学内容
+ * 完整的 Markdown 渲染函数
+ *
+ * 优化：如果没有 Markdown 语法，只处理特殊格式并保留 LaTeX 原样，
+ * 让 MathJax 直接渲染公式，避免 markdown-it 干扰
  */
 export function renderMarkdown(content: string): string {
   if (!content || typeof content !== 'string') return ''
 
-  // 保护数学内容
+  // 如果没有 Markdown 语法，只处理特殊格式，不经过 markdown-it
+  if (!hasMarkdownSyntax(content)) {
+    return processSpecialFormats(content)
+  }
+
+  // 有 Markdown 语法，需要完整处理
   const { content: protectedContent, placeholders } = protectMath(content)
-
-  // 处理特殊格式
   let processed = processSpecialFormats(protectedContent)
-
-  // 渲染 markdown
   processed = md.render(processed)
-
-  // 恢复数学内容
   return restoreMath(processed, placeholders)
 }
 
 /**
  * 渲染行内 Markdown 内容（不添加 <p> 标签）
- * 用于题目、选项等需要在同一行显示的场景
  */
 export function renderInlineMarkdown(content: string): string {
   if (!content || typeof content !== 'string') return ''
   if (!content.trim()) return ''
 
-  // 移除换行符，确保内容在同一行显示
+  // 如果没有 Markdown 语法，只处理特殊格式
+  if (!hasMarkdownSyntax(content)) {
+    return processSpecialFormats(content.replace(/[\r\n]+/g, ' '))
+  }
+
+  // 有 Markdown 语法，需要完整处理
   const singleLineContent = content.replace(/[\r\n]+/g, ' ')
-
-  // 保护数学内容
   const { content: protectedContent, placeholders } = protectMath(singleLineContent)
-
-  // 处理特殊格式
   let processed = processSpecialFormats(protectedContent)
-
-  // 使用 renderInline 避免添加 <p> 标签
   processed = md.renderInline(processed)
-
-  // 恢复数学内容
   return restoreMath(processed, placeholders)
 }

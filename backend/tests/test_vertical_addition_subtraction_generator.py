@@ -112,7 +112,7 @@ class TestVerticalAdditionSubtractionGenerator(unittest.TestCase):
         questions = self.generator.generate(config_top_tens, quantity=3, question_type="ORAL_CALCULATION")
         self.assertEqual(len(questions), 3)
         for q in questions:
-            # 验证包含空缺标记
+            # 验证包含空缺标记（使用\makebox 固定宽度确保对齐）
             self.assertIn("\\boxed{\\phantom{0}}", q["stem"])
 
         # 测试个位空缺
