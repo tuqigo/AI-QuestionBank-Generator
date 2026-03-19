@@ -261,6 +261,7 @@ async def get_templates(
                     semester=t.semester,
                     textbook_version=t.textbook_version,
                     knowledge_point_id=t.knowledge_point_id,
+                    description=t.description,
                     example=t.example,
                 )
                 for t in templates

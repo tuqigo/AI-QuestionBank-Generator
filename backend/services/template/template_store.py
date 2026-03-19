@@ -315,7 +315,7 @@ def get_template_list_items() -> List[QuestionTemplateListItem]:
     try:
         cursor = conn.execute(
             """
-            SELECT id, name, subject, grade, semester, textbook_version, question_type, knowledge_point_id, example, sort_order
+            SELECT id, name, subject, grade, semester, textbook_version, question_type, knowledge_point_id, example, description, sort_order
             FROM question_templates
             WHERE is_active = 1
             ORDER BY sort_order ASC, id ASC
@@ -400,5 +400,6 @@ def _row_to_list_item(row: sqlite3.Row) -> QuestionTemplateListItem:
         question_type=row["question_type"],
         knowledge_point_id=row["knowledge_point_id"],
         example=json.loads(row["example"]) if row["example"] else None,
+        description=row["description"],
         sort_order=row["sort_order"]
     )
