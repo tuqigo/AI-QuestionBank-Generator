@@ -1400,3 +1400,157 @@ backend/db/migrations/
 
 线上执行sql :  sqlite3 /path/to/your/tixiaobao.db < backend/db/migrations/007_ad  d_bainaineishu_comparison_template.sql
 ```
+
+---
+
+## 9. 实战经验：竖式加减法模板配置
+
+### 9.1 任务背景
+
+**模板信息**：
+- ID: 15
+- 名称：竖式加减法
+- 年级：一年级下学期 (grade1, lower)
+- 教材版本：人教版 (rjb)
+- 题型：ORAL_CALCULATION（口算题）
+
+**示例题目**（LaTeX 竖式格式）：
+```latex
+\[ \begin{array}{r}
+   \boxed{\phantom{0}} 6 \[4pt]
++  2 \boxed{\phantom{0}} \[4pt]
+\hline
+   4   5
+\end{array} \]
+```
+
+这是一个**两位数加减两位数竖式填空**题型，需要在个位或十位留空让学生填写。
+
+### 9.2 分析步骤
+
+**第一步：分析示例题目结构**
+- 使用 LaTeX `array` 环境展示竖式
+- 空缺位置使用 `\boxed{\phantom{0}}` 表示
+- 运算符号：`+` 或 `-`
+- 横线使用 `\hline`
+
+**第二步：检查现有生成器**
+```bash
+# 查看现有生成器列表
+ls backend/services/template/generators/
+```
+
+现有生成器：
+- `compare_number.py` - 比大小
+- `mixed_addition_subtraction.py` - 加减法（横式）
+- `currency_conversion.py` - 人民币换算
+- `volume_conversion.py` - 体积换算
+- `fraction_comparison.py` - 分数比大小
+- `length_comparison.py` - 长度换算
+- `multiplication_division_comprehensive.py` - 乘除综合
+
+**结论**：没有竖式格式生成器，需要新建。
+
+### 9.3 创建生成器
+
+**文件**: `backend/services/template/generators/vertical_addition_subtraction.py`
+
+**核心功能**：
+1. 支持加法/减法两种运算
+2. 支持 6 种空缺位置：`top_tens`, `top_ones`, `bottom_tens`, `bottom_ones`, `result_tens`, `result_ones`
+3. 支持约束条件：`ensure_no_borrowing`（不借位）, `ensure_no_carrying`（不进位）, `ensure_positive_result`（结果非负）
+4. 输出标准 LaTeX array 格式
+
+**配置参数示例**：
+```json
+{
+  "min_value": 10,
+  "max_value": 50,
+  "operation_types": ["addition", "subtraction"],
+  "blank_positions": ["top_tens", "top_ones", "bottom_tens", "bottom_ones", "result_tens", "result_ones"],
+  "ensure_positive_result": true
+}
+```
+
+### 9.4 注册生成器
+
+编辑 `backend/services/template/generators/__init__.py`：
+
+```python
+from .vertical_addition_subtraction import VerticalAdditionSubtractionGenerator
+
+GENERATOR_REGISTRY = {
+    # ... 现有生成器
+    "vertical_addition_subtraction": VerticalAdditionSubtractionGenerator,
+}
+```
+
+### 9.5 配置数据库模板
+
+```sql
+UPDATE question_templates
+SET generator_module = 'vertical_addition_subtraction',
+    template_pattern = '竖式加减法填空（两位数加减两位数）',
+    variables_config = '{"min_value": 10, "max_value": 50, "operation_types": ["addition", "subtraction"], "blank_positions": ["top_tens", "top_ones", "bottom_tens", "bottom_ones", "result_tens", "result_ones"], "ensure_positive_result": true}'
+WHERE id = 15;
+```
+
+### 9.6 编写测试
+
+**文件**: `backend/tests/test_vertical_addition_subtraction_generator.py`
+
+**测试覆盖**：
+- 基本生成功能
+- 只生成加法/减法
+- 确保结果非负
+- 不同空缺位置
+- 题目不重复
+- 大量生成（50 题）
+- LaTeX 格式验证
+- 知识点获取
+- 约束条件（不进位/不借位）
+- 边界值处理
+- 集成测试（生成器注册）
+
+**运行测试**：
+```bash
+cd backend
+python -m unittest tests.test_vertical_addition_subtraction_generator -v
+```
+
+### 9.7 关键代码片段
+
+**LaTeX 竖式生成**：
+```python
+def _generate_vertical_latex(self, num1, num2, result, operation, blank_pos):
+    # 分解数字
+    num1_tens = num1 // 10
+    num1_ones = num1 % 10
+
+    # 根据空缺位置生成填空
+    if blank_pos == "top_tens":
+        num1_str = f"\boxed{{\phantom{{0}}}} {num1_ones}"
+
+    op_symbol = "+" if operation == "addition" else "-"
+
+    latex = f"""\[ \begin{{array}}{{r}}
+  {num1_str} \\[4pt]
+{op_symbol} {num2_str} \\[4pt]
+\hline
+  {result_str}
+\end{{array}} \]"""
+    return latex
+```
+
+### 9.8 经验总结
+
+1. **先分析示例题目**：从 example 字段理解题目格式和要求
+2. **检查现有生成器**：避免重复造轮子
+3. **配置化设计**：生成器本身不限制年级，所有范围通过 configuration 控制
+4. **约束条件要灵活**：如 `ensure_positive_result`、`ensure_no_borrowing` 等
+5. **编写完整测试**：覆盖基本功能、边界情况、约束条件
+6. **LaTeX 格式注意**：使用 `\boxed{\phantom{0}}` 表示空缺，`\\[4pt]` 控制行距
+
+---
+
+## 10. 常见问题
