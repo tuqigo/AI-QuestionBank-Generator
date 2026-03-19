@@ -23,11 +23,19 @@ function protectMath(content: string): { content: string; placeholders: Map<stri
   let idx = 0
 
   // 保护 $$...$$ (display math) - 先处理 display math，避免被 inline 匹配
-  content = content.replace(/\$\$((?:[^$]|\\\$)+?)\$\$/g, (match, math) => {
+  content = content.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
     // 在保护前，先将 math 内容中的 ___ 转换为安全的下划线占位符
     const processedMath = math.replace(/_{3,}/g, '\\underline{\\hspace{1.5cm}}')
     const placeholder = `MATH_DISPLAY_${idx++}`
     placeholders.set(placeholder, `$$${processedMath}$$`)
+    return `@@${placeholder}@@`
+  })
+
+  // 保护 \[...\] (display math) - 竖式加减法等使用的 LaTeX 格式
+  // 使用 [\s\S]*? 匹配包括换行符在内的任意字符
+  content = content.replace(/\\\s*\[([\s\S]*?)\\\s*\]/g, (match, math) => {
+    const placeholder = `MATH_DISPLAY_BRACKET_${idx++}`
+    placeholders.set(placeholder, `\\[${math}\\]`)
     return `@@${placeholder}@@`
   })
 
