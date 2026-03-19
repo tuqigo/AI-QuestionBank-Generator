@@ -480,18 +480,18 @@ export default function TemplatesPage() {
           </div>
 
           <div className="form-group full-width">
-            <label>示例题目（用 | 分隔多个示例）</label>
-            <input
-              type="text"
-              value={formData.example ? formData.example.join(' | ') : ''}
+            <label>示例题目（每行一个）</label>
+            <textarea
+              value={formData.example ? formData.example.join('\n') : ''}
               onChange={(e) => {
                 const val = e.target.value
                 setFormData({
                   ...formData,
-                  example: val.split('|').map((s: string) => s.trim()).filter((s: string) => s.length > 0),
+                  example: val.split('\n').map((s: string) => s.trim()).filter((s: string) => s.length > 0),
                 })
               }}
-              placeholder="示例题目 1 | 示例题目 2 | 示例题目 3"
+              placeholder="示例题目 1&#10;示例题目 2&#10;示例题目 3"
+              rows={3}
             />
             {formData.example && formData.example.length > 0 && (
               <div className="example-preview-list">
