@@ -77,6 +77,7 @@ def create_template(
     knowledge_point_id: Optional[int] = None,
     sort_order: int = 0,
     is_active: bool = True,
+    description: Optional[str] = None,
 ) -> int:
     """
     创建新模板
@@ -91,11 +92,11 @@ def create_template(
             """
             INSERT INTO question_templates
             (name, subject, grade, semester, textbook_version, question_type, template_pattern,
-             variables_config, example, knowledge_point_id, sort_order, is_active)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             variables_config, example, knowledge_point_id, sort_order, is_active, description)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (name, subject, grade, semester, textbook_version, question_type, template_pattern,
-             variables_config, example, knowledge_point_id, sort_order, 1 if is_active else 0)
+             variables_config, example, knowledge_point_id, sort_order, 1 if is_active else 0, description)
         )
         conn.commit()
         template_id = cursor.lastrowid
@@ -123,6 +124,7 @@ def update_template(
     is_active: Optional[bool] = None,
     question_type: Optional[str] = None,
     generator_module: Optional[str] = None,
+    description: Optional[str] = None,
 ) -> bool:
     """
     更新模板
@@ -176,6 +178,9 @@ def update_template(
         if generator_module is not None:
             updates.append("generator_module = ?")
             values.append(generator_module)
+        if description is not None:
+            updates.append("description = ?")
+            values.append(description)
 
         if not updates:
             return False
