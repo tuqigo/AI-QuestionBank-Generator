@@ -13,9 +13,6 @@
 -- 1. 删除旧索引
 DROP INDEX IF EXISTS idx_question_templates_knowledge_point;
 
--- 2. 添加 knowledge_point_id 字段（允许 NULL，因为已有记录可能没有关联知识点）
-ALTER TABLE question_templates ADD COLUMN knowledge_point_id INTEGER;
-
 -- 3. 删除旧的 knowledge_point 字段
 ALTER TABLE question_templates DROP COLUMN knowledge_point;
 
