@@ -74,3 +74,25 @@ PDF下载
   1.列名: ['年级', '学期', '教材版本', '题型', '知识点', '模板名称', '例题']  只要有莫行少了任何数据都是脏数据
   2.subject固定为数学，年级对应grade ，学期对应semester，教材版本对应textbook_version，题型对应question_type,  例题对应example， 模板名称对应name 。 知识点先不考虑 
   3.grade不在core.constants.SUPPORTED_GRADES 非法，semester不在core.constants.SUPPORTED_SEMESTERS非法，textbook_version不在core.constants.SUPPORTED_TEXTBOOK_VERSIONS这里非法
+
+
+
+  你读取表question_templates id为4的行 取出一些必要信息 比如	
+name	TEXT	NO	NULL	
+subject	TEXT	NO	NULL	
+grade	TEXT	NO	NULL	
+semester	TEXT	NO	NULL	
+textbook_version	TEXT	NO	NULL	
+question_type	TEXT	NO	NULL	
+example	TEXT	YES	NULL		
+description	TEXT	YES	NULL
+理解模板生成题目的要求，自己理解消化
+
+knowledge_point_id 这个字段先不用考虑 	
+
+然后读取文档 @  不需要完全按照这个文档内容来现在更新了  生成generator_module 代码 （先看下现成的能不能满足不能满足就新建）
+
+最终你需要修改这条记录的 generator_module ，template_pattern，variables_config 三个字段 
+
+使我后续可以生成题目  
+
