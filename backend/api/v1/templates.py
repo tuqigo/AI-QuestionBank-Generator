@@ -64,8 +64,8 @@ class TemplateCreateInput(BaseModel):
     semester: str
     textbook_version: str
     question_type: str
-    template_pattern: str
-    variables_config: str  # JSON 字符串格式
+    template_pattern: Optional[str] = None
+    variables_config: Optional[str] = None  # JSON 字符串格式
     description: Optional[str] = None  # 模板描述
     example: Optional[str] = None  # JSON 字符串格式，如 '["题 1","题 2"]'
     knowledge_point_id: Optional[int] = None

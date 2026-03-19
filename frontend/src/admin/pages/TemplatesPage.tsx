@@ -242,10 +242,6 @@ export default function TemplatesPage() {
       alert('请输入模板名称')
       return
     }
-    if (!formData.template_pattern?.trim()) {
-      alert('请输入模板模式')
-      return
-    }
 
     try {
       let variablesConfig: object
