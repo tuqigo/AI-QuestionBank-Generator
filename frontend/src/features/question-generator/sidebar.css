@@ -630,6 +630,11 @@
   min-width: 0;
 }
 
+/* 缩小模板列表中的 MathJax 公式 */
+.example-content .MathJax {
+  font-size: 0.85em;
+}
+
 /* ===== 数量选择器 ===== */
 .quantity-selector {
   display: flex;
