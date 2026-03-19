@@ -95,7 +95,7 @@ frontend/
 
 | 层级 | 技术 |
 |-------|------------|
-| 后端 | FastAPI (Python 3.8+ 且机械后端代码要兼容), SQLite, JWT |
+| 后端 | FastAPI (Python 3.8+ 写后端代码要兼容), SQLite, JWT |
 | 前端 | React 19, TypeScript, Vite 7 |
 | AI | DashScope (Qwen-plus, Qwen-vision) |
 | 渲染 | MathJax (LaTeX), marked (Markdown) |
@@ -179,10 +179,13 @@ SMTP_PASS=your-auth-code
 
 ## 数据库操作规范
 ```
+数据库的设计要遵循 ：禁止数据库外键、改用业务层保证
 操作语句撰写
-1.DDL在schema.sql 2.DML 在migrations文件夹下面
+1.DDL在schema.sql 
+2.DML 在migrations文件夹下面
 操作语句执行
-1.DDL启动时自动执行 2.DML 通过命令   python -m db.migrations_cli migrate 执行
+1.DDL启动时自动执行 
+2.DML 通过命令   python -m db.migrations_cli migrate 执行
 ```
 
 ## 数据库迁移
