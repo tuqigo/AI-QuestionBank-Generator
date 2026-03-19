@@ -239,7 +239,7 @@ export interface QuestionTemplate {
   question_type: string
   template_pattern: string
   variables_config: string | object
-  example: string | null
+  example: string[] | null
   knowledge_point_id: number | null
   generator_module: string | null
   sort_order: number
@@ -260,7 +260,7 @@ export interface TemplateListItem {
   semester: string
   textbook_version: string
   knowledge_point_id: number | null
-  example: string | null
+  example: string[] | null
 }
 
 export interface TemplateCreateInput {
@@ -272,7 +272,7 @@ export interface TemplateCreateInput {
   question_type: string
   template_pattern: string
   variables_config: string
-  example?: string
+  example?: string  // JSON 字符串格式
   knowledge_point_id?: number | null
   sort_order?: number
   is_active?: boolean
@@ -287,7 +287,7 @@ export interface TemplateUpdateInput {
   textbook_version?: string
   template_pattern?: string
   variables_config?: string
-  example?: string
+  example?: string  // JSON 字符串格式
   knowledge_point_id?: number | null
   sort_order?: number
   is_active?: boolean

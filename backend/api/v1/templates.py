@@ -41,7 +41,7 @@ class TemplateListItem(BaseModel):
     semester: str
     textbook_version: str
     knowledge_point_id: Optional[int]
-    example: Optional[str]
+    example: Optional[List[str]]
 
 
 class TemplateListResponse(BaseModel):
@@ -65,7 +65,7 @@ class TemplateCreateInput(BaseModel):
     question_type: str
     template_pattern: str
     variables_config: str  # JSON 字符串格式
-    example: Optional[str] = None
+    example: Optional[str] = None  # JSON 字符串格式，如 '["题 1","题 2"]'
     knowledge_point_id: Optional[int] = None
     sort_order: int = 0
     is_active: bool = True
@@ -81,7 +81,7 @@ class TemplateUpdateInput(BaseModel):
     textbook_version: Optional[str] = None
     template_pattern: Optional[str] = None
     variables_config: Optional[str] = None  # JSON 字符串格式
-    example: Optional[str] = None
+    example: Optional[str] = None  # JSON 字符串格式
     knowledge_point_id: Optional[int] = None
     sort_order: Optional[int] = None
     is_active: Optional[bool] = None
@@ -122,7 +122,7 @@ class TemplateFull(BaseModel):
     question_type: str
     template_pattern: str
     variables_config: dict
-    example: Optional[str]
+    example: Optional[List[str]]
     knowledge_point_id: Optional[int]
     generator_module: Optional[str]
     sort_order: int
@@ -303,7 +303,7 @@ async def get_all_templates_for_admin():
                 question_type=row["question_type"],
                 template_pattern=row["template_pattern"],
                 variables_config=json.loads(row["variables_config"]),
-                example=row["example"],
+                example=json.loads(row["example"]) if row["example"] else None,
                 knowledge_point_id=row["knowledge_point_id"],
                 generator_module=row["generator_module"],
                 sort_order=row["sort_order"],

@@ -13,6 +13,7 @@ import {
   type KnowledgePointOption,
 } from '../services/api'
 import { getConfigs, type ConfigOption, type QuestionTypeOption, type TextbookVersionOption } from '@/api/config'
+import { MathJaxText } from '../components/MathJaxText'
 import './TemplatesPage.css'
 
 export default function TemplatesPage() {
@@ -23,7 +24,21 @@ export default function TemplatesPage() {
   const [currentTemplate, setCurrentTemplate] = useState<QuestionTemplate | null>(null)
   const [testQuantity, setTestQuantity] = useState(5)
   const [testResult, setTestResult] = useState<any[] | null>(null)
-  const [formData, setFormData] = useState<TemplateCreateInput>({
+  const [formData, setFormData] = useState<{
+    name: string
+    subject: string
+    grade: string
+    semester: string
+    textbook_version: string
+    question_type: string
+    template_pattern: string
+    variables_config: string
+    example: string[]
+    knowledge_point_id: number | null
+    sort_order: number
+    is_active: boolean
+    generator_module: string
+  }>({
     name: '',
     subject: 'math',
     grade: 'grade1',
@@ -32,7 +47,7 @@ export default function TemplatesPage() {
     question_type: 'CALCULATION',
     template_pattern: '',
     variables_config: '{}',
-    example: '',
+    example: [],
     knowledge_point_id: null,
     sort_order: 0,
     is_active: true,
@@ -158,7 +173,7 @@ export default function TemplatesPage() {
       question_type: 'CALCULATION',
       template_pattern: '',
       variables_config: '{}',
-      example: '',
+      example: [],
       knowledge_point_id: null,
       sort_order: 0,
       is_active: true,
@@ -181,7 +196,7 @@ export default function TemplatesPage() {
       variables_config: typeof template.variables_config === 'string'
         ? template.variables_config
         : JSON.stringify(template.variables_config, null, 2),
-      example: template.example || '',
+      example: template.example || [],
       knowledge_point_id: template.knowledge_point_id || null,
       sort_order: template.sort_order,
       is_active: template.is_active,
@@ -230,10 +245,16 @@ export default function TemplatesPage() {
         return
       }
 
+      // 将 example 数组转为 JSON 字符串
+      const exampleJson = formData.example && formData.example.length > 0
+        ? JSON.stringify(formData.example)
+        : undefined
+
       if (modalMode === 'create') {
         await createTemplate({
           ...formData,
           variables_config: JSON.stringify(variablesConfig),
+          example: exampleJson,
         })
         alert('创建成功')
       } else if (modalMode === 'edit' && currentTemplate) {
@@ -245,7 +266,7 @@ export default function TemplatesPage() {
           textbook_version: formData.textbook_version,
           template_pattern: formData.template_pattern,
           variables_config: JSON.stringify(variablesConfig),
-          example: formData.example,
+          example: exampleJson,
           knowledge_point_id: formData.knowledge_point_id,
           sort_order: formData.sort_order,
           is_active: formData.is_active,
@@ -459,13 +480,28 @@ export default function TemplatesPage() {
           </div>
 
           <div className="form-group full-width">
-            <label>示例</label>
-            <textarea
-              value={formData.example}
-              onChange={(e) => setFormData({ ...formData, example: e.target.value })}
-              placeholder="示例题目"
-              rows={2}
+            <label>示例题目（用 | 分隔多个示例）</label>
+            <input
+              type="text"
+              value={formData.example ? formData.example.join(' | ') : ''}
+              onChange={(e) => {
+                const val = e.target.value
+                setFormData({
+                  ...formData,
+                  example: val.split('|').map((s: string) => s.trim()).filter((s: string) => s.length > 0),
+                })
+              }}
+              placeholder="示例题目 1 | 示例题目 2 | 示例题目 3"
             />
+            {formData.example && formData.example.length > 0 && (
+              <div className="example-preview-list">
+                {formData.example.map((ex: string, i: number) => (
+                  <div key={i} className="example-preview-item">
+                    <MathJaxText text={ex} />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="form-group checkbox-group">
@@ -564,7 +600,18 @@ export default function TemplatesPage() {
             <strong>生成器模块:</strong> {currentTemplate?.generator_module || '-'}
           </div>
           <div className="view-row">
-            <strong>示例:</strong> {currentTemplate?.example || '-'}
+            <strong>示例:</strong>{' '}
+            {currentTemplate?.example && currentTemplate.example.length > 0 ? (
+              <ul className="example-list">
+                {currentTemplate.example.map((ex, i) => (
+                  <li key={i}>
+                    <MathJaxText text={ex} />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              '-'
+            )}
           </div>
           <div className="view-row">
             <strong>状态:</strong> {currentTemplate?.is_active ? '启用' : '禁用'}

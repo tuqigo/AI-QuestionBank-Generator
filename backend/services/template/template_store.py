@@ -73,7 +73,7 @@ def create_template(
     question_type: str,
     template_pattern: str,
     variables_config: str,  # JSON 字符串格式
-    example: Optional[str] = None,
+    example: Optional[List[str]] = None,
     knowledge_point_id: Optional[int] = None,
     sort_order: int = 0,
     is_active: bool = True,
@@ -117,7 +117,7 @@ def update_template(
     textbook_version: Optional[str] = None,
     template_pattern: Optional[str] = None,
     variables_config: Optional[str] = None,  # JSON 字符串格式
-    example: Optional[str] = None,
+    example: Optional[List[str]] = None,
     knowledge_point_id: Optional[int] = None,
     sort_order: Optional[int] = None,
     is_active: Optional[bool] = None,
@@ -378,7 +378,7 @@ def _row_to_template(row: sqlite3.Row) -> QuestionTemplate:
         question_type=row["question_type"],
         template_pattern=row["template_pattern"],
         variables_config=json.loads(row["variables_config"]),
-        example=row["example"],
+        example=json.loads(row["example"]) if row["example"] else None,
         knowledge_point_id=row["knowledge_point_id"],
         generator_module=row["generator_module"],
         sort_order=row["sort_order"],
@@ -399,6 +399,6 @@ def _row_to_list_item(row: sqlite3.Row) -> QuestionTemplateListItem:
         textbook_version=row["textbook_version"],
         question_type=row["question_type"],
         knowledge_point_id=row["knowledge_point_id"],
-        example=row["example"],
+        example=json.loads(row["example"]) if row["example"] else None,
         sort_order=row["sort_order"]
     )

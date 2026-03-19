@@ -11,6 +11,7 @@ import { getConfigs, type ConfigOption, type TextbookVersionOption } from '@/api
 import type { StructuredQuestion, MetaData, TemplateItem, TemplateFilter } from '@/types/question'
 import { useMathJaxSimple } from '@/hooks/useMathJax'
 import { useSwipeToClose } from '@/hooks/useSwipeToClose'
+import { MathJaxText } from '@/admin/components/MathJaxText'
 import './MainContent.css'
 
 /**
@@ -853,10 +854,12 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                         onClick={() => handleTemplateSelect(template)}
                       >
                         <div className="template-name">{template.name}</div>
-                        {template.example && (
+                        {template.example && template.example.length > 0 && (
                           <div className="template-example">
                             <span className="example-label">例题：</span>
-                            <span className="example-content">{unescapeLatex(template.example)}</span>
+                            <span className="example-content">
+                              <MathJaxText text={unescapeLatex(template.example[0])} />
+                            </span>
                           </div>
                         )}
                       </div>
