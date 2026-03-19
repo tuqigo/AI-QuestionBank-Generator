@@ -54,6 +54,9 @@ export default function TemplatesPage() {
     generator_module: '',
   })
 
+  // 示例输入行的本地状态（字符串数组）
+  const [exampleRows, setExampleRows] = useState<string[]>([])
+
   // 配置常量状态
   const [subjects, setSubjects] = useState<ConfigOption[]>([])
   const [grades, setGrades] = useState<ConfigOption[]>([])
@@ -179,6 +182,7 @@ export default function TemplatesPage() {
       is_active: true,
       generator_module: '',
     })
+    setExampleRows([''])  // 初始化一个空行
     setModalVisible(true)
   }
 
@@ -202,6 +206,8 @@ export default function TemplatesPage() {
       is_active: template.is_active,
       generator_module: template.generator_module || '',
     })
+    // 将数组转换为行，如果为空则添加一个空行
+    setExampleRows(template.example && template.example.length > 0 ? template.example : [''])
     setModalVisible(true)
   }
 
@@ -223,6 +229,7 @@ export default function TemplatesPage() {
     setModalVisible(false)
     setCurrentTemplate(null)
     setTestResult(null)
+    setExampleRows([])
   }
 
   const handleSave = async () => {
@@ -245,16 +252,14 @@ export default function TemplatesPage() {
         return
       }
 
-      // 将 example 数组转为 JSON 字符串
-      const exampleJson = formData.example && formData.example.length > 0
-        ? JSON.stringify(formData.example)
-        : undefined
+      // 使用 exampleRows 作为实际数据（过滤空行）
+      const exampleArray = exampleRows.filter(row => row.trim().length > 0)
 
       if (modalMode === 'create') {
         await createTemplate({
           ...formData,
           variables_config: JSON.stringify(variablesConfig),
-          example: exampleJson,
+          example: exampleArray.length > 0 ? JSON.stringify(exampleArray) : undefined,
         })
         alert('创建成功')
       } else if (modalMode === 'edit' && currentTemplate) {
@@ -266,7 +271,7 @@ export default function TemplatesPage() {
           textbook_version: formData.textbook_version,
           template_pattern: formData.template_pattern,
           variables_config: JSON.stringify(variablesConfig),
-          example: exampleJson,
+          example: exampleArray.length > 0 ? JSON.stringify(exampleArray) : undefined,
           knowledge_point_id: formData.knowledge_point_id,
           sort_order: formData.sort_order,
           is_active: formData.is_active,
@@ -314,6 +319,26 @@ export default function TemplatesPage() {
     } catch (error) {
       console.error('删除失败:', error)
       alert('删除失败')
+    }
+  }
+
+  // 示例行操作
+  const handleExampleRowChange = (index: number, value: string) => {
+    const newRows = [...exampleRows]
+    newRows[index] = value
+    setExampleRows(newRows)
+  }
+
+  const handleAddExampleRow = () => {
+    setExampleRows([...exampleRows, ''])
+  }
+
+  const handleRemoveExampleRow = (index: number) => {
+    if (exampleRows.length === 1) {
+      setExampleRows([''])  // 至少保留一行
+    } else {
+      const newRows = exampleRows.filter((_, i) => i !== index)
+      setExampleRows(newRows)
     }
   }
 
@@ -480,28 +505,41 @@ export default function TemplatesPage() {
           </div>
 
           <div className="form-group full-width">
-            <label>示例题目（每行一个）</label>
-            <textarea
-              value={formData.example ? formData.example.join('\n') : ''}
-              onChange={(e) => {
-                const val = e.target.value
-                setFormData({
-                  ...formData,
-                  example: val.split('\n').map((s: string) => s.trim()).filter((s: string) => s.length > 0),
-                })
-              }}
-              placeholder="示例题目 1&#10;示例题目 2&#10;示例题目 3"
-              rows={3}
-            />
-            {formData.example && formData.example.length > 0 && (
-              <div className="example-preview-list">
-                {formData.example.map((ex: string, i: number) => (
-                  <div key={i} className="example-preview-item">
-                    <MathJaxText text={ex} />
-                  </div>
-                ))}
-              </div>
-            )}
+            <label>示例题目</label>
+            <div className="example-rows">
+              {exampleRows.map((row, index) => (
+                <div key={index} className="example-row">
+                  <input
+                    type="text"
+                    value={row}
+                    onChange={(e) => handleExampleRowChange(index, e.target.value)}
+                    placeholder={`示例题目 ${index + 1}`}
+                  />
+                  <button
+                    type="button"
+                    className="admin-btn admin-btn-danger admin-btn-sm"
+                    onClick={() => handleRemoveExampleRow(index)}
+                    disabled={exampleRows.length === 1}
+                    title="删除此行"
+                  >
+                    －
+                  </button>
+                  {/* 实时预览 */}
+                  {row && row.trim().length > 0 && (
+                    <span className="example-preview">
+                      <MathJaxText text={row} />
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="admin-btn admin-btn-secondary admin-btn-sm mt-2"
+              onClick={handleAddExampleRow}
+            >
+              ＋ 添加示例
+            </button>
           </div>
 
           <div className="form-group checkbox-group">
