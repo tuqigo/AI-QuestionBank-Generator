@@ -52,9 +52,9 @@ class QuestionTemplate(BaseModel):
     question_type: str = Field(..., description="题型（见 core.constants.SUPPORTED_QUESTION_TYPES）")
     template_pattern: str = Field(..., description="模板模式字符串")
     variables_config: dict = Field(..., description="变量配置")
+    knowledge_point_id: Optional[int] = Field(None, description="关联 knowledge_points 表的 ID")
     example: Optional[str] = Field(None, description="示例")
     generator_module: Optional[str] = Field(None, description="生成器模块名")
-    knowledge_point: Optional[str] = Field(None, description="知识点分组名称")
     sort_order: int = Field(0, description="排序序号")
     is_active: bool = Field(True, description="是否启用")
     created_at: Optional[datetime] = Field(None, description="创建时间")
@@ -92,7 +92,7 @@ class QuestionTemplateListItem(BaseModel):
     semester: str
     textbook_version: str
     question_type: str
-    knowledge_point: Optional[str]
+    knowledge_point_id: Optional[int]
     example: Optional[str]
     sort_order: int
 

@@ -232,7 +232,7 @@ CREATE TABLE IF NOT EXISTS question_templates (
     question_type TEXT NOT NULL,
     template_pattern TEXT NOT NULL,
     variables_config TEXT NOT NULL,
-    knowledge_point TEXT
+    knowledge_point_id INTEGER,  -- 关联 knowledge_points.id，不在数据库层面加外键约束
     example TEXT,
     generator_module TEXT,  -- 可选，指定特殊生成逻辑的模块名
     sort_order INTEGER DEFAULT 0,
@@ -242,8 +242,8 @@ CREATE TABLE IF NOT EXISTS question_templates (
 );
 
 -- 添加索引以优化查询
-CREATE INDEX IF NOT EXISTS idx_question_templates_knowledge_point
-    ON question_templates(knowledge_point, is_active);
+CREATE INDEX IF NOT EXISTS idx_question_templates_knowledge_point_id
+    ON question_templates(knowledge_point_id, is_active);
 
 -- ============================================
 -- 9. 模板使用记录表 (template_usage_logs)

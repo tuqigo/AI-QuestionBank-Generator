@@ -22,6 +22,8 @@ from models.config import (
     AllConfigsResponse, ConfigOptionsResponse, TextbookVersionOption, QuestionTypeOption,
     # 题型模型
 )
+from pydantic import BaseModel
+from typing import List
 from services.config import (
     SubjectStore, GradeStore, SemesterStore, TextbookVersionStore, KnowledgePointStore,
 )
@@ -34,6 +36,14 @@ from models.question_type import (
 from core.constants import SUPPORTED_GENERATOR_MODULES
 
 router = APIRouter()
+
+
+# ==================== 响应模型 ====================
+
+class KnowledgePointOption(BaseModel):
+    """知识点选项（用于下拉框）"""
+    id: int
+    name: str
 
 
 # ==================== 公共配置接口 ====================
@@ -249,6 +259,23 @@ def delete_textbook_version(id: int):
 
 
 # ==================== 知识点管理接口 ====================
+
+@router.get("/knowledge-points/options", response_model=List[KnowledgePointOption])
+def get_knowledge_point_options(
+    subject_code: Optional[str] = None,
+    grade_code: Optional[str] = None,
+    semester_code: Optional[str] = None,
+    textbook_version_code: Optional[str] = None,
+    active_only: bool = True,
+):
+    """获取知识点选项列表（用于下拉框）"""
+    return KnowledgePointStore.get_as_options(
+        subject_code=subject_code,
+        grade_code=grade_code,
+        semester_code=semester_code,
+        textbook_version_code=textbook_version_code,
+    )
+
 
 @router.get("/knowledge-points", response_model=List[KnowledgePointResponse])
 def list_knowledge_points(

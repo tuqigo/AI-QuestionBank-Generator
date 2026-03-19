@@ -238,9 +238,9 @@ export interface QuestionTemplate {
   textbook_version: string
   question_type: string
   template_pattern: string
-  variables_config: string
+  variables_config: string | object
   example: string | null
-  knowledge_point: string | null
+  knowledge_point_id: number | null
   generator_module: string | null
   sort_order: number
   is_active: boolean
@@ -259,7 +259,7 @@ export interface TemplateListItem {
   grade: string
   semester: string
   textbook_version: string
-  knowledge_point: string | null
+  knowledge_point_id: number | null
   example: string | null
 }
 
@@ -273,7 +273,7 @@ export interface TemplateCreateInput {
   template_pattern: string
   variables_config: string
   example?: string
-  knowledge_point?: string
+  knowledge_point_id?: number | null
   sort_order?: number
   is_active?: boolean
   generator_module?: string
@@ -288,7 +288,7 @@ export interface TemplateUpdateInput {
   template_pattern?: string
   variables_config?: string
   example?: string
-  knowledge_point?: string
+  knowledge_point_id?: number | null
   sort_order?: number
   is_active?: boolean
   question_type?: string
@@ -298,6 +298,11 @@ export interface TemplateUpdateInput {
 export interface TemplateGenerateInput {
   template_id: number
   quantity: number
+}
+
+export interface KnowledgePointOption {
+  id: number
+  name: string
 }
 
 export async function getKnowledgePoints(
@@ -315,6 +320,25 @@ export async function getKnowledgePoints(
   const response = await fetchWithAdminAuth(`/api/templates/knowledge-points?${params}`)
   if (!response.ok) {
     throw new Error('获取知识点列表失败')
+  }
+  return response.json()
+}
+
+export async function getKnowledgePointOptions(
+  subject?: string,
+  grade?: string,
+  semester?: string,
+  textbook_version?: string
+): Promise<KnowledgePointOption[]> {
+  const params = new URLSearchParams()
+  if (subject) params.set('subject_code', subject)
+  if (grade) params.set('grade_code', grade)
+  if (semester) params.set('semester_code', semester)
+  if (textbook_version) params.set('textbook_version_code', textbook_version)
+
+  const response = await fetchWithAdminAuth(`/api/configs/knowledge-points/options?${params}`)
+  if (!response.ok) {
+    throw new Error('获取知识点选项失败')
   }
   return response.json()
 }

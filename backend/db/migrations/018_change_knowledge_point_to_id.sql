@@ -1,0 +1,24 @@
+-- =====================================================
+-- 迁移：将 knowledge_point 字段改为 knowledge_point_id
+-- 版本：018
+-- 日期：2026-03-19
+-- =====================================================
+-- 目的：
+--   - 将 question_templates.knowledge_point(TEXT) 改为 knowledge_point_id(INTEGER)
+--   - 引用 knowledge_points 表的 ID
+--   - 不在数据库层面添加外键约束，由业务逻辑保证一致性
+--   - 保留 subject/grade/semester/textbook_version 冗余字段用于快速筛选
+-- =====================================================
+
+-- 1. 删除旧索引
+DROP INDEX IF EXISTS idx_question_templates_knowledge_point;
+
+-- 2. 添加 knowledge_point_id 字段（允许 NULL，因为已有记录可能没有关联知识点）
+ALTER TABLE question_templates ADD COLUMN knowledge_point_id INTEGER;
+
+-- 3. 删除旧的 knowledge_point 字段
+ALTER TABLE question_templates DROP COLUMN knowledge_point;
+
+-- 4. 添加新索引优化查询
+CREATE INDEX IF NOT EXISTS idx_question_templates_knowledge_point_id
+    ON question_templates(knowledge_point_id, is_active);

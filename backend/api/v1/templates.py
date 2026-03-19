@@ -21,6 +21,7 @@ from services.template.template_store import (
     update_template,
     delete_template,
 )
+from services.config.knowledge_point_store import KnowledgePointStore
 from services.template.generators import get_generator
 from api.v1.auth import get_current_user_email
 from services.user.user_store import get_user as get_user_by_email
@@ -39,7 +40,7 @@ class TemplateListItem(BaseModel):
     grade: str
     semester: str
     textbook_version: str
-    knowledge_point: Optional[str]
+    knowledge_point_id: Optional[int]
     example: Optional[str]
 
 
@@ -65,7 +66,7 @@ class TemplateCreateInput(BaseModel):
     template_pattern: str
     variables_config: str  # JSON 字符串格式
     example: Optional[str] = None
-    knowledge_point: Optional[str] = None
+    knowledge_point_id: Optional[int] = None
     sort_order: int = 0
     is_active: bool = True
     generator_module: Optional[str] = None
@@ -81,7 +82,7 @@ class TemplateUpdateInput(BaseModel):
     template_pattern: Optional[str] = None
     variables_config: Optional[str] = None  # JSON 字符串格式
     example: Optional[str] = None
-    knowledge_point: Optional[str] = None
+    knowledge_point_id: Optional[int] = None
     sort_order: Optional[int] = None
     is_active: Optional[bool] = None
     question_type: Optional[str] = None
@@ -122,7 +123,7 @@ class TemplateFull(BaseModel):
     template_pattern: str
     variables_config: dict
     example: Optional[str]
-    knowledge_point: Optional[str]
+    knowledge_point_id: Optional[int]
     generator_module: Optional[str]
     sort_order: int
     is_active: bool
@@ -209,7 +210,7 @@ async def get_templates(
     subject: str = None,
     semester: str = None,
     textbook_version: str = None,
-    knowledge_point: str = None,
+    knowledge_point_id: int = None,
 ):
     """
     获取所有启用的模板列表
@@ -221,16 +222,16 @@ async def get_templates(
     - subject: 学科 (math, chinese, english)
     - semester: 学期 (upper, lower)
     - textbook_version: 教材版本 (人教版，北师大版，...)
-    - knowledge_point: 知识点分组名称
+    - knowledge_point_id: 知识点 ID
     """
-    api_logger.info(f"获取模板列表请求，筛选条件：grade={grade}, subject={subject}, semester={semester}, textbook_version={textbook_version}, knowledge_point={knowledge_point}")
+    api_logger.info(f"获取模板列表请求，筛选条件：grade={grade}, subject={subject}, semester={semester}, textbook_version={textbook_version}, knowledge_point_id={knowledge_point_id}")
 
     try:
         # 获取所有启用的模板
         templates = get_template_list_items()
 
         # 前端筛选（如果提供了筛选条件）
-        if grade or subject or semester or textbook_version or knowledge_point:
+        if grade or subject or semester or textbook_version or knowledge_point_id:
             filtered = []
             for t in templates:
                 if grade and t.grade != grade:
@@ -241,7 +242,7 @@ async def get_templates(
                     continue
                 if textbook_version and t.textbook_version != textbook_version:
                     continue
-                if knowledge_point and t.knowledge_point != knowledge_point:
+                if knowledge_point_id and t.knowledge_point_id != knowledge_point_id:
                     continue
                 filtered.append(t)
             templates = filtered
@@ -255,7 +256,7 @@ async def get_templates(
                     grade=t.grade,
                     semester=t.semester,
                     textbook_version=t.textbook_version,
-                    knowledge_point=t.knowledge_point,
+                    knowledge_point_id=t.knowledge_point_id,
                     example=t.example,
                 )
                 for t in templates
@@ -281,7 +282,7 @@ async def get_all_templates_for_admin():
         cursor = conn.execute(
             """
             SELECT id, name, subject, grade, semester, textbook_version, question_type, template_pattern,
-                   variables_config, example, knowledge_point, generator_module, sort_order, is_active,
+                   variables_config, example, knowledge_point_id, generator_module, sort_order, is_active,
                    created_at, updated_at
             FROM question_templates
             ORDER BY sort_order ASC, id ASC
@@ -303,7 +304,7 @@ async def get_all_templates_for_admin():
                 template_pattern=row["template_pattern"],
                 variables_config=json.loads(row["variables_config"]),
                 example=row["example"],
-                knowledge_point=row["knowledge_point"],
+                knowledge_point_id=row["knowledge_point_id"],
                 generator_module=row["generator_module"],
                 sort_order=row["sort_order"],
                 is_active=bool(row["is_active"]),
@@ -326,6 +327,15 @@ async def create_template_api(input: TemplateCreateInput):
     api_logger.info(f"创建模板请求：name={input.name}")
 
     try:
+        # 验证 knowledge_point_id 是否存在（如果提供）
+        if input.knowledge_point_id is not None:
+            kp = KnowledgePointStore.get_by_id(input.knowledge_point_id)
+            if not kp:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"知识点不存在：id={input.knowledge_point_id}"
+                )
+
         template_id = create_template(
             name=input.name,
             subject=input.subject,
@@ -336,11 +346,13 @@ async def create_template_api(input: TemplateCreateInput):
             template_pattern=input.template_pattern,
             variables_config=input.variables_config,
             example=input.example,
-            knowledge_point=input.knowledge_point,
+            knowledge_point_id=input.knowledge_point_id,
             sort_order=input.sort_order,
             is_active=input.is_active,
         )
         return TemplateCreateResponse(id=template_id)
+    except HTTPException:
+        raise
     except Exception as e:
         api_logger.error(f"创建模板失败：{e}")
         api_logger.error(f"堆栈跟踪:\n{traceback.format_exc()}")
@@ -355,6 +367,15 @@ async def update_template_api(template_id: int, input: TemplateUpdateInput):
     api_logger.info(f"更新模板请求：id={template_id}")
 
     try:
+        # 验证 knowledge_point_id 是否存在（如果提供）
+        if input.knowledge_point_id is not None:
+            kp = KnowledgePointStore.get_by_id(input.knowledge_point_id)
+            if not kp:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"知识点不存在：id={input.knowledge_point_id}"
+                )
+
         success = update_template(
             template_id=template_id,
             name=input.name,
@@ -365,7 +386,7 @@ async def update_template_api(template_id: int, input: TemplateUpdateInput):
             template_pattern=input.template_pattern,
             variables_config=input.variables_config,
             example=input.example,
-            knowledge_point=input.knowledge_point,
+            knowledge_point_id=input.knowledge_point_id,
             sort_order=input.sort_order,
             is_active=input.is_active,
             question_type=input.question_type,
