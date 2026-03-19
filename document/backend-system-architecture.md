@@ -80,7 +80,7 @@
 ┌─────────────────────────────────────────────────────────────────┐
 │                      数据存储层 (Data)                           │
 ├─────────────────────────────────────────────────────────────────┤
-│  SQLite Database (data/users.db) - 路径统一在 config.py 配置     │
+│  SQLite Database (data/tixiaobao.db) - 路径统一在 config.py 配置   │
 │  - users                - ai_generation_records                 │
 │  - otp_codes            - questions                             │
 │  - otp_rate_limit       - admin_operation_logs                  │
@@ -602,18 +602,19 @@ CREATE TABLE template_usage_logs (
 ### 4.1 ER 图
 
 ```
-┌─────────────┐       ┌──────────────────────┐
-│   users     │       │   otp_codes          │
-├─────────────┤       ├──────────────────────┤
-│ id (PK)     │       │ id (PK)              │
-│ email       │       │ email                │
-│ hashed_pwd  │       │ code                 │
-│ created_at  │       │ purpose              │
-│ is_disabled │       │ expires_at           │
-└─────────────┘       └──────────────────────┘
-       │
-       │ 1:N
-       ▼
+┌─────────────────┐     ┌──────────────────┐     ┌──────────────────┐
+│     users       │     │   otp_codes      │     │ otp_rate_limit   │
+├─────────────────┤     ├──────────────────┤     ├──────────────────┤
+│ id (PK)         │     │ id (PK)          │     │ id (PK)          │
+│ email           │     │ email            │     │ email            │
+│ hashed_password │     │ code             │     │ purpose          │
+│ grade           │     │ purpose          │     │ ip_address       │
+│ created_at      │     │ attempts         │     │ request_count    │
+│ is_disabled     │     │ expires_at       │     │ reset_at         │
+└─────────────────┘     └──────────────────┘     └──────────────────┘
+        │
+        │ 1:N
+        ▼
 ┌──────────────────────┐       ┌──────────────────────┐
 │ user_question_       │       │ ai_generation_       │
 │ records              │       │ records              │
@@ -622,25 +623,34 @@ CREATE TABLE template_usage_logs (
 │ user_id (FK)         │       │ user_id (FK)         │
 │ title                │       │ prompt               │
 │ prompt_type          │       │ prompt_type          │
-│ ai_response          │       │ success              │
-│ short_id             │       │ duration             │
-│ share_token          │       │ error_message        │
-│ is_deleted           │       └──────────────────────┘
+│ prompt_content       │       │ success              │
+│ image_path           │       │ duration             │
+│ ai_response          │       │ error_message        │
+│ short_id             │       │ created_at           │
+│ share_token          │       └──────────────────────┘
+│ is_deleted           │
+│ created_at           │
 └──────────────────────┘
-       │
-       │ 1:N
-       ▼
+        │
+        │ 1:N
+        ▼
 ┌──────────────────────┐
-│   questions          │
+│    questions         │
 ├──────────────────────┤
 │ id (PK)              │
+│ short_id             │
 │ record_id (FK)       │
 │ question_index       │
 │ type                 │
 │ stem                 │
 │ options (JSON)       │
-│ answer_text          │
+│ passage (JSON)       │
+│ sub_questions (JSON) │
+│ knowledge_points     │
+│ answer_blanks        │
 │ rows_to_answer       │
+│ answer_text          │
+│ created_at           │
 └──────────────────────┘
 
 ┌──────────────────────┐
@@ -650,11 +660,122 @@ CREATE TABLE template_usage_logs (
 │ operator             │
 │ action               │
 │ target_type          │
+│ target_id            │
+│ ip                   │
+│ details (JSON)       │
 │ created_at           │
+└──────────────────────┘
+
+┌──────────────────────┐     ┌──────────────────────┐
+│ question_templates   │     │ template_usage_logs  │
+├──────────────────────┤     ├──────────────────────┤
+│ id (PK)              │     │ id (PK)              │
+│ name                 │     │ template_id (FK)     │
+│ subject              │     │ user_id (FK)         │
+│ grade                │     │ generated_params     │
+│ semester             │     │ created_at           │
+│ textbook_version     │     └──────────────────────┘
+│ question_type        │
+│ template_pattern     │
+│ variables_config     │
+│ example              │
+│ generator_module     │
+│ sort_order           │
+│ is_active            │
+│ created_at           │
+│ updated_at           │
+└──────────────────────┘
+
+┌──────────────────────┐
+│  knowledge_points    │
+├──────────────────────┤
+│ id (PK)              │
+│ name                 │
+│ subject_code         │
+│ grade_code           │
+│ semester_code        │
+│ textbook_version_code│
+│ sort_order           │
+│ is_active            │
+│ created_at           │
+│ updated_at           │
+└──────────────────────┘
+
+┌──────────────────────┐
+│    question_types    │
+├──────────────────────┤
+│ id (PK)              │
+│ en_name              │
+│ zh_name              │
+│ subjects             │
+│ is_active            │
+│ created_at           │
+│ updated_at           │
+└──────────────────────┘
+
+┌──────────────────────┐
+│     subjects         │
+├──────────────────────┤
+│ id (PK)              │
+│ code                 │
+│ name_zh              │
+│ sort_order           │
+│ is_active            │
+│ created_at           │
+│ updated_at           │
+└──────────────────────┘
+
+┌──────────────────────┐
+│      grades          │
+├──────────────────────┤
+│ id (PK)              │
+│ code                 │
+│ name_zh              │
+│ sort_order           │
+│ is_active            │
+│ created_at           │
+│ updated_at           │
+└──────────────────────┘
+
+┌──────────────────────┐
+│    semesters         │
+├──────────────────────┤
+│ id (PK)              │
+│ code                 │
+│ name_zh              │
+│ sort_order           │
+│ is_active            │
+│ created_at           │
+│ updated_at           │
+└──────────────────────┘
+
+┌──────────────────────┐
+│ textbook_versions    │
+├──────────────────────┤
+│ id (PK)              │
+│ version_code         │
+│ name_zh              │
+│ sort_order           │
+│ is_active            │
+│ created_at           │
+│ updated_at           │
+└──────────────────────┘
+
+┌──────────────────────┐
+│ schema_migrations    │
+├──────────────────────┤
+│ id (PK)              │
+│ version              │
+│ filename             │
+│ executed_at          │
+│ checksum             │
+│ status               │
 └──────────────────────┘
 ```
 
 ### 4.2 表结构说明
+
+#### 核心业务表
 
 #### users - 用户表
 | 字段 | 类型 | 说明 |
@@ -664,11 +785,304 @@ CREATE TABLE template_usage_logs (
 | hashed_password | TEXT | bcrypt 密码哈希 |
 | grade | TEXT | 用户年级（grade1~grade9） |
 | created_at | TIMESTAMP | 创建时间 |
-| is_disabled | INTEGER | 禁用标记 |
+| is_disabled | INTEGER | 禁用标记（0=正常，1=禁用） |
 
-详见 [数据库表结构](#附录 - 数据库表结构)
+#### otp_codes - OTP 验证码表
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | INTEGER | 主键，自增 |
+| email | TEXT | 邮箱 |
+| code | TEXT | 6 位数字验证码 |
+| purpose | TEXT | 用途（register/reset_password） |
+| attempts | INTEGER | 验证尝试次数（最大 5 次） |
+| created_at | TIMESTAMP | 创建时间 |
+| expires_at | TIMESTAMP | 过期时间（默认 5 分钟） |
 
-### 4.3 数据库路径配置（重构后）
+#### otp_rate_limit - OTP 速率限制表
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | INTEGER | 主键，自增 |
+| email | TEXT | 邮箱 |
+| purpose | TEXT | 用途 |
+| ip_address | TEXT | IP 地址 |
+| request_count | INTEGER | 时间窗口内请求次数 |
+| reset_at | TIMESTAMP | 计数器重置时间（60 分钟窗口） |
+
+#### user_question_records - 用户题目记录表
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | INTEGER | 主键，自增 |
+| user_id | INTEGER | 外键 → users.id |
+| title | VARCHAR(200) | 题目集标题 |
+| prompt_type | VARCHAR(10) | 输入类型（text/image） |
+| prompt_content | TEXT | 用户提示词全文 |
+| image_path | VARCHAR(500) | 图片路径（图片题） |
+| ai_response | TEXT | AI 返回内容（Markdown） |
+| short_id | TEXT | 短 ID（分享链接） |
+| share_token | VARCHAR(64) | 分享令牌 |
+| is_deleted | INTEGER | 软删除（0=正常，1=已删除） |
+| created_at | TIMESTAMP | 创建时间 |
+
+#### questions - 题目表
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | INTEGER | 主键，自增 |
+| short_id | TEXT | 短 ID（唯一） |
+| record_id | INTEGER | 外键 → user_question_records.id |
+| question_index | INTEGER | 题目序号（1, 2, 3...） |
+| type | TEXT | 题型（SINGLE_CHOICE/CALCULATION 等） |
+| stem | TEXT | 题干内容 |
+| options | TEXT | 选项数组（JSON，选择题） |
+| passage | TEXT | 阅读材料（JSON，阅读理解/完形填空） |
+| sub_questions | TEXT | 子题列表（JSON） |
+| knowledge_points | TEXT | 知识点列表（JSON 数组） |
+| answer_blanks | INTEGER | 填空题空格数 |
+| rows_to_answer | INTEGER | 预留作答行数 |
+| answer_text | TEXT | 标准答案 |
+| created_at | TIMESTAMP | 创建时间 |
+
+#### ai_generation_records - AI 生成记录表
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | INTEGER | 主键，自增 |
+| user_id | INTEGER | 外键 → users.id |
+| prompt | TEXT | 用户原始提示词 |
+| prompt_type | VARCHAR(20) | 提示词类型（text/image） |
+| success | INTEGER | 是否成功（1=成功，0=失败） |
+| duration | REAL | 耗时（秒） |
+| error_message | TEXT | 错误信息 |
+| created_at | TIMESTAMP | 创建时间 |
+
+#### admin_operation_logs - 管理员操作日志表
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | INTEGER | 主键，自增 |
+| operator | TEXT | 操作人标识 |
+| action | TEXT | 操作类型 |
+| target_type | TEXT | 操作对象类型 |
+| target_id | INTEGER | 操作对象 ID |
+| ip | TEXT | 操作来源 IP |
+| details | TEXT | 详细信息（JSON） |
+| created_at | TIMESTAMP | 创建时间 |
+
+---
+
+#### 模板系统表
+
+#### question_templates - 题目模板表
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | INTEGER | 主键，自增 |
+| name | TEXT | 模板名称 |
+| subject | TEXT | 学科（math/chinese/english） |
+| grade | TEXT | 年级（grade1~grade9） |
+| semester | TEXT | 学期（upper/lower） |
+| textbook_version | TEXT | 教材版本 |
+| question_type | TEXT | 题型 |
+| template_pattern | TEXT | 模板模式字符串 |
+| variables_config | TEXT | 变量配置（JSON） |
+| example | TEXT | 示例题目 |
+| generator_module | TEXT | 生成器模块名 |
+| sort_order | INTEGER | 排序序号 |
+| is_active | INTEGER | 是否启用 |
+| created_at | TIMESTAMP | 创建时间 |
+| updated_at | TIMESTAMP | 更新时间 |
+
+#### template_usage_logs - 模板使用记录表
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | INTEGER | 主键，自增 |
+| template_id | INTEGER | 外键 → question_templates.id |
+| user_id | INTEGER | 外键 → users.id |
+| generated_params | TEXT | 生成参数（JSON） |
+| created_at | TIMESTAMP | 创建时间 |
+
+#### knowledge_points - 知识点表
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | INTEGER | 主键，自增 |
+| name | TEXT | 知识点名称 |
+| subject_code | TEXT | 学科代码 |
+| grade_code | TEXT | 年级代码 |
+| semester_code | TEXT | 学期代码 |
+| textbook_version_code | TEXT | 教材版本代码 |
+| sort_order | INTEGER | 排序序号 |
+| is_active | INTEGER | 是否启用 |
+| created_at | TIMESTAMP | 创建时间 |
+| updated_at | TIMESTAMP | 更新时间 |
+
+---
+
+#### 配置表
+
+#### subjects - 学科表
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | INTEGER | 主键，自增 |
+| code | TEXT | 代码（math/chinese/english） |
+| name_zh | TEXT | 中文名 |
+| sort_order | INTEGER | 排序 |
+| is_active | INTEGER | 是否启用 |
+| created_at | TIMESTAMP | 创建时间 |
+| updated_at | TIMESTAMP | 更新时间 |
+
+#### grades - 年级表
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | INTEGER | 主键，自增 |
+| code | TEXT | 代码（grade1~grade9） |
+| name_zh | TEXT | 中文名（一年级~九年级） |
+| sort_order | INTEGER | 排序 |
+| is_active | INTEGER | 是否启用 |
+| created_at | TIMESTAMP | 创建时间 |
+| updated_at | TIMESTAMP | 更新时间 |
+
+#### semesters - 学期表
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | INTEGER | 主键，自增 |
+| code | TEXT | 代码（upper/lower） |
+| name_zh | TEXT | 中文名（上学期/下学期） |
+| sort_order | INTEGER | 排序 |
+| is_active | INTEGER | 是否启用 |
+| created_at | TIMESTAMP | 创建时间 |
+| updated_at | TIMESTAMP | 更新时间 |
+
+#### textbook_versions - 教材版本表
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | INTEGER | 主键，自增 |
+| version_code | TEXT | 版本代码（rjb/bsd/sj 等） |
+| name_zh | TEXT | 中文名（人教版/北师大版等） |
+| sort_order | INTEGER | 排序 |
+| is_active | INTEGER | 是否启用 |
+| created_at | TIMESTAMP | 创建时间 |
+| updated_at | TIMESTAMP | 更新时间 |
+
+#### question_types - 题型表
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | INTEGER | 主键，自增 |
+| en_name | TEXT | 英文名（唯一） |
+| zh_name | TEXT | 中文名 |
+| subjects | TEXT | 适用学科（逗号分隔） |
+| is_active | INTEGER | 是否启用 |
+| created_at | TIMESTAMP | 创建时间 |
+| updated_at | TIMESTAMP | 更新时间 |
+
+---
+
+#### 系统表
+
+#### schema_migrations - 迁移记录表
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | INTEGER | 主键，自增 |
+| version | TEXT | 迁移版本（唯一） |
+| filename | TEXT | 迁移文件名 |
+| executed_at | TIMESTAMP | 执行时间 |
+| checksum | TEXT | 校验和 |
+| status | TEXT | 状态（success/failed） |
+
+### 4.3 数据库索引设计
+
+#### 用户相关索引
+```sql
+-- 用户邮箱查询（登录场景）
+CREATE INDEX idx_users_email ON users(email);
+
+-- OTP 验证码验证
+CREATE INDEX idx_otp_codes_email ON otp_codes(email, purpose);
+CREATE INDEX idx_otp_rate_limit_email ON otp_rate_limit(email, purpose);
+```
+
+#### 题目记录相关索引
+```sql
+-- 用户记录列表查询（主索引）
+CREATE INDEX idx_user_question_records_user_deleted
+    ON user_question_records(user_id, is_deleted, created_at DESC);
+
+-- 分享链接访问
+CREATE INDEX idx_user_question_records_share_token
+    ON user_question_records(share_token);
+
+-- 短 ID 快速访问
+CREATE INDEX idx_user_question_records_short_id
+    ON user_question_records(short_id);
+```
+
+#### 题目相关索引
+```sql
+-- 按试卷 ID 查询题目
+CREATE INDEX idx_questions_record_id
+    ON questions(record_id, question_index);
+
+-- 短 ID 快速访问
+CREATE INDEX idx_questions_short_id
+    ON questions(short_id);
+```
+
+#### AI 生成记录相关索引
+```sql
+-- 用户记录筛选
+CREATE INDEX idx_ai_generation_records_user_id
+    ON ai_generation_records(user_id);
+
+-- 成功/失败统计
+CREATE INDEX idx_ai_generation_records_success
+    ON ai_generation_records(success);
+
+-- 类型筛选
+CREATE INDEX idx_ai_generation_records_prompt_type
+    ON ai_generation_records(prompt_type);
+
+-- 时间排序
+CREATE INDEX idx_ai_generation_records_created_at
+    ON ai_generation_records(created_at DESC);
+
+-- 复合查询优化
+CREATE INDEX idx_ai_generation_records_composite
+    ON ai_generation_records(user_id, success, prompt_type, created_at DESC);
+```
+
+#### 管理员日志相关索引
+```sql
+-- 按操作类型查询
+CREATE INDEX idx_admin_logs_action
+    ON admin_operation_logs(action, created_at DESC);
+
+-- 按操作对象查询
+CREATE INDEX idx_admin_logs_target
+    ON admin_operation_logs(target_type, target_id);
+```
+
+#### 知识点相关索引
+```sql
+-- 多条件筛选
+CREATE INDEX idx_kp_filters
+    ON knowledge_points(subject_code, grade_code, semester_code, textbook_version_code);
+
+-- 启用状态 + 名称
+CREATE INDEX idx_kp_active
+    ON knowledge_points(is_active, name);
+```
+
+#### 配置表相关索引
+```sql
+CREATE INDEX idx_subjects_code ON subjects(code, is_active);
+CREATE INDEX idx_grades_code ON grades(code, is_active);
+CREATE INDEX idx_semesters_code ON semesters(code, is_active);
+CREATE INDEX idx_textbook_versions_code ON textbook_versions(version_code, is_active);
+```
+
+#### 迁移记录相关索引
+```sql
+CREATE INDEX idx_schema_migrations_version ON schema_migrations(version);
+```
+
+---
+
+### 4.4 数据库路径配置（重构后）
 
 **重构前问题**:
 - 每个文件重复定义 `DB_PATH`
@@ -726,20 +1140,16 @@ CREATE TABLE schema_migrations (
 **迁移脚本列表**:
 ```
 db/migrations/
-├── 000_create_schema_migrations_table.sql
-├── 001_add_questions_table.sql
-├── 002_add_question_templates.sql
-├── 005_add_volume_conversion_template.sql
-├── 006_add_fraction_comparison_template.sql
-├── 007_add_bainaineishu_comparison_template.sql
-├── 008_add_currency_recognition_template.sql
-├── 009_add_mixed_addition_subtraction_template.sql
-├── 010_unify_arithmetic_generators.sql
-├── 011_rename_question_types_to_complexity.sql
-├── 012_add_question_types_table.sql
-├── 013_add_length_comparison_template.sql
-├── 014_add_multiplication_division_comprehensive_template.sql
-└── 015_add_multiplication_practice_template.sql
+├── 000_create_schema_migrations_table.sql    # 迁移元数据表
+├── 001_create_users_and_otp_tables.sql       # 用户表、OTP 验证码表
+├── 002_create_question_records_tables.sql    # 题目记录表、AI 生成记录表
+├── 003_create_questions_table.sql            # 题目表
+├── 004_create_admin_logs_table.sql           # 管理员操作日志表
+├── 005_create_templates_tables.sql           # 模板表、模板使用记录表
+├── 006_create_config_tables.sql              # 配置表（学科/年级/学期/教材版本）
+├── 007_create_knowledge_points_table.sql     # 知识点表
+├── 008_create_question_types_table.sql       # 题型表
+└── ... (后续增量迁移)
 ```
 
 ---

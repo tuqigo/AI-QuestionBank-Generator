@@ -64,4 +64,8 @@ PDF下载
   1. 题目数量 这一栏 需要放到生成题目一个区域 在生成题目按钮上面 只展示题目数量和 加减号  
   2.将下载PDF的按钮样式改成和当前 打印题目样式一致 特别的是主题色 大小等 
   3.将当前所有打印题目的功能下线 所有相关代码 都不例外  
-  
+
+20260319
+  1.帮我分析下 现在我需要 将question_templates表的knowledge_point改为 knowledge_points表的id 是否合理
+  改成knowledge_points表的id之后 question_templates表的subject，grade，semester，textbook_version字段是否可以不需要了，因为knowledge_points表里面已经有了这些字段
+  2.
