@@ -69,3 +69,8 @@ PDF下载
   1.帮我分析下 现在我需要 将question_templates表的knowledge_point改为 knowledge_points表的id 是否合理
   改成knowledge_points表的id之后 question_templates表的subject，grade，semester，textbook_version字段是否可以不需要了，因为knowledge_points表里面已经有了这些字段
   2.
+
+
+  1.列名: ['年级', '学期', '教材版本', '题型', '知识点', '模板名称', '例题']  只要有莫行少了任何数据都是脏数据
+  2.subject固定为数学，年级对应grade ，学期对应semester，教材版本对应textbook_version，题型对应question_type,  例题对应example， 模板名称对应name 。 知识点先不考虑 
+  3.grade不在core.constants.SUPPORTED_GRADES 非法，semester不在core.constants.SUPPORTED_SEMESTERS非法，textbook_version不在core.constants.SUPPORTED_TEXTBOOK_VERSIONS这里非法

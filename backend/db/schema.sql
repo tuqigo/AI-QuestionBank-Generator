@@ -241,10 +241,6 @@ CREATE TABLE IF NOT EXISTS question_templates (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 添加索引以优化查询
-CREATE INDEX IF NOT EXISTS idx_question_templates_knowledge_point_id
-    ON question_templates(knowledge_point_id, is_active);
-
 -- ============================================
 -- 9. 模板使用记录表 (template_usage_logs)
 -- ============================================
