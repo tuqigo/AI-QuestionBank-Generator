@@ -2,7 +2,7 @@
  * 单选题组件
  */
 import { useMemo } from 'react'
-import type { QuestionRendererProps, QuestionWithOptions } from '@/types/question'
+import type { QuestionRendererProps, QuestionWithOptions, StructuredQuestion } from '@/types/question'
 import { renderInlineMarkdown } from '@/utils/markdownProcessor'
 
 interface SingleChoiceProps extends QuestionRendererProps {
@@ -10,6 +10,9 @@ interface SingleChoiceProps extends QuestionRendererProps {
 }
 
 export default function SingleChoice({ question, index, mode = 'render' }: SingleChoiceProps) {
+  // 从 rendering_meta 获取是否显示题号
+  const showQuestionNumber = (question as StructuredQuestion).rendering_meta?.show_question_number
+
   const options = question.options || []
 
   // 处理选项：移除可能存在的 A. B. C. D. 前缀（如果 AI 返回了前缀）
@@ -26,7 +29,9 @@ export default function SingleChoice({ question, index, mode = 'render' }: Singl
   return (
     <div className={`question-item question-single-choice ${modeClass}`}>
       <div className="question-header">
-        <span className="question-number">{index}.</span>
+        {showQuestionNumber !== false && (
+          <span className="question-number">{index}. </span>
+        )}
         <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(question.stem) }} />
       </div>
       <div className="question-options">

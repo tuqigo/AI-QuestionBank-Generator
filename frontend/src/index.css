@@ -7,6 +7,9 @@
 /* ===== 引入题目样式 ===== */
 @import './components/questions/questions.css';
 
+/* ===== 引入题目渲染配置样式（rendering_meta 驱动） ===== */
+@import './components/questions/questions-render-config.css';
+
 /* ===== Reset & Base ===== */
 *,
 *::before,

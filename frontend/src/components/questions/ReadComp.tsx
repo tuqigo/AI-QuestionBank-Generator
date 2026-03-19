@@ -3,7 +3,7 @@
  * 支持所有题型的子题目
  */
 import { useMemo } from 'react'
-import { QuestionRendererProps, QuestionWithPassage, QuestionWithSubQuestions } from '@/types/question'
+import { QuestionRendererProps, QuestionWithPassage, QuestionWithSubQuestions, StructuredQuestion } from '@/types/question'
 import { renderMarkdown, renderInlineMarkdown } from '@/utils/markdownProcessor'
 import SingleChoice from './SingleChoice'
 import MultipleChoice from './MultipleChoice'
@@ -19,6 +19,9 @@ interface ReadCompProps extends QuestionRendererProps {
 }
 
 export default function ReadComp({ question, index, mode = 'render' }: ReadCompProps) {
+  // 从 rendering_meta 获取是否显示题号
+  const showQuestionNumber = (question as StructuredQuestion).rendering_meta?.show_question_number
+
   const passage = question.passage || ''
   const subQuestions = question.sub_questions || []
 
@@ -38,7 +41,9 @@ export default function ReadComp({ question, index, mode = 'render' }: ReadCompP
   return (
     <div className={`question-item question-read-comp ${modeClass}`}>
       <div className="question-header">
-        <span className="question-number">{index}. </span>
+        {showQuestionNumber !== false && (
+          <span className="question-number">{index}. </span>
+        )}
         <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(question.stem) }} />
       </div>
 

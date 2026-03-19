@@ -2,7 +2,7 @@
  * 多选题组件
  */
 import { useMemo } from 'react'
-import { QuestionRendererProps, QuestionWithOptions } from '@/types/question'
+import { QuestionRendererProps, QuestionWithOptions, StructuredQuestion } from '@/types/question'
 import { renderInlineMarkdown } from '@/utils/markdownProcessor'
 
 interface MultipleChoiceProps extends QuestionRendererProps {
@@ -10,6 +10,9 @@ interface MultipleChoiceProps extends QuestionRendererProps {
 }
 
 export default function MultipleChoice({ question, index, mode = 'render' }: MultipleChoiceProps) {
+  // 从 rendering_meta 获取是否显示题号
+  const showQuestionNumber = (question as StructuredQuestion).rendering_meta?.show_question_number
+
   const options = question.options || []
 
   // 多选题选项标签（A, B, C...）
@@ -26,7 +29,9 @@ export default function MultipleChoice({ question, index, mode = 'render' }: Mul
   return (
     <div className={`question-item question-multiple-choice ${modeClass}`}>
       <div className="question-header">
-        <span className="question-number">{index}. </span>
+        {showQuestionNumber !== false && (
+          <span className="question-number">{index}. </span>
+        )}
         <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(question.stem) }} />
       </div>
       <div className="question-options">

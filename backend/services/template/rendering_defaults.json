@@ -1,0 +1,83 @@
+{
+  "global": {
+    "layout": "single",
+    "font_size": 14,
+    "latex_scale": 1.0,
+    "rows_to_answer": 1,
+    "keep_together": true,
+    "show_question_number": true
+  },
+  "by_question_type": {
+    "ORAL_CALCULATION": {
+      "layout": "multi",
+      "columns": 4,
+      "font_size": 20,
+      "answer_width": 80,
+      "show_question_number": false
+    },
+    "FILL_BLANK": {
+      "layout": "single",
+      "font_size": 14,
+      "answer_width": 150,
+      "show_question_number": true
+    },
+    "CALCULATION": {
+      "layout": "multi",
+      "font_size": 18,
+      "columns": 3,
+      "rows_to_answer": 2,
+      "keep_together": true
+    },
+    "WORD_PROBLEM": {
+      "layout": "single",
+      "font_size": 14,
+      "rows_to_answer": 5
+    },
+    "VERTICAL_ARITHMETIC": {
+      "layout": "single",
+      "font_size": 16,
+      "latex_scale": 1.2,
+      "keep_together": false
+    },
+    "READ_COMP": {
+      "layout": "single",
+      "font_size": 14,
+      "keep_together": true
+    },
+    "SINGLE_CHOICE": {
+      "layout": "single",
+      "font_size": 14,
+      "keep_together": true
+    },
+    "MULTIPLE_CHOICE": {
+      "layout": "single",
+      "font_size": 14,
+      "keep_together": true
+    },
+    "TRUE_FALSE": {
+      "layout": "single",
+      "font_size": 14,
+      "keep_together": true
+    },
+    "GEOMETRY": {
+      "layout": "single",
+      "font_size": 14,
+      "keep_together": true
+    },
+    "POETRY_APP": {
+      "layout": "single",
+      "font_size": 14,
+      "rows_to_answer": 2
+    },
+    "CLOZE": {
+      "layout": "single",
+      "font_size": 14,
+      "keep_together": true
+    },
+    "ESSAY": {
+      "layout": "single",
+      "font_size": 14,
+      "rows_to_answer": 10
+    }
+  }
+}

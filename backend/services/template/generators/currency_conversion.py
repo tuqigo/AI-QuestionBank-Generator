@@ -22,6 +22,9 @@ class CurrencyConversionGenerator(TemplateGenerator):
         fen_max = template_config.get("fen", {}).get("max", 50)
         convert_types = template_config.get("convert_types", ["yuan_to_jiao", "jiao_to_fen", "yuan_fen_to_fen"])
 
+        # 获取渲染元数据
+        rendering_meta = self.get_rendering_meta(question_type, template_config)
+
         for _ in range(quantity):
             max_attempts = 50
             for _ in range(max_attempts):
@@ -114,6 +117,7 @@ class CurrencyConversionGenerator(TemplateGenerator):
                 "stem": stem,
                 "knowledge_points": self.get_knowledge_points(template_config),
                 "rows_to_answer": 1,
+                "rendering_meta": rendering_meta,
             })
 
         return questions

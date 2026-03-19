@@ -22,6 +22,9 @@ class CompareNumberGenerator(TemplateGenerator):
         b_max = template_config.get("b", {}).get("max", 10)
         ensure_different = "ensure_different" in template_config.get("rules", [])
 
+        # 获取渲染元数据
+        rendering_meta = self.get_rendering_meta(question_type, template_config)
+
         for _ in range(quantity):
             # 生成不重复的数对
             max_attempts = 50
@@ -50,6 +53,7 @@ class CompareNumberGenerator(TemplateGenerator):
                 "stem": stem,
                 "knowledge_points": self.get_knowledge_points(template_config),
                 "rows_to_answer": 1,
+                "rendering_meta": rendering_meta,
             })
 
         return questions

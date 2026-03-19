@@ -38,6 +38,9 @@ class VerticalAdditionSubtractionGenerator(TemplateGenerator):
         ensure_no_carrying = template_config.get("ensure_no_carrying", False)  # 加法不进位
         ensure_positive_result = template_config.get("ensure_positive_result", True)  # 确保结果非负
 
+        # 获取渲染元数据
+        rendering_meta = self.get_rendering_meta(question_type, template_config)
+
         for _ in range(quantity):
             max_attempts = 50
             for attempt in range(max_attempts):
@@ -94,6 +97,7 @@ class VerticalAdditionSubtractionGenerator(TemplateGenerator):
                 "stem": stem,
                 "knowledge_points": self.get_knowledge_points(template_config),
                 "rows_to_answer": 1,
+                "rendering_meta": rendering_meta,
             })
 
         return questions

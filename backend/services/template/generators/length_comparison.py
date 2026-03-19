@@ -26,6 +26,9 @@ class LengthComparisonGenerator(TemplateGenerator):
             "m_cm_to_cm", "m_dm_to_dm"
         ])
 
+        # 获取渲染元数据
+        rendering_meta = self.get_rendering_meta(question_type, template_config)
+
         for _ in range(quantity):
             max_attempts = 50
             for _ in range(max_attempts):
@@ -110,6 +113,7 @@ class LengthComparisonGenerator(TemplateGenerator):
                 "stem": stem,
                 "knowledge_points": self.get_knowledge_points(template_config),
                 "rows_to_answer": 1,
+                "rendering_meta": rendering_meta,
             })
 
         return questions

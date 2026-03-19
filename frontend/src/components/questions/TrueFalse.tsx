@@ -1,7 +1,7 @@
 /**
  * 判断题组件
  */
-import type { QuestionRendererProps } from '@/types/question'
+import type { QuestionRendererProps, StructuredQuestion } from '@/types/question'
 import { renderInlineMarkdown } from '@/utils/markdownProcessor'
 
 interface TrueFalseProps extends QuestionRendererProps {
@@ -9,12 +9,17 @@ interface TrueFalseProps extends QuestionRendererProps {
 }
 
 export default function TrueFalse({ question, index, mode = 'render' }: TrueFalseProps) {
+  // 从 rendering_meta 获取是否显示题号
+  const showQuestionNumber = (question as StructuredQuestion).rendering_meta?.show_question_number
+
   const modeClass = mode === 'print' ? 'question-print-mode' : 'question-render-mode'
 
   return (
     <div className={`question-item question-true-false ${modeClass}`}>
       <div className="question-header">
-        <span className="question-number">{index}. </span>
+        {showQuestionNumber !== false && (
+          <span className="question-number">{index}. </span>
+        )}
         <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(question.stem) }} />
       </div>
       <div className="question-options">

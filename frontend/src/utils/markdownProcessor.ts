@@ -72,19 +72,25 @@ function protectMath(content: string): { content: string; placeholders: Map<stri
 /**
  * 处理特殊格式（填空、括号等）
  */
-function processSpecialFormats(content: string): string {
+function processSpecialFormats(content: string, answerWidth?: number): string {
   let processed = content
 
   // 处理 [   ] 方框填空（2 个空格以上）
   processed = processed.replace(/\[ {2,}\]/g, '<span class="blank-box"></span>')
 
-  // 处理带空格的括号（全角）
+  // 处理带空格的括号（全角）- 支持 answer_width 控制宽度
   processed = processed.replace(/（ {2,}）/g, () => {
-    return '（<span class="answer-blank"></span>）'
+    if (answerWidth) {
+      return `（<span class="answer-placeholder" style="width: ${answerWidth}px; min-width: ${answerWidth}px; display: inline-block; border-bottom: 1px dotted currentColor;"></span>）`
+    }
+    return '（<span class="answer-placeholder"></span>）'
   })
-  // 处理带空格的半角括号
+  // 处理带空格的半角括号 - 支持 answer_width 控制宽度
   processed = processed.replace(/\( {2,}\)/g, () => {
-    return '(<span class="answer-blank"></span>)'
+    if (answerWidth) {
+      return `(<span class="answer-placeholder" style="width: ${answerWidth}px; min-width: ${answerWidth}px; display: inline-block; border-bottom: 1px dotted currentColor;"></span>)`
+    }
+    return '(<span class="answer-placeholder"></span>)'
   })
   // 处理完全空的括号
   processed = processed.replace(/（）/g, '<span class="blank-parentheses"></span>')
@@ -111,38 +117,44 @@ function restoreMath(content: string, placeholders: Map<string, string>): string
  *
  * 优化：如果没有 Markdown 语法，只处理特殊格式并保留 LaTeX 原样，
  * 让 MathJax 直接渲染公式，避免 markdown-it 干扰
+ *
+ * @param content 要渲染的内容
+ * @param answerWidth 作答区域宽度（从 rendering_meta.answer_width 获取）
  */
-export function renderMarkdown(content: string): string {
+export function renderMarkdown(content: string, answerWidth?: number): string {
   if (!content || typeof content !== 'string') return ''
 
   // 如果没有 Markdown 语法，只处理特殊格式，不经过 markdown-it
   if (!hasMarkdownSyntax(content)) {
-    return processSpecialFormats(content)
+    return processSpecialFormats(content, answerWidth)
   }
 
   // 有 Markdown 语法，需要完整处理
   const { content: protectedContent, placeholders } = protectMath(content)
-  let processed = processSpecialFormats(protectedContent)
+  let processed = processSpecialFormats(protectedContent, answerWidth)
   processed = md.render(processed)
   return restoreMath(processed, placeholders)
 }
 
 /**
  * 渲染行内 Markdown 内容（不添加 <p> 标签）
+ *
+ * @param content 要渲染的内容
+ * @param answerWidth 作答区域宽度（从 rendering_meta.answer_width 获取）
  */
-export function renderInlineMarkdown(content: string): string {
+export function renderInlineMarkdown(content: string, answerWidth?: number): string {
   if (!content || typeof content !== 'string') return ''
   if (!content.trim()) return ''
 
   // 如果没有 Markdown 语法，只处理特殊格式
   if (!hasMarkdownSyntax(content)) {
-    return processSpecialFormats(content.replace(/[\r\n]+/g, ' '))
+    return processSpecialFormats(content.replace(/[\r\n]+/g, ' '), answerWidth)
   }
 
   // 有 Markdown 语法，需要完整处理
   const singleLineContent = content.replace(/[\r\n]+/g, ' ')
   const { content: protectedContent, placeholders } = protectMath(singleLineContent)
-  let processed = processSpecialFormats(protectedContent)
+  let processed = processSpecialFormats(protectedContent, answerWidth)
   processed = md.renderInline(processed)
   return restoreMath(processed, placeholders)
 }

@@ -84,11 +84,37 @@ export interface Question {
   sub_questions?: Question[]
 }
 
+/** 题目渲染元数据 */
+export interface QuestionRenderingMeta {
+  // ========== 布局相关 ==========
+  layout?: 'single' | 'multi' | 'inline'  // 单列/多列/行内布局
+  columns?: number  // 多列布局时的列数（默认 3）
+
+  // ========== 字体相关 ==========
+  font_size?: number  // 12-24，默认 14
+
+  // ========== LaTeX 相关（竖式专用） ==========
+  latex_scale?: number  // MathJax 缩放，默认 1.0
+
+  // ========== 作答区域 ==========
+  rows_to_answer?: number  // 作答行数（计算题/应用题/作文题）
+  answer_width?: number  // 作答宽度 px（填空题/口算题）
+
+  // ========== 打印控制 ==========
+  keep_together?: boolean  // 避免分页打断（默认 true）
+
+  // ========== 显示控制 ==========
+  show_question_number?: boolean  // 是否显示题号（默认 true）
+}
+
 /** 带后端填充字段的题目 */
 export interface StructuredQuestion extends Question {
   rows_to_answer: number  // 预留作答行数
   answer_blanks?: number  // 填空题空格数
   answer_text?: string    // 参考答案
+
+  // 新增：渲染元数据
+  rendering_meta?: QuestionRenderingMeta
 }
 
 // ===================== API 响应 =====================

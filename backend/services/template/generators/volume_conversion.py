@@ -24,6 +24,9 @@ class VolumeConversionGenerator(TemplateGenerator):
             "l_to_ml", "ml_to_l", "dm3_to_l", "l_to_dm3"
         ])
 
+        # 获取渲染元数据
+        rendering_meta = self.get_rendering_meta(question_type, template_config)
+
         for _ in range(quantity):
             max_attempts = 50
             for _ in range(max_attempts):
@@ -122,6 +125,7 @@ class VolumeConversionGenerator(TemplateGenerator):
                 "stem": stem,
                 "knowledge_points": self.get_knowledge_points(template_config),
                 "rows_to_answer": 1,
+                "rendering_meta": rendering_meta,
             })
 
         return questions

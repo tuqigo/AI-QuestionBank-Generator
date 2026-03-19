@@ -2,7 +2,7 @@
  * 完形填空组件
  */
 import { useMemo } from 'react'
-import { QuestionRendererProps, QuestionWithPassage, QuestionWithSubQuestions } from '@/types/question'
+import { QuestionRendererProps, QuestionWithPassage, QuestionWithSubQuestions, StructuredQuestion } from '@/types/question'
 import { renderInlineMarkdown, renderMarkdown } from '@/utils/markdownProcessor'
 import FillBlank from './FillBlank'
 
@@ -11,6 +11,9 @@ interface ClozeProps extends QuestionRendererProps {
 }
 
 export default function Cloze({ question, index, mode = 'render' }: ClozeProps) {
+  // 从 rendering_meta 获取是否显示题号
+  const showQuestionNumber = (question as StructuredQuestion).rendering_meta?.show_question_number
+
   const passage = question.passage || ''
   const subQuestions = question.sub_questions || []
 
@@ -25,7 +28,9 @@ export default function Cloze({ question, index, mode = 'render' }: ClozeProps) 
   return (
     <div className={`question-item question-cloze ${modeClass}`}>
       <div className="question-header">
-        <span className="question-number">{index}. </span>
+        {showQuestionNumber !== false && (
+          <span className="question-number">{index}. </span>
+        )}
         <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(question.stem) }} />
       </div>
 
