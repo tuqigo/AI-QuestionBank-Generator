@@ -53,6 +53,7 @@ class QuestionTemplate(BaseModel):
     template_pattern: str = Field(..., description="模板模式字符串")
     variables_config: dict = Field(..., description="变量配置")
     knowledge_point_id: Optional[int] = Field(None, description="关联 knowledge_points 表的 ID")
+    description: Optional[str] = Field(None, description="模板描述")
     example: Optional[List[str]] = Field(None, description="示例题目数组")
     generator_module: Optional[str] = Field(None, description="生成器模块名")
     sort_order: int = Field(0, description="排序序号")
@@ -93,6 +94,7 @@ class QuestionTemplateListItem(BaseModel):
     textbook_version: str
     question_type: str
     knowledge_point_id: Optional[int]
+    description: Optional[str]
     example: Optional[List[str]]
     sort_order: int
 

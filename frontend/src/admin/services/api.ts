@@ -240,6 +240,7 @@ export interface QuestionTemplate {
   template_pattern: string
   variables_config: string | object
   example: string[] | null
+  description: string | null
   knowledge_point_id: number | null
   generator_module: string | null
   sort_order: number
@@ -273,6 +274,7 @@ export interface TemplateCreateInput {
   template_pattern: string
   variables_config: string
   example?: string  // JSON 字符串格式
+  description?: string
   knowledge_point_id?: number | null
   sort_order?: number
   is_active?: boolean
@@ -288,6 +290,7 @@ export interface TemplateUpdateInput {
   template_pattern?: string
   variables_config?: string
   example?: string  // JSON 字符串格式
+  description?: string
   knowledge_point_id?: number | null
   sort_order?: number
   is_active?: boolean

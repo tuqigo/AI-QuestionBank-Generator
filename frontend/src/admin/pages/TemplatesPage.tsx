@@ -34,6 +34,7 @@ export default function TemplatesPage() {
     template_pattern: string
     variables_config: string
     example: string[]
+    description: string
     knowledge_point_id: number | null
     sort_order: number
     is_active: boolean
@@ -48,6 +49,7 @@ export default function TemplatesPage() {
     template_pattern: '',
     variables_config: '{}',
     example: [],
+    description: '',
     knowledge_point_id: null,
     sort_order: 0,
     is_active: true,
@@ -177,6 +179,7 @@ export default function TemplatesPage() {
       template_pattern: '',
       variables_config: '{}',
       example: [],
+      description: '',
       knowledge_point_id: null,
       sort_order: 0,
       is_active: true,
@@ -201,6 +204,7 @@ export default function TemplatesPage() {
         ? template.variables_config
         : JSON.stringify(template.variables_config, null, 2),
       example: template.example || [],
+      description: template.description || '',
       knowledge_point_id: template.knowledge_point_id || null,
       sort_order: template.sort_order,
       is_active: template.is_active,
@@ -260,6 +264,7 @@ export default function TemplatesPage() {
           ...formData,
           variables_config: JSON.stringify(variablesConfig),
           example: exampleArray.length > 0 ? JSON.stringify(exampleArray) : undefined,
+          description: formData.description || undefined,
         })
         alert('创建成功')
       } else if (modalMode === 'edit' && currentTemplate) {
@@ -272,6 +277,7 @@ export default function TemplatesPage() {
           template_pattern: formData.template_pattern,
           variables_config: JSON.stringify(variablesConfig),
           example: exampleArray.length > 0 ? JSON.stringify(exampleArray) : undefined,
+          description: formData.description || undefined,
           knowledge_point_id: formData.knowledge_point_id,
           sort_order: formData.sort_order,
           is_active: formData.is_active,
@@ -495,6 +501,16 @@ export default function TemplatesPage() {
           </div>
 
           <div className="form-group full-width">
+            <label>模板描述 (description)</label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="描述模板的用途和特点，帮助管理员更好地理解模板"
+              rows={3}
+            />
+          </div>
+
+          <div className="form-group full-width">
             <label>变量配置 (variables_config) - JSON 格式</label>
             <textarea
               value={formData.variables_config}
@@ -625,6 +641,10 @@ export default function TemplatesPage() {
           <div className="view-row">
             <strong>模板模式:</strong>
             <pre className="json-viewer">{currentTemplate?.template_pattern}</pre>
+          </div>
+          <div className="view-row">
+            <strong>模板描述:</strong>
+            <div className="description-text">{currentTemplate?.description || '-'}</div>
           </div>
           <div className="view-row">
             <strong>变量配置:</strong>

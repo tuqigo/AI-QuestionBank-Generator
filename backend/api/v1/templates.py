@@ -41,6 +41,7 @@ class TemplateListItem(BaseModel):
     semester: str
     textbook_version: str
     knowledge_point_id: Optional[int]
+    description: Optional[str]
     example: Optional[List[str]]
 
 
@@ -65,6 +66,7 @@ class TemplateCreateInput(BaseModel):
     question_type: str
     template_pattern: str
     variables_config: str  # JSON 字符串格式
+    description: Optional[str] = None  # 模板描述
     example: Optional[str] = None  # JSON 字符串格式，如 '["题 1","题 2"]'
     knowledge_point_id: Optional[int] = None
     sort_order: int = 0
@@ -81,6 +83,7 @@ class TemplateUpdateInput(BaseModel):
     textbook_version: Optional[str] = None
     template_pattern: Optional[str] = None
     variables_config: Optional[str] = None  # JSON 字符串格式
+    description: Optional[str] = None  # 模板描述
     example: Optional[str] = None  # JSON 字符串格式
     knowledge_point_id: Optional[int] = None
     sort_order: Optional[int] = None
@@ -122,6 +125,7 @@ class TemplateFull(BaseModel):
     question_type: str
     template_pattern: str
     variables_config: dict
+    description: Optional[str]
     example: Optional[List[str]]
     knowledge_point_id: Optional[int]
     generator_module: Optional[str]
@@ -282,7 +286,7 @@ async def get_all_templates_for_admin():
         cursor = conn.execute(
             """
             SELECT id, name, subject, grade, semester, textbook_version, question_type, template_pattern,
-                   variables_config, example, knowledge_point_id, generator_module, sort_order, is_active,
+                   variables_config, example, description, knowledge_point_id, generator_module, sort_order, is_active,
                    created_at, updated_at
             FROM question_templates
             ORDER BY sort_order ASC, id ASC
@@ -303,6 +307,7 @@ async def get_all_templates_for_admin():
                 question_type=row["question_type"],
                 template_pattern=row["template_pattern"],
                 variables_config=json.loads(row["variables_config"]),
+                description=row["description"],
                 example=json.loads(row["example"]) if row["example"] else None,
                 knowledge_point_id=row["knowledge_point_id"],
                 generator_module=row["generator_module"],
@@ -345,6 +350,7 @@ async def create_template_api(input: TemplateCreateInput):
             question_type=input.question_type,
             template_pattern=input.template_pattern,
             variables_config=input.variables_config,
+            description=input.description,
             example=input.example,
             knowledge_point_id=input.knowledge_point_id,
             sort_order=input.sort_order,
@@ -385,6 +391,7 @@ async def update_template_api(template_id: int, input: TemplateUpdateInput):
             textbook_version=input.textbook_version,
             template_pattern=input.template_pattern,
             variables_config=input.variables_config,
+            description=input.description,
             example=input.example,
             knowledge_point_id=input.knowledge_point_id,
             sort_order=input.sort_order,
