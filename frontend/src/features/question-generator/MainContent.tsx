@@ -14,14 +14,6 @@ import { useSwipeToClose } from '@/hooks/useSwipeToClose'
 import { MathJaxText } from '@/admin/components/MathJaxText'
 import './MainContent.css'
 
-/**
- * 转义 LaTeX 公式中的反斜杠
- * 后端返回的 JSON 中反斜杠被转义为 \\，需要转换回 \
- */
-function unescapeLatex(str: string): string {
-  return str.replace(/\\\\/g, '\\')
-}
-
 const SHORTCUTS = [
   { label: '口算题', prompt: '小学一年级数学 数的组成，比大小、多少、长短、高矮、轻重、简单分类、统计', icon: '🔢' },
   { label: '综合题', prompt: '小学六年级 数学综合练习（分数运算、百分数、圆、比例、统计）', icon: '📝' },
@@ -858,7 +850,7 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                           <div className="template-example">
                             <span className="example-label">例题：</span>
                             <span className="example-content">
-                              <MathJaxText text={unescapeLatex(template.example[0])} />
+                              <MathJaxText text={template.example[0]} />
                             </span>
                           </div>
                         )}
