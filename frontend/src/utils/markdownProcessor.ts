@@ -97,8 +97,11 @@ function processSpecialFormats(
         // 虚线框
         return `<span class="answer-dashed-box" style="display:inline-block !important; width:${boxWidth}px !important; height:1.2em !important; border:1px dashed #000 !important; vertical-align:middle !important; background:#f9f9f9 !important;"></span>`
       case 'circle':
-        // 圆圈：使用 border-radius 50%
-        return `<span class="answer-circle" data-style="circle" style="display:inline-block !important; width:${boxWidth}px !important; height:${boxWidth}px !important; border:1px solid #000 !important; border-radius:50% !important; vertical-align:middle !important; background:#fff !important;"></span>`
+        // 圆圈：用于比大小或口算题作答区域
+        // 圆形大小 = answerWidth（如果是自适应则使用字体高度的 1.2 倍）
+        const circleSize = isInfiniteWidth ? '1.2em' : `${boxWidth}px`
+        // 比大小题目：圆圈左右添加间距，让数字和圆圈分开
+        return `<span class="answer-circle" data-style="circle" style="display:inline-block !important; width:${circleSize} !important; height:${circleSize} !important; border:1px solid #000 !important; border-radius:50% !important; vertical-align:middle !important; background:#fff !important; margin:0 0.3em !important;"></span>`
       case 'parentheses':
         // 括号：虚线底部
         return `<span class="answer-parentheses" style="display:inline-block !important; width:${boxWidth}px !important; min-width:30px !important; border-bottom:1px dotted #000 !important; vertical-align:middle !important;"></span>`

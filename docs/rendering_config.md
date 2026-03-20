@@ -13,7 +13,7 @@
 | `font_size` | number | 12-24 | `14` | 题目字体大小 (px) | 所有题型 |
 | `latex_scale` | number | 0.5-2.0 | `1.0` | LaTeX 公式缩放比例 | 竖式计算题 |
 | `rows_to_answer` | number | 1-20 | `1` | 预留作答行数 | 计算题、应用题、作文题 |
-| `answer_width` | number | 20-300 或 `-1` | `80` | 作答区域宽度 (px)，`-1` 自适应 | 填空题、口算题 |
+| `answer_width` | number | 20-300 或 `-1` | `80` | 作答区域宽度 (px)，`-1` 自适应 | 填空题、口算题、比大小题 |
 | `answer_style` | string | 见下方表格 | `line` | 作答区域样式 | 填空题、口算题、判断题 |
 | `keep_together` | boolean | `true` / `false` | `true` | 避免题目被分页打断 | 阅读理解、完形填空 |
 | `show_question_number` | boolean | `true` / `false` | `true` | 是否显示题号 | 所有题型 |
@@ -27,7 +27,7 @@
 | `box` | 实线方框 | ┌────┐ | 填空题 |
 | `line` | 下划线 | ────── | 填空题（默认） |
 | `dashed_box` | 虚线方框 | ┌┈┈┈┐ | 口算题 |
-| `circle` | 圆圈/圆形 | ⭕ | 口算题、判断题 |
+| `circle` | 圆圈/圆形 | ⭕ | 口算题、判断题、比大小题 **（圆圈是正方形，width=height）**|
 | `parentheses` | 括号虚线 | （┈┈） | 填空题 |
 | `blank` | 灰色背景 | ████ | 计算题 |
 
@@ -159,6 +159,25 @@
   }
 }
 ```
+
+### 示例 4：比大小题目（圆圈居中对齐）
+```json
+{
+  "rendering_config": {
+    "layout": "single",
+    "font_size": 18,
+    "answer_width": 32,
+    "answer_style": "circle",
+    "show_question_number": true
+  }
+}
+```
+**效果**：`4 ⭕ 5` - 圆圈在两个数字中间，垂直居中对齐，左右有适当间距
+
+**注意**：
+- `answer_style: "circle"` 时，圆圈是正方形（宽=高），所以 `answer_width` 同时控制圆圈的直径
+- 圆圈左右自动添加间距（`margin: 0 0.3em`），数字和圆圈不会紧贴
+- **推荐值**：比大小题目建议 `answer_width: 32-40`，字体 `font_size: 18` 时圆圈大小适中
 
 ---
 

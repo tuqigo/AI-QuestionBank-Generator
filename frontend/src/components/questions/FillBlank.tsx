@@ -24,9 +24,6 @@ export default function FillBlank({ question, index, mode = 'render' }: FillBlan
         )}
         <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(question.stem, answerWidth, answerStyle) }} />
       </div>
-      <div className="answer-line">
-        <span className="answer-placeholder" style={{ width: answerWidth ? `${answerWidth}px` : undefined }}>________________________</span>
-      </div>
     </div>
   )
 }

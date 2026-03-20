@@ -533,6 +533,25 @@ export function getPrintStyles(): string {
       border-bottom: 1px dotted currentColor;
     }
 
+    /* 答案样式 - 打印时边框变黑色 */
+    .answer-box,
+    .answer-line,
+    .answer-dashed-box,
+    .answer-circle,
+    .answer-parentheses,
+    .answer-blank {
+      border-color: #000 !important;
+      border-bottom-color: #000 !important;
+    }
+
+    /* 圆圈样式（比大小、口算题） */
+    .answer-circle {
+      border-radius: 50% !important;
+      border: 1px solid #000 !important;
+      background: #fff !important;
+      margin: 0 0.3em !important; /* 左右间距，让数字和圆圈分开 */
+    }
+
     /* 答案区域 */
     .answer-area {
       margin-top: var(--answer-area-margin-top);
