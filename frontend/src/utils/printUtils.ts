@@ -4,13 +4,46 @@ import type { StructuredQuestion } from '@/types/question'
 import '@/types/mathjax'
 import type { LayoutConfig } from '@/config/questionConfig'
 import { QUESTION_TYPE_CONFIGS } from '@/config/questionConfig'
-import html2canvas from 'html2canvas'
-import { jsPDF } from 'jspdf'
 
-// 挂载到 window 供后续使用
-if (typeof window !== 'undefined') {
-  ;(window as any).html2canvas = html2canvas
-  ;(window as any).jspdf = { jsPDF }
+// PDF 库懒加载：不直接 import，而是动态加载
+let _html2canvas: typeof import('html2canvas').default | null = null
+let _jsPDF: typeof import('jspdf').jsPDF | null = null
+
+/**
+ * 预加载 PDF 生成库（html2canvas + jsPDF）
+ * 在用户点击"生成题目"后调用，提前加载以便下载时无延迟
+ */
+export async function preloadPDFLibs(): Promise<void> {
+  if (_html2canvas && _jsPDF) {
+    // 已经加载过，直接返回
+    return
+  }
+
+  try {
+    console.log('[PDF] 开始预加载 PDF 库...')
+    const [html2canvasMod, jspdfMod] = await Promise.all([
+      import('html2canvas'),
+      import('jspdf')
+    ])
+    _html2canvas = html2canvasMod.default
+    _jsPDF = jspdfMod.jsPDF
+
+    // 挂载到 window 供后续使用
+    ;(window as any).html2canvas = _html2canvas
+    ;(window as any).jspdf = { jsPDF: _jsPDF }
+
+    console.log('[PDF] 预加载完成')
+  } catch (err) {
+    console.error('[PDF] 预加载失败:', err)
+    throw new Error('PDF 库加载失败，请检查网络连接')
+  }
+}
+
+/**
+ * 检查 PDF 库是否已加载
+ */
+export function isPDFLibsLoaded(): boolean {
+  return _html2canvas !== null && _jsPDF !== null
 }
 
 /**
@@ -859,6 +892,12 @@ export const handleDownloadPDF = async (
   if (!questions || questions.length === 0) {
     toast.error('没有可下载的内容')
     return false
+  }
+
+  // 确保 PDF 库已加载（如果预加载失败或未执行，这里会加载）
+  if (!isPDFLibsLoaded()) {
+    toast.info('正在加载 PDF 引擎...')
+    await preloadPDFLibs()
   }
 
   try {

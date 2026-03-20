@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { fetchWithAuth, clearToken } from '@/core/auth/userAuth'
 import { validatePrompt } from '@/utils/promptValidator'
-import { handleDownloadPDF } from '@/utils/printUtils'
+import { handleDownloadPDF, preloadPDFLibs } from '@/utils/printUtils'
 import HistoryDropdown from '../history/HistoryList'
 import ProgressModal from './ProgressModal'
 import PrintPreview from '@/components/PrintPreview'
@@ -366,6 +366,11 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
 
       setProgressStage('complete')
 
+      // 预加载 PDF 库（用户点击"生成题目"后提前加载，下载时无延迟）
+      preloadPDFLibs().catch(err => {
+        console.warn('[PDF] 预加载失败:', err)
+      })
+
       setTimeout(() => {
         setShowProgress(false)
         // 移动端打开预览模态框
@@ -447,6 +452,11 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
 
       // 完成后显示完成状态
       setProgressStage('complete')
+
+      // 预加载 PDF 库（用户点击"生成题目"后提前加载，下载时无延迟）
+      preloadPDFLibs().catch(err => {
+        console.warn('[PDF] 预加载失败:', err)
+      })
 
       // 500ms 后关闭进度条并滚动到打印按钮（仅移动端）
       setTimeout(() => {
