@@ -75,6 +75,19 @@
 }
 ```
 
+**配置参数 - 混合题型（不同题型使用不同 answer_style）**:
+```json
+{
+  "question_complexity": ["simple", "compare_simple", "compare_with_result"],
+  "num": {"min": 1, "max": 20},
+  "q_type": {
+    "compare_simple": "circle",
+    "compare_with_result": "circle"
+  }
+}
+```
+> **说明**: `q_type` 用于为特定题型单独设置 `answer_style`，优先级高于 `rendering_config` 中的配置。
+
 **配置参数 - 综合型**:
 ```json
 {
