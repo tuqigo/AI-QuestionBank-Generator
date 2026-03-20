@@ -266,7 +266,7 @@ export function renderSubQuestions(
   mode: 'print' | 'render' = 'print',
   fontSize: string = '10.5pt',
   answerWidth?: number,
-  answerStyle?: 'box' | 'line' | 'dashed_box' | 'circle' | 'parentheses' | 'blank'
+  answerStyle?: string
 ): string {
   const optionLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
 
