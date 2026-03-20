@@ -33,6 +33,7 @@ export default function TemplatesPage() {
     question_type: string
     template_pattern: string
     variables_config: string
+    rendering_config: string
     example: string[]
     description: string
     knowledge_point_id: number | null
@@ -48,6 +49,7 @@ export default function TemplatesPage() {
     question_type: 'CALCULATION',
     template_pattern: '',
     variables_config: '{}',
+    rendering_config: '{}',
     example: [],
     description: '',
     knowledge_point_id: null,
@@ -178,6 +180,7 @@ export default function TemplatesPage() {
       question_type: 'CALCULATION',
       template_pattern: '',
       variables_config: '{}',
+      rendering_config: '{}',
       example: [],
       description: '',
       knowledge_point_id: null,
@@ -192,6 +195,21 @@ export default function TemplatesPage() {
   const openEditModal = (template: QuestionTemplate) => {
     setModalMode('edit')
     setCurrentTemplate(template)
+
+    // 解析 variables_config，分离出 rendering_config
+    let variablesConfigStr = '{}'
+    let renderingConfigStr = '{}'
+
+    if (template.variables_config) {
+      const varsConfig = typeof template.variables_config === 'string'
+        ? JSON.parse(template.variables_config)
+        : template.variables_config
+
+      const { rendering_config, ...restConfig } = varsConfig
+      variablesConfigStr = JSON.stringify(restConfig, null, 2)
+      renderingConfigStr = rendering_config ? JSON.stringify(rendering_config, null, 2) : '{}'
+    }
+
     setFormData({
       name: template.name,
       subject: template.subject,
@@ -200,9 +218,8 @@ export default function TemplatesPage() {
       textbook_version: template.textbook_version,
       question_type: template.question_type,
       template_pattern: template.template_pattern,
-      variables_config: typeof template.variables_config === 'string'
-        ? template.variables_config
-        : JSON.stringify(template.variables_config, null, 2),
+      variables_config: variablesConfigStr,
+      rendering_config: renderingConfigStr,
       example: template.example || [],
       description: template.description || '',
       knowledge_point_id: template.knowledge_point_id || null,
@@ -252,13 +269,29 @@ export default function TemplatesPage() {
         return
       }
 
+      // 解析 rendering_config
+      let renderingConfig: object | undefined
+      if (formData.rendering_config.trim()) {
+        try {
+          renderingConfig = JSON.parse(formData.rendering_config)
+        } catch {
+          alert('渲染配置必须是有效的 JSON 格式')
+          return
+        }
+      }
+
+      // 合并 rendering_config 到 variables_config 中
+      const finalVariablesConfig = renderingConfig
+        ? { ...variablesConfig, rendering_config: renderingConfig }
+        : variablesConfig
+
       // 使用 exampleRows 作为实际数据（过滤空行）
       const exampleArray = exampleRows.filter(row => row.trim().length > 0)
 
       if (modalMode === 'create') {
         await createTemplate({
           ...formData,
-          variables_config: JSON.stringify(variablesConfig),
+          variables_config: JSON.stringify(finalVariablesConfig),
           example: exampleArray.length > 0 ? JSON.stringify(exampleArray) : undefined,
           description: formData.description || undefined,
         })
@@ -271,7 +304,7 @@ export default function TemplatesPage() {
           semester: formData.semester,
           textbook_version: formData.textbook_version,
           template_pattern: formData.template_pattern,
-          variables_config: JSON.stringify(variablesConfig),
+          variables_config: JSON.stringify(finalVariablesConfig),
           example: exampleArray.length > 0 ? JSON.stringify(exampleArray) : undefined,
           description: formData.description || undefined,
           knowledge_point_id: formData.knowledge_point_id,
@@ -506,6 +539,37 @@ export default function TemplatesPage() {
             />
           </div>
 
+          {/* 配置说明提示框 */}
+          <div className="config-help-box">
+            <div className="config-help-header">
+              <span className="config-help-icon">!</span>
+              <span className="config-help-title">配置说明</span>
+            </div>
+            <div className="config-help-content">
+              <p><strong>变量配置 (variables_config)</strong> - 定义题目生成时使用的变量参数：</p>
+              <ul>
+                <li><code>min</code>, <code>max</code> - 数值范围，如 <code>{"{ }"}</code></li>
+                <li><code>operator</code> - 运算符类型，如 <code>"+"</code>, <code>"-"</code></li>
+                <li><code>decimal_places</code> - 小数位数</li>
+                <li><code>quantity</code> - 题目数量</li>
+                <li>其他生成器需要的特定参数</li>
+              </ul>
+              <p><strong>渲染配置 (rendering_config)</strong> - 控制题目的显示样式：</p>
+              <ul>
+                <li><code>layout</code> - 布局方式：<code>single</code> (单列), <code>multi</code> (多列), <code>inline</code> (行内)</li>
+                <li><code>columns</code> - 多列布局时的列数 (1-10)</li>
+                <li><code>font_size</code> - 字体大小 (12-24px)</li>
+                <li><code>latex_scale</code> - LaTeX 公式缩放比例 (0.5-2.0)</li>
+                <li><code>rows_to_answer</code> - 预留作答行数 (1-20)</li>
+                <li><code>answer_width</code> - 作答区域宽度 (px)，<code>-1</code> 为自适应</li>
+                <li><code>answer_style</code> - 作答样式：<code>box</code> (实线框), <code>line</code> (下划线), <code>dashed_box</code> (虚线框),
+                  <code>circle</code> (圆圈), <code>parentheses</code> (括号), <code>blank</code> (灰色背景)</li>
+                <li><code>keep_together</code> - 避免分页打断 (<code>true</code>/<code>false</code>)</li>
+                <li><code>show_question_number</code> - 是否显示题号 (<code>true</code>/<code>false</code>)</li>
+              </ul>
+            </div>
+          </div>
+
           <div className="form-group full-width">
             <label>变量配置 (variables_config) - JSON 格式</label>
             <textarea
@@ -513,6 +577,16 @@ export default function TemplatesPage() {
               onChange={(e) => setFormData({ ...formData, variables_config: e.target.value })}
               placeholder='例如：{"min": 1, "max": 10}'
               rows={5}
+            />
+          </div>
+
+          <div className="form-group full-width">
+            <label>渲染配置 (rendering_config) - JSON 格式</label>
+            <textarea
+              value={formData.rendering_config}
+              onChange={(e) => setFormData({ ...formData, rendering_config: e.target.value })}
+              placeholder='例如：{"layout": "multi", "columns": 3, "font_size": 18, "answer_style": "circle"}'
+              rows={6}
             />
           </div>
 
@@ -643,15 +717,31 @@ export default function TemplatesPage() {
             <div className="description-text">{currentTemplate?.description || '-'}</div>
           </div>
           <div className="view-row">
+            <strong>生成器模块:</strong> {currentTemplate?.generator_module || '-'}
+          </div>
+          <div className="view-row">
             <strong>变量配置:</strong>
             <pre className="json-viewer">
-              {typeof currentTemplate?.variables_config === 'string'
-                ? currentTemplate.variables_config
-                : JSON.stringify(currentTemplate?.variables_config, null, 2)}
+              {(() => {
+                const varsConfig = typeof currentTemplate?.variables_config === 'string'
+                  ? JSON.parse(currentTemplate.variables_config)
+                  : currentTemplate?.variables_config || {}
+                const { rendering_config, ...restConfig } = varsConfig
+                return JSON.stringify(restConfig, null, 2)
+              })()}
             </pre>
           </div>
           <div className="view-row">
-            <strong>生成器模块:</strong> {currentTemplate?.generator_module || '-'}
+            <strong>渲染配置:</strong>
+            <pre className="json-viewer">
+              {(() => {
+                const varsConfig = typeof currentTemplate?.variables_config === 'string'
+                  ? JSON.parse(currentTemplate.variables_config)
+                  : currentTemplate?.variables_config || {}
+                const renderingConfig = varsConfig.rendering_config || {}
+                return Object.keys(renderingConfig).length > 0 ? JSON.stringify(renderingConfig, null, 2) : '-'
+              })()}
+            </pre>
           </div>
           <div className="view-row">
             <strong>示例:</strong>{' '}
