@@ -7,13 +7,15 @@
 | 生成器模块名 | 功能描述 | 适用场景 | 关键配置参数 |
 |-------------|---------|---------|-------------|
 | `mixed_addition_subtraction` ⭐ | **统一加减法生成器** | 所有加减法题型及比大小 | `question_complexity`, `num.min/max`, `result_within_X`, `q_type` |
+| `fraction_arithmetic_comparison` ⭐ | **分数加减乘除比较综合** | 分数所有运算及比较 | `denominator`, `numerator`, `question_complexity`, `q_type` |
+| `fraction_comparison` | 分数比大小 |  LaTeX 分数格式比较 | `denominator.min/max`, `compare_types` |
 | `currency_conversion` | 元角分换算 | 人民币单位换算 | `yuan/jiao/fen.max`, `convert_types` |
 | `volume_conversion` | 体积单位换算 | 立方米/立方分米/立方厘米/升/毫升 | `conversion_types` (12 种) |
-| `fraction_comparison` | 分数比大小 |  LaTeX 分数格式比较 | `denominator.min/max`, `compare_types` |
 
 > **注意**:
 > 1. `mixed_addition_subtraction` 是统一的加减法生成器，已覆盖原有的 `addition_subtraction`、`consecutive_addition_subtraction` 和 `compare_number` 功能。
 > 2. `multiplication_table` 生成器已删除，其功能由 `multiplication_division_comprehensive` 统一支持（通过 `question_complexity: ["simple_multiply"]` 配置实现）。
+> 3. `fraction_arithmetic_comparison` 是分数综合生成器，支持加减乘除、混合运算、比较大小、填空、倒数、带分数等 30+ 种题型。
 
 ---
 
@@ -109,7 +111,132 @@
 
 ---
 
-### 2. CurrencyConversionGenerator
+### 2. FractionArithmeticComparisonGenerator ⭐ 分数加减乘除比较综合
+
+**模块名**: `fraction_arithmetic_comparison`
+**文件**: `fraction_arithmetic_comparison.py`
+
+**功能**: 分数加减乘除比较大小综合生成器，支持小学 3-6 年级所有分数相关题型
+
+**题型**: `CALCULATION` 或 `FILL_BLANK`
+
+**支持的题型** (30+ 种):
+
+#### 加减法 (4 种)
+| 题型代码 | 说明 | 示例 | 年级 |
+|---------|------|------|------|
+| `same_denominator_add` | 同分母分数加法 | $1/5 + 2/5 = [BLANK]$ | 三年级 |
+| `same_denominator_subtract` | 同分母分数减法 | $3/5 - 1/5 = [BLANK]$ | 三年级 |
+| `different_denominator_add` | 异分母分数加法 | $1/3 + 1/4 = [BLANK]$ | 五年级 |
+| `different_denominator_subtract` | 异分母分数减法 | $3/4 - 1/3 = [BLANK]$ | 五年级 |
+
+#### 乘法 (3 种)
+| 题型代码 | 说明 | 示例 | 年级 |
+|---------|------|------|------|
+| `multiply_fraction_int` | 分数乘整数 | $2/3 \times 4 = [BLANK]$ | 五年级 |
+| `multiply_fraction_fraction` | 分数乘分数 | $1/2 \times 2/3 = [BLANK]$ | 六年级 |
+| `multiply_mixed` | 带分数乘法 | $1\frac{1}{2} \times 2/3 = [BLANK]$ | 六年级 |
+
+#### 除法 (3 种)
+| 题型代码 | 说明 | 示例 | 年级 |
+|---------|------|------|------|
+| `divide_fraction_int` | 分数除整数 | $3/4 \div 2 = [BLANK]$ | 五年级 |
+| `divide_fraction_fraction` | 分数除分数 | $1/2 \div 1/4 = [BLANK]$ | 六年级 |
+| `divide_mixed` | 带分数除法 | $1\frac{1}{2} \div 1/2 = [BLANK]$ | 六年级 |
+
+#### 混合运算 (6 种)
+| 题型代码 | 说明 | 示例 | 年级 |
+|---------|------|------|------|
+| `mixed_add_subtract` | 分数加减混合 | $1/2 + 1/3 - 1/6 = [BLANK]$ | 五年级 |
+| `multiply_divide_mixed` | 分数乘除混合 | $1/2 \times 3/4 \div 1/8 = [BLANK]$ | 六年级 |
+| `multiply_add` | 分数乘加 | $1/2 \times 3 + 1/4 = [BLANK]$ | 六年级 |
+| `multiply_subtract` | 分数乘减 | $3/4 \times 2 - 1/2 = [BLANK]$ | 六年级 |
+| `divide_add` | 分数除加 | $3/4 \div 2 + 1/8 = [BLANK]$ | 六年级 |
+| `divide_subtract` | 分数除减 | $3/4 \div 2 - 1/8 = [BLANK]$ | 六年级 |
+
+#### 比较大小 (5 种)
+| 题型代码 | 说明 | 示例 | 年级 |
+|---------|------|------|------|
+| `compare_same_denominator` | 同分母比较 | $2/5 [BLANK] 3/5$ | 三年级 |
+| `compare_same_numerator` | 同分子比较 | $2/3 [BLANK] 2/5$ | 四年级 |
+| `compare_different` | 异分母比较 | $3/4 [BLANK] 2/3$ | 五年级 |
+| `compare_with_result` | 运算后比较 | $1/2 + 1/3 [BLANK] 5/6$ | 五年级 |
+| `compare_multiply` | 乘法结果比较 | $1/2 \times 3 [BLANK] 2$ | 五年级 |
+
+#### 填空题 (3 种)
+| 题型代码 | 说明 | 示例 | 年级 |
+|---------|------|------|------|
+| `fill_blank_numerator` | 填分子 | $[BLANK]/5 + 2/5 = 4/5$ | 五年级 |
+| `fill_blank_denominator` | 填分母 | $1/[BLANK] + 1/5 = 2/5$ | 五年级 |
+| `fill_blank_operation` | 填运算符 | $1/2 [BLANK] 1/3 = 5/6$ | 六年级 |
+
+#### 其他 (3 种)
+| 题型代码 | 说明 | 示例 | 年级 |
+|---------|------|------|------|
+| `reciprocal` | 求倒数 | $3/4 的倒数是 [BLANK]$ | 六年级 |
+| `mixed_number_add` | 带分数加法 | $1\frac{1}{2} + 2\frac{1}{3} = [BLANK]$ | 六年级 |
+| `mixed_number_subtract` | 带分数减法 | $3\frac{3}{4} - 1\frac{1}{2} = [BLANK]$ | 六年级 |
+
+**配置参数 - 三年级 (同分母分数)**:
+```json
+{
+  "denominator": {"min": 2, "max": 10},
+  "numerator": {"min": 1},
+  "question_complexity": ["same_denominator_add", "same_denominator_subtract"],
+  "rules": ["ensure_proper_fraction"]
+}
+```
+
+**配置参数 - 五年级 (异分母分数)**:
+```json
+{
+  "denominator": {"min": 2, "max": 20},
+  "numerator": {"min": 1},
+  "question_complexity": ["different_denominator_add", "different_denominator_subtract", "multiply_fraction_int"],
+  "rules": ["ensure_simplest_result"]
+}
+```
+
+**配置参数 - 六年级 (综合)**:
+```json
+{
+  "denominator": {"min": 2, "max": 15},
+  "numerator": {"min": 1},
+  "whole": {"min": 1, "max": 5},
+  "question_complexity": [
+    "multiply_fraction_fraction", "divide_fraction_fraction",
+    "multiply_divide_mixed", "mixed_number_add"
+  ],
+  "rules": ["ensure_simplest_result", "ensure_proper_fraction"]
+}
+```
+
+**配置参数 - 比较大小专项**:
+```json
+{
+  "denominator": {"min": 2, "max": 12},
+  "numerator": {"min": 1},
+  "question_complexity": [
+    "compare_same_denominator", "compare_same_numerator", "compare_different"
+  ],
+  "q_type": {
+    "compare_same_denominator": "circle",
+    "compare_different": "circle"
+  }
+}
+```
+
+**适用模板**:
+- 三年级同分母分数加减法
+- 五年级异分母分数加减法
+- 五年级分数乘法
+- 六年级分数除法
+- 六年级分数混合运算
+- 分数比大小专项练习
+
+---
+
+### 3. CurrencyConversionGenerator
 
 **模块名**: `currency_conversion`
 **文件**: `currency_conversion.py`
@@ -147,7 +274,7 @@
 
 ---
 
-### 3. VolumeConversionGenerator
+### 4. VolumeConversionGenerator
 
 **模块名**: `volume_conversion`
 **文件**: `volume_conversion.py`
@@ -185,7 +312,7 @@
 
 ---
 
-### 4. FractionComparisonGenerator
+### 5. FractionComparisonGenerator
 
 **模块名**: `fraction_comparison`
 **文件**: `fraction_comparison.py`
@@ -218,7 +345,7 @@
 
 ---
 
-### 5. FractionComparisonGenerator (续)
+### 6. FractionComparisonGenerator (续)
 
 **适用模板**:
 - 分数比大小

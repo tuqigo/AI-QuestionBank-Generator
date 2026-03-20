@@ -5,6 +5,7 @@ from .base import TemplateGenerator
 from .currency_conversion import CurrencyConversionGenerator
 from .volume_conversion import VolumeConversionGenerator
 from .fraction_comparison import FractionComparisonGenerator
+from .fraction_arithmetic_comparison import FractionArithmeticComparisonGenerator
 from .mixed_addition_subtraction import MixedAdditionSubtractionGenerator
 from .length_comparison import LengthComparisonGenerator
 from .multiplication_division_comprehensive import MultiplicationDivisionComprehensiveGenerator
@@ -17,6 +18,7 @@ GENERATOR_REGISTRY = {
     "currency_conversion": CurrencyConversionGenerator,
     "volume_conversion": VolumeConversionGenerator,
     "fraction_comparison": FractionComparisonGenerator,
+    "fraction_arithmetic_comparison": FractionArithmeticComparisonGenerator,
     "mixed_addition_subtraction": MixedAdditionSubtractionGenerator,
     "length_comparison": LengthComparisonGenerator,
     "multiplication_division_comprehensive": MultiplicationDivisionComprehensiveGenerator,
