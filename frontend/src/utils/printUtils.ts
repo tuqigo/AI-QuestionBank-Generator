@@ -129,10 +129,12 @@ function renderSingleQuestion(question: StructuredQuestion, index: number): stri
     : '10.5pt'
   const answerWidth = question.rendering_meta?.answer_width
   const showQuestionNumber = question.rendering_meta?.show_question_number !== false  // 默认 true
+  const keepTogether = question.rendering_meta?.keep_together === true
   const stemHtml = renderMarkdown(question.stem, answerWidth)
   const optionLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
 
-  let html = `<div class="question-item ${typeClass}" style="margin-bottom: 12px; page-break-inside: avoid; font-size: ${fontSize};">`
+  const keepTogetherStyle = keepTogether ? 'page-break-inside: avoid; break-inside: avoid;' : ''
+  let html = `<div class="question-item ${typeClass}" style="margin-bottom: 12px; ${keepTogetherStyle} font-size: ${fontSize};">`
 
   // 题目头部
   html += `<div class="question-header" style="display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px; flex-wrap: nowrap;">`
@@ -195,19 +197,24 @@ function renderGridGroup(
     ? `${(firstQuestion.rendering_meta.font_size * 0.75).toFixed(1)}pt`  // px 转 pt
     : '10.5pt'
   const answerWidth = firstQuestion?.rendering_meta?.answer_width
+  const showQuestionNumber = firstQuestion?.rendering_meta?.show_question_number !== false  // 默认 true
+  const keepTogether = firstQuestion?.rendering_meta?.keep_together === true
 
-  let html = `<div class="question-grid-container" style="display: grid; grid-template-columns: repeat(${columns}, 1fr); gap: ${gap}; margin-bottom: 12px; font-size: ${fontSize};">`
+  const keepTogetherStyle = keepTogether ? 'page-break-inside: avoid; break-inside: avoid;' : ''
+  let html = `<div class="question-grid-container" style="display: grid; grid-template-columns: repeat(${columns}, 1fr); gap: ${gap}; margin-bottom: 12px; font-size: ${fontSize}; ${keepTogetherStyle}">`
 
   questions.forEach((question, i) => {
     const typeClass = getQuestionTypeClass(question.type)
     const stemHtml = renderMarkdown(question.stem, answerWidth)
     const globalIndex = startIndex + i
 
-    html += `<div class="question-grid-item ${typeClass}" style="padding: ${itemPadding}; border: ${itemBorder}; page-break-inside: avoid;">`
+    html += `<div class="question-grid-item ${typeClass}" style="padding: ${itemPadding}; border: ${itemBorder}; ${keepTogetherStyle}">`
 
     // 题目头部（网格模式下题号与题目在同一行）
     html += `<div class="question-header" style="display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px; flex-wrap: nowrap;">`
-    html += `<span class="question-number" style="font-weight: bold; min-width: 20px; flex-shrink: 0; white-space: nowrap; font-size: ${fontSize}; line-height: 1.8;">${globalIndex + 1}.</span>`
+    if (showQuestionNumber) {
+      html += `<span class="question-number" style="font-weight: bold; min-width: 20px; flex-shrink: 0; white-space: nowrap; font-size: ${fontSize}; line-height: 1.8;">${globalIndex + 1}.</span>`
+    }
     html += `<div class="question-stem" style="flex: 1; font-size: ${fontSize}; line-height: 1.8;">${stemHtml}</div>`
     html += `</div>`
 
