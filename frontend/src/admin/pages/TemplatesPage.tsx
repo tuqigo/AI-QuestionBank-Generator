@@ -552,6 +552,8 @@ export default function TemplatesPage() {
                 <li><code>operator</code> - 运算符类型，如 <code>"+"</code>, <code>"-"</code></li>
                 <li><code>decimal_places</code> - 小数位数</li>
                 <li><code>quantity</code> - 题目数量</li>
+                <li><code>q_type</code> - 用于为特定题型单独设置 `answer_style`，优先级高于 `rendering_config`
+                  +中的配置。              "compare_simple":"circle","compare_with_result":"circle"                               </li>
                 <li>其他生成器需要的特定参数</li>
               </ul>
               <p><strong>渲染配置 (rendering_config)</strong> - 控制题目的显示样式：</p>
