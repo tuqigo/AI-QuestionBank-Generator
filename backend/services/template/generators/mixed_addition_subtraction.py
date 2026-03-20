@@ -64,6 +64,9 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
         # 获取渲染元数据
         rendering_meta = self.get_rendering_meta(question_type, template_config)
 
+        # 判断是否包含比较类型题目
+        has_compare = any(t in question_complexity for t in ["compare_simple", "compare_with_result", "compare_mixed_operation"])
+
         for _ in range(quantity):
             max_attempts = 100
             for _ in range(max_attempts):
@@ -307,12 +310,18 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
                 # 100 次尝试后仍未生成有效题目，跳过
                 continue
 
+            # 为比较类型题目设置 circle 答案样式
+            question_rendering_meta = rendering_meta.copy()
+            if q_type in ["compare_simple", "compare_with_result", "compare_mixed_operation"]:
+                question_rendering_meta["answer_style"] = "circle"
+                question_rendering_meta["answer_width"] = 40
+
             questions.append({
                 "type": question_type,
                 "stem": stem,
                 "knowledge_points": self.get_knowledge_points(template_config),
                 "rows_to_answer": 3,
-                "rendering_meta": rendering_meta,
+                "rendering_meta": question_rendering_meta,
             })
 
         return questions
