@@ -53,7 +53,9 @@ function getRenderingStyles(renderingMeta?: QuestionRenderingMeta): React.CSSPro
 
   // 作答宽度（填空题/口算题）
   if (renderingMeta.answer_width) {
-    (styles as any)['--answer-placeholder-width'] = `${renderingMeta.answer_width}px`
+    const widthPx = String(renderingMeta.answer_width) + 'px'
+    ;(styles as any)['--answer-placeholder-width'] = widthPx
+    ;(styles as any)['--answer-width'] = widthPx
   }
 
   return styles

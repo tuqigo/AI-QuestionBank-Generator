@@ -1,7 +1,7 @@
 """
 模板：分数比大小
 生成逻辑：生成两个分数，比较它们的大小
-例题：$\\frac{3}{4}$ （ ） $\\frac{2}{3}$、$\\frac{5}{6}$ （ ） $\\frac{7}{8}$
+例题：$\\frac{3}{4}$ [BLANK] $\\frac{2}{3}$、$\\frac{5}{6}$ [BLANK] $\\frac{7}{8}$
 """
 import random
 from typing import List, Dict, Any
@@ -36,7 +36,7 @@ class FractionComparisonGenerator(TemplateGenerator):
                 compare_type = random.choice(compare_types)
 
                 if compare_type == "common_denominator":
-                    # 同分母分数比较：2/5 （ ） 3/5
+                    # 同分母分数比较：2/5 [BLANK] 3/5
                     denominator = random.randint(denominator_min, denominator_max)
                     numerator1 = random.randint(numerator_min, denominator - 1 if ensure_proper_fraction else denominator)
                     numerator2 = random.randint(numerator_min, denominator - 1 if ensure_proper_fraction else denominator)
@@ -44,10 +44,10 @@ class FractionComparisonGenerator(TemplateGenerator):
                     if ensure_different and numerator1 == numerator2:
                         continue
 
-                    stem = f"$\\frac{{{numerator1}}}{{{denominator}}}$ （    ） $\\frac{{{numerator2}}}{{{denominator}}}$"
+                    stem = f"$\\frac{{{numerator1}}}{{{denominator}}}$ [BLANK] $\\frac{{{numerator2}}}{{{denominator}}}$"
 
                 elif compare_type == "common_numerator":
-                    # 同分子分数比较：2/3 （ ） 2/5
+                    # 同分子分数比较：2/3 [BLANK] 2/5
                     numerator = random.randint(numerator_min, denominator_max)
                     denominator1 = random.randint(denominator_min, denominator_max)
                     denominator2 = random.randint(denominator_min, denominator_max)
@@ -57,10 +57,10 @@ class FractionComparisonGenerator(TemplateGenerator):
                     if ensure_proper_fraction and (numerator >= denominator1 or numerator >= denominator2):
                         continue
 
-                    stem = f"$\\frac{{{numerator}}}{{{denominator1}}}$ （    ） $\\frac{{{numerator}}}{{{denominator2}}}$"
+                    stem = f"$\\frac{{{numerator}}}{{{denominator1}}}$ [BLANK] $\\frac{{{numerator}}}{{{denominator2}}}$"
 
                 else:
-                    # 异分母分数比较：3/4 （ ） 2/3
+                    # 异分母分数比较：3/4 [BLANK] 2/3
                     denominator1 = random.randint(denominator_min, denominator_max)
                     denominator2 = random.randint(denominator_min, denominator_max)
 
@@ -77,7 +77,7 @@ class FractionComparisonGenerator(TemplateGenerator):
                     if numerator1 * denominator2 == numerator2 * denominator1:
                         continue
 
-                    stem = f"$\\frac{{{numerator1}}}{{{denominator1}}}$ （    ） $\\frac{{{numerator2}}}{{{denominator2}}}$"
+                    stem = f"$\\frac{{{numerator1}}}{{{denominator1}}}$ [BLANK] $\\frac{{{numerator2}}}{{{denominator2}}}$"
 
                 if stem in used_stems:
                     continue

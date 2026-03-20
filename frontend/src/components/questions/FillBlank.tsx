@@ -9,8 +9,9 @@ interface FillBlankProps extends QuestionRendererProps {
 }
 
 export default function FillBlank({ question, index, mode = 'render' }: FillBlankProps) {
-  // 从 rendering_meta 获取作答区域宽度和是否显示题号
+  // 从 rendering_meta 获取作答区域宽度、样式和是否显示题号
   const answerWidth = (question as StructuredQuestion).rendering_meta?.answer_width
+  const answerStyle = (question as StructuredQuestion).rendering_meta?.answer_style
   const showQuestionNumber = (question as StructuredQuestion).rendering_meta?.show_question_number
 
   const modeClass = mode === 'print' ? 'question-print-mode' : 'question-render-mode'
@@ -21,7 +22,7 @@ export default function FillBlank({ question, index, mode = 'render' }: FillBlan
         {showQuestionNumber !== false && (
           <span className="question-number">{index}. </span>
         )}
-        <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(question.stem, answerWidth) }} />
+        <div className="question-stem" dangerouslySetInnerHTML={{ __html: renderInlineMarkdown(question.stem, answerWidth, answerStyle) }} />
       </div>
       <div className="answer-line">
         <span className="answer-placeholder" style={{ width: answerWidth ? `${answerWidth}px` : undefined }}>________________________</span>

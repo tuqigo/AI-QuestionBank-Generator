@@ -72,27 +72,63 @@ function protectMath(content: string): { content: string; placeholders: Map<stri
 /**
  * 处理特殊格式（填空、括号等）
  */
-function processSpecialFormats(content: string, answerWidth?: number): string {
+function processSpecialFormats(
+  content: string,
+  answerWidth?: number,
+  answerStyle?: 'box' | 'line' | 'dashed_box' | 'circle' | 'parentheses' | 'blank'
+): string {
   let processed = content
 
-  // 处理 [   ] 方框填空（2 个空格以上）
+  // 处理 [BLANK] 标记 - 新的标准答案位置标记
+  processed = processed.replace(/\[BLANK\]/g, () => {
+    // answerWidth 为 -1 或 null/undefined 时表示自适应宽度
+    const isInfiniteWidth = answerWidth === -1 || answerWidth == null
+    const boxWidth = isInfiniteWidth ? 40 : (answerWidth ?? 40)
+
+    // 根据 answer_style 返回不同的 HTML 样式（使用 !important 确保优先级）
+    switch (answerStyle) {
+      case 'box':
+        // 方框：实线边框
+        return `<span class="answer-box" style="display:inline-block !important; width:${boxWidth}px !important; height:1.2em !important; border:1px solid #000 !important; vertical-align:middle !important; background:#fff !important;"></span>`
+      case 'line':
+        // 横线：底部边框
+        return `<span class="answer-line" style="display:inline-block !important; width:${boxWidth}px !important; height:1.2em !important; border-bottom:1px solid #000 !important; vertical-align:middle !important;"></span>`
+      case 'dashed_box':
+        // 虚线框
+        return `<span class="answer-dashed-box" style="display:inline-block !important; width:${boxWidth}px !important; height:1.2em !important; border:1px dashed #000 !important; vertical-align:middle !important; background:#f9f9f9 !important;"></span>`
+      case 'circle':
+        // 圆圈：使用 border-radius 50%
+        return `<span class="answer-circle" data-style="circle" style="display:inline-block !important; width:${boxWidth}px !important; height:${boxWidth}px !important; border:1px solid #000 !important; border-radius:50% !important; vertical-align:middle !important; background:#fff !important;"></span>`
+      case 'parentheses':
+        // 括号：虚线底部
+        return `<span class="answer-parentheses" style="display:inline-block !important; width:${boxWidth}px !important; min-width:30px !important; border-bottom:1px dotted #000 !important; vertical-align:middle !important;"></span>`
+      case 'blank':
+        // 空格：灰色背景
+        return `<span class="answer-blank" style="display:inline-block !important; width:${boxWidth}px !important; background:#f5f5f5 !important; vertical-align:middle !important;"></span>`
+      default:
+        // 默认使用横线样式
+        return `<span class="answer-line" style="display:inline-block !important; width:${boxWidth}px !important; height:1.2em !important; border-bottom:1px solid #000 !important; vertical-align:middle !important;"></span>`
+    }
+  })
+
+  // 处理 [   ] 方框填空（2 个空格以上）- 向后兼容
   processed = processed.replace(/\[ {2,}\]/g, '<span class="blank-box"></span>')
 
-  // 处理带空格的括号（全角）- 支持 answer_width 控制宽度
+  // 处理带空格的括号（全角）- 支持 answer_width 控制宽度 - 向后兼容
   processed = processed.replace(/（ {2,}）/g, () => {
     if (answerWidth) {
       return `（<span class="answer-placeholder" style="width: ${answerWidth}px; min-width: ${answerWidth}px; display: inline-block; border-bottom: 1px dotted currentColor;"></span>）`
     }
     return '（<span class="answer-placeholder"></span>）'
   })
-  // 处理带空格的半角括号 - 支持 answer_width 控制宽度
+  // 处理带空格的半角括号 - 支持 answer_width 控制宽度 - 向后兼容
   processed = processed.replace(/\( {2,}\)/g, () => {
     if (answerWidth) {
       return `(<span class="answer-placeholder" style="width: ${answerWidth}px; min-width: ${answerWidth}px; display: inline-block; border-bottom: 1px dotted currentColor;"></span>)`
     }
     return '(<span class="answer-placeholder"></span>)'
   })
-  // 处理完全空的括号
+  // 处理完全空的括号 - 向后兼容
   processed = processed.replace(/（）/g, '<span class="blank-parentheses"></span>')
   processed = processed.replace(/\(\)/g, '<span class="blank-parentheses"></span>')
 
@@ -120,18 +156,23 @@ function restoreMath(content: string, placeholders: Map<string, string>): string
  *
  * @param content 要渲染的内容
  * @param answerWidth 作答区域宽度（从 rendering_meta.answer_width 获取）
+ * @param answerStyle 作答样式类型（从 rendering_meta.answer_style 获取）
  */
-export function renderMarkdown(content: string, answerWidth?: number): string {
+export function renderMarkdown(
+  content: string,
+  answerWidth?: number,
+  answerStyle?: 'box' | 'line' | 'dashed_box' | 'circle' | 'parentheses' | 'blank'
+): string {
   if (!content || typeof content !== 'string') return ''
 
   // 如果没有 Markdown 语法，只处理特殊格式，不经过 markdown-it
   if (!hasMarkdownSyntax(content)) {
-    return processSpecialFormats(content, answerWidth)
+    return processSpecialFormats(content, answerWidth, answerStyle)
   }
 
   // 有 Markdown 语法，需要完整处理
   const { content: protectedContent, placeholders } = protectMath(content)
-  let processed = processSpecialFormats(protectedContent, answerWidth)
+  let processed = processSpecialFormats(protectedContent, answerWidth, answerStyle)
   processed = md.render(processed)
   return restoreMath(processed, placeholders)
 }
@@ -141,20 +182,25 @@ export function renderMarkdown(content: string, answerWidth?: number): string {
  *
  * @param content 要渲染的内容
  * @param answerWidth 作答区域宽度（从 rendering_meta.answer_width 获取）
+ * @param answerStyle 作答样式类型（从 rendering_meta.answer_style 获取）
  */
-export function renderInlineMarkdown(content: string, answerWidth?: number): string {
+export function renderInlineMarkdown(
+  content: string,
+  answerWidth?: number,
+  answerStyle?: 'box' | 'line' | 'dashed_box' | 'circle' | 'parentheses' | 'blank'
+): string {
   if (!content || typeof content !== 'string') return ''
   if (!content.trim()) return ''
 
   // 如果没有 Markdown 语法，只处理特殊格式
   if (!hasMarkdownSyntax(content)) {
-    return processSpecialFormats(content.replace(/[\r\n]+/g, ' '), answerWidth)
+    return processSpecialFormats(content.replace(/[\r\n]+/g, ' '), answerWidth, answerStyle)
   }
 
   // 有 Markdown 语法，需要完整处理
   const singleLineContent = content.replace(/[\r\n]+/g, ' ')
   const { content: protectedContent, placeholders } = protectMath(singleLineContent)
-  let processed = processSpecialFormats(protectedContent, answerWidth)
+  let processed = processSpecialFormats(protectedContent, answerWidth, answerStyle)
   processed = md.renderInline(processed)
   return restoreMath(processed, placeholders)
 }

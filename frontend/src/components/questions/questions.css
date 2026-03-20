@@ -52,7 +52,31 @@
   margin: revert !important;
 }
 
-.question-stem > * {
+/* 答案元素不受 inline 强制转换影响（保持 inline-block 以支持宽高） */
+.question-stem > .answer-box,
+.question-stem > .answer-line,
+.question-stem > .answer-dashed-box,
+.question-stem > .answer-circle,
+.question-stem > .answer-parentheses,
+.question-stem > .answer-blank {
+  display: inline-block !important;
+  margin: 0 !important;
+}
+
+/* 答案样式特定规则 - 确保内联样式被正确应用 */
+.question-stem > .answer-circle {
+  border-radius: 50% !important;
+  border: 1px solid #000 !important;
+  background: #fff !important;
+}
+
+.question-stem > .answer-dashed-box {
+  border: 1px dashed #000 !important;
+  background: #f9f9f9 !important;
+}
+
+/* 其他元素保持 inline，但不能覆盖答案元素 */
+.question-stem > :not(.answer-box):not(.answer-line):not(.answer-dashed-box):not(.answer-circle):not(.answer-parentheses):not(.answer-blank) {
   display: inline !important;
   margin: 0 !important;
 }

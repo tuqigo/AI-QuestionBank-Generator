@@ -46,7 +46,7 @@ class CompareNumberGenerator(TemplateGenerator):
                 continue
 
             # 构建题干
-            stem = f"{a}（    ）{b}"
+            stem = f"{a}[BLANK]{b}"
 
             questions.append({
                 "type": question_type,

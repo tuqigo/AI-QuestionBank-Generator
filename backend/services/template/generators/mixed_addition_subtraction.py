@@ -2,12 +2,12 @@
 模板：加减法统一生成器
 
 统一支持所有加减法相关题型：
-- 简单加减：5 + 3 = （ ）
-- 连加：1+6+19=（ ）
-- 连减：96-23-45=（ ）
-- 加减混合：49-19+27=（ ）
-- 减法填空：17 - （ ）= 2
-- 运算比较：54+6+16（ ）74
+- 简单加减：5 + 3 = [BLANK]
+- 连加：1+6+19=[BLANK]
+- 连减：96-23-45=[BLANK]
+- 加减混合：49-19+27=[BLANK]
+- 减法填空：17 - [BLANK]= 2
+- 运算比较：54+6+16[BLANK]74
 """
 import random
 from typing import List, Dict, Any
@@ -72,7 +72,7 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
                 stem = ""
 
                 if q_type == "simple":
-                    # 简单加减：5 + 3 = （ ）
+                    # 简单加减：5 + 3 = [BLANK]
                     a = random.randint(num_min, num_max)
                     b = random.randint(num_min, num_max)
                     op = random.choice(op_values)
@@ -90,10 +90,10 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
                     if result_within_100 and result > 100:
                         continue
 
-                    stem = f"{a}{op}{b}=（    ）"
+                    stem = f"{a}{op}{b}=[BLANK]"
 
                 elif q_type == "simple_fill":
-                    # 简单填空：5 + （ ） = 8  或  8 - （ ） = 3
+                    # 简单填空：5 + [BLANK] = 8  或  8 - [BLANK] = 3
                     op = random.choice(["+", "-"])
                     if op == "+":
                         a = random.randint(num_min, min(50, num_max))
@@ -101,17 +101,17 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
                         result = a + missing
                         if result_limit and result > result_limit:
                             continue
-                        stem = f"{a}+（    ）={result}"
+                        stem = f"{a}+[BLANK]={result}"
                     else:
                         result = random.randint(1, 50)
                         missing = random.randint(1, 50)
                         a = result + missing
                         if a > 100:
                             continue
-                        stem = f"{a}-（    ）={result}"
+                        stem = f"{a}-[BLANK]={result}"
 
                 elif q_type == "consecutive_add":
-                    # 连加：1+6+19=（ ）
+                    # 连加：1+6+19=[BLANK]
                     # 根据 result_within_10 调整范围
                     if result_within_10:
                         a = random.randint(num_min, min(4, a_max if a_max > 0 else 10))
@@ -127,10 +127,10 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
                         continue
                     if result_within_100 and result > 100:
                         continue
-                    stem = f"{a}+{b}+{c}=（    ）"
+                    stem = f"{a}+{b}+{c}=[BLANK]"
 
                 elif q_type == "consecutive_subtract":
-                    # 连减：96-23-45=（ ）
+                    # 连减：96-23-45=[BLANK]
                     if result_within_10:
                         # 10 以内连减
                         a = random.randint(max(3, num_min), min(10, a_max if a_max > 0 else 10))
@@ -143,10 +143,10 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
 
                     if ensure_positive and (a - b - c < 0):
                         continue
-                    stem = f"{a}-{b}-{c}=（    ）"
+                    stem = f"{a}-{b}-{c}=[BLANK]"
 
                 elif q_type == "mixed_operation":
-                    # 加减混合：49-19+27=（ ）
+                    # 加减混合：49-19+27=[BLANK]
                     a = random.randint(20, min(80, num_max))
                     b = random.randint(1, min(50, num_max))
                     c = random.randint(1, min(50, num_max))
@@ -174,19 +174,19 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
                     if result < 0:
                         continue
 
-                    stem = f"{a}{op1}{b}{op2}{c}=（    ）"
+                    stem = f"{a}{op1}{b}{op2}{c}=[BLANK]"
 
                 elif q_type == "missing_operand":
-                    # 减法填空：17 - （ ） = 2
+                    # 减法填空：17 - [BLANK]= 2
                     result = random.randint(1, 50)
                     missing = random.randint(1, 50)
                     a = result + missing
                     if a > 100:
                         continue
-                    stem = f"{a}-（    ）={result}"
+                    stem = f"{a}-[BLANK]={result}"
 
                 elif q_type == "compare_simple":
-                    # 简单比较：a + b （ ）c
+                    # 简单比较：a + b [BLANK]c
                     a = random.randint(num_min, num_max)
                     b = random.randint(num_min, num_max)
                     op = random.choice(["+", "-"])
@@ -202,10 +202,10 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
                         compare_num = result - random.randint(1, 20)
                         if compare_num < 0:
                             compare_num = result + random.randint(1, 20)
-                    stem = f"{a}{op}{b}（    ）{compare_num}"
+                    stem = f"{a}{op}{b}[BLANK]{compare_num}"
 
                 elif q_type == "compare_with_result":
-                    # 运算后比较（支持混合运算）：74-28+22（ ）75
+                    # 运算后比较（支持混合运算）：74-28+22[BLANK]75
                     op1 = random.choice(["+", "-"])
                     op2 = random.choice(["+", "-"])
 
@@ -242,10 +242,10 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
                         if compare_num < 0:
                             compare_num = result + random.randint(1, 20)
 
-                    stem = f"{a}{op1}{b}{op2}{c}（    ）{compare_num}"
+                    stem = f"{a}{op1}{b}{op2}{c}[BLANK]{compare_num}"
 
                 elif q_type == "compare_mixed_operation":
-                    # 混合运算比较（确保有加有减）：74-28+22（ ）75
+                    # 混合运算比较（确保有加有减）：74-28+22[BLANK]75
                     op1 = random.choice(["+", "-"])
                     op2 = random.choice(["+", "-"])
 
@@ -287,7 +287,7 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
                         if compare_num < 0:
                             compare_num = result + random.randint(1, 20)
 
-                    stem = f"{a}{op1}{b}{op2}{c}（    ）{compare_num}"
+                    stem = f"{a}{op1}{b}{op2}{c}[BLANK]{compare_num}"
 
                 else:
                     # 默认：简单加减法
@@ -296,7 +296,7 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
                     op = random.choice(["+", "-"])
                     if ensure_positive and op == "-" and a < b:
                         continue
-                    stem = f"{a}{op}{b}=（    ）"
+                    stem = f"{a}{op}{b}=[BLANK]"
 
                 if stem in used_stems:
                     continue

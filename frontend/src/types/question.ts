@@ -98,7 +98,9 @@ export interface QuestionRenderingMeta {
 
   // ========== 作答区域 ==========
   rows_to_answer?: number  // 作答行数（计算题/应用题/作文题）
-  answer_width?: number  // 作答宽度 px（填空题/口算题）
+  answer_width?: number  // 作答宽度 px（填空题/口算题），-1 表示自适应宽度
+  answer_style?: 'box' | 'line' | 'dashed_box' | 'circle' | 'parentheses' | 'blank'  // 答案样式类型
+  answer_count?: number  // 答案位置数量（用于多空题）
 
   // ========== 打印控制 ==========
   keep_together?: boolean  // 避免分页打断（默认 true）

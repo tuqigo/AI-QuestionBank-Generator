@@ -10,11 +10,14 @@ interface OralCalculationProps extends QuestionRendererProps {
 }
 
 export default function OralCalculation({ question, index, mode = 'render' }: OralCalculationProps) {
-  // 从 rendering_meta 获取作答区域宽度和是否显示题号
-  const answerWidth = (question as StructuredQuestion).rendering_meta?.answer_width
-  const showQuestionNumber = (question as StructuredQuestion).rendering_meta?.show_question_number
+  // 从 rendering_meta 获取作答区域宽度和样式
+  const renderingMeta = (question as StructuredQuestion).rendering_meta
+  const answerWidth = renderingMeta?.answer_width
+  const answerStyle = renderingMeta?.answer_style
+  const showQuestionNumber = renderingMeta?.show_question_number
 
-  const html = renderInlineMarkdown(question.stem, answerWidth)
+  const html = renderInlineMarkdown(question.stem, answerWidth, answerStyle)
+
   const modeClass = mode === 'print' ? 'question-print-mode' : 'question-render-mode'
 
   return (

@@ -9,16 +9,18 @@
   },
   "by_question_type": {
     "ORAL_CALCULATION": {
-      "layout": "multi",
+      "layout": "dashed_box",
       "columns": 4,
-      "font_size": 20,
+      "font_size": 18,
       "answer_width": 80,
+      "answer_style": "circle",
       "show_question_number": false
     },
     "FILL_BLANK": {
       "layout": "single",
       "font_size": 14,
       "answer_width": 150,
+      "answer_style": "line",
       "show_question_number": true
     },
     "CALCULATION": {
@@ -26,7 +28,9 @@
       "font_size": 18,
       "columns": 3,
       "rows_to_answer": 2,
-      "keep_together": true
+      "keep_together": true,
+      "answer_style": "blank",
+      "show_question_number": false
     },
     "WORD_PROBLEM": {
       "layout": "single",
@@ -57,6 +61,8 @@
     "TRUE_FALSE": {
       "layout": "single",
       "font_size": 14,
+      "answer_width": 40,
+      "answer_style": "circle",
       "keep_together": true
     },
     "GEOMETRY": {

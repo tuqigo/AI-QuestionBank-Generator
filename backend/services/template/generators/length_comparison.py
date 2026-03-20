@@ -1,7 +1,7 @@
 """
 模板：长度比较 - 长度单位换算
 生成逻辑：生成米、分米、厘米之间的换算题目
-例题：7m = （ ）cm、500cm = （ ）m、1dm = （ ）cm、70m2dm = （ ）dm
+例题：7m = [BLANK]cm、500cm = [BLANK]m、1dm = [BLANK]cm、70m2dm = [BLANK]dm
 """
 import random
 from typing import List, Dict, Any
@@ -37,66 +37,66 @@ class LengthComparisonGenerator(TemplateGenerator):
 
                 if convert_type == "m_to_cm":
                     # 米→厘米：1m = 100cm
-                    # 例题：7m = （ ）cm
+                    # 例题：7m = [BLANK]cm
                     value = random.randint(value_min, value_max)
-                    stem = f"{value}m = （    ）cm"
+                    stem = f"{value}m = [BLANK]cm"
                     answer = value * 100
 
                 elif convert_type == "cm_to_m":
                     # 厘米→米：100cm = 1m
-                    # 例题：500cm = （ ）m
+                    # 例题：500cm = [BLANK]m
                     value = random.randint(1, value_max) * 100
-                    stem = f"{value}cm = （    ）m"
+                    stem = f"{value}cm = [BLANK]m"
                     answer = value // 100
 
                 elif convert_type == "dm_to_cm":
                     # 分米→厘米：1dm = 10cm
-                    # 例题：1dm = （ ）cm
+                    # 例题：1dm = [BLANK]cm
                     value = random.randint(value_min, value_max)
-                    stem = f"{value}dm = （    ）cm"
+                    stem = f"{value}dm = [BLANK]cm"
                     answer = value * 10
 
                 elif convert_type == "cm_to_dm":
                     # 厘米→分米：10cm = 1dm
-                    # 例题：30cm = （ ）dm
+                    # 例题：30cm = [BLANK]dm
                     value = random.randint(1, value_max) * 10
-                    stem = f"{value}cm = （    ）dm"
+                    stem = f"{value}cm = [BLANK]dm"
                     answer = value // 10
 
                 elif convert_type == "m_to_dm":
                     # 米→分米：1m = 10dm
-                    # 例题：5m = （ ）dm
+                    # 例题：5m = [BLANK]dm
                     value = random.randint(value_min, value_max)
-                    stem = f"{value}m = （    ）dm"
+                    stem = f"{value}m = [BLANK]dm"
                     answer = value * 10
 
                 elif convert_type == "dm_to_m":
                     # 分米→米：10dm = 1m
-                    # 例题：40dm = （ ）m
+                    # 例题：40dm = [BLANK]m
                     value = random.randint(1, value_max) * 10
-                    stem = f"{value}dm = （    ）m"
+                    stem = f"{value}dm = [BLANK]m"
                     answer = value // 10
 
                 elif convert_type == "m_cm_to_cm":
-                    # 米 + 厘米→厘米：1m50cm = （ ）cm
-                    # 例题：2m50cm = （ ）cm
+                    # 米 + 厘米→厘米：1m50cm = [BLANK]cm
+                    # 例题：2m50cm = [BLANK]cm
                     m_value = random.randint(value_min, value_max)
                     cm_value = random.randint(1, 99)
-                    stem = f"{m_value}m{cm_value}cm = （    ）cm"
+                    stem = f"{m_value}m{cm_value}cm = [BLANK]cm"
                     answer = m_value * 100 + cm_value
 
                 elif convert_type == "m_dm_to_dm":
-                    # 米 + 分米→分米：3m5dm = （ ）dm
-                    # 例题：70m2dm = （ ）dm
+                    # 米 + 分米→分米：3m5dm = [BLANK]dm
+                    # 例题：70m2dm = [BLANK]dm
                     m_value = random.randint(value_min, value_max)
                     dm_value = random.randint(1, 9)
-                    stem = f"{m_value}m{dm_value}dm = （    ）dm"
+                    stem = f"{m_value}m{dm_value}dm = [BLANK]dm"
                     answer = m_value * 10 + dm_value
 
                 else:
                     # 默认：分米→厘米
                     value = random.randint(value_min, value_max)
-                    stem = f"{value}dm = （    ）cm"
+                    stem = f"{value}dm = [BLANK]cm"
                     answer = value * 10
 
                 if stem in used_stems:

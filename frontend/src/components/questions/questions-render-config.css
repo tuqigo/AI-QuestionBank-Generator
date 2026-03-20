@@ -78,14 +78,16 @@
   /* 内联 width 样式优先（由 markdownProcessor.ts 注入） */
 }
 
-/* 口算题作答框宽度 */
-.question-oral-calculation .answer-box {
-  width: var(--answer-width, 80px);
-}
-
-/* 填空题作答宽度 */
-.question-fill-blank .answer-line {
-  width: var(--answer-width, auto);
+/* 答案样式 - 打印时边框变黑色 */
+@media print {
+  .answer-box,
+  .answer-line,
+  .answer-dashed-box,
+  .answer-circle,
+  .answer-parentheses {
+    border-color: #000 !important;
+    border-bottom-color: #000 !important;
+  }
 }
 
 /* ==================== 打印控制 - 避免分页打断 ==================== */
@@ -132,12 +134,10 @@
 /* 口算题 */
 .question-oral-calculation {
   /* 不硬编码 columns，由 rendering_meta 控制 */
-  --answer-width: 80px;
 }
 
 /* 填空题 */
 .question-fill-blank {
-  --answer-width: 150px;
 }
 
 /* 计算题 */
