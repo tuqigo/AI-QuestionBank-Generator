@@ -13,6 +13,7 @@
       "columns": 4,
       "font_size": 16,
       "answer_width": 150,
+      "answer_style": "blank",
       "show_question_number": true
     },
     "FILL_BLANK": {

@@ -314,7 +314,6 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
             question_rendering_meta = rendering_meta.copy()
             if q_type in ["compare_simple", "compare_with_result", "compare_mixed_operation"]:
                 question_rendering_meta["answer_style"] = "circle"
-                question_rendering_meta["answer_width"] = 40
 
             questions.append({
                 "type": question_type,

@@ -25,7 +25,6 @@ class CompareNumberGenerator(TemplateGenerator):
         # 获取渲染元数据，并覆盖 answer_style 为 circle（比大小题目专用）
         rendering_meta = self.get_rendering_meta(question_type, template_config)
         rendering_meta["answer_style"] = "circle"
-        rendering_meta["answer_width"] = 40  # 圆圈宽度
 
         for _ in range(quantity):
             # 生成不重复的数对
