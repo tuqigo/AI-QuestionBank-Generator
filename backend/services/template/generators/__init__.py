@@ -2,7 +2,6 @@
 模板生成器包
 """
 from .base import TemplateGenerator
-from .compare_number import CompareNumberGenerator
 from .currency_conversion import CurrencyConversionGenerator
 from .volume_conversion import VolumeConversionGenerator
 from .fraction_comparison import FractionComparisonGenerator
@@ -15,7 +14,6 @@ from .vertical_addition_subtraction import VerticalAdditionSubtractionGenerator
 # 生成器注册表
 # key: generator_module 值，value: 生成器类
 GENERATOR_REGISTRY = {
-    "compare_number": CompareNumberGenerator,
     "currency_conversion": CurrencyConversionGenerator,
     "volume_conversion": VolumeConversionGenerator,
     "fraction_comparison": FractionComparisonGenerator,

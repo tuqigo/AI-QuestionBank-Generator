@@ -6,70 +6,43 @@
 
 | 生成器模块名 | 功能描述 | 适用场景 | 关键配置参数 |
 |-------------|---------|---------|-------------|
-| `compare_number` | 数字比大小 | 两个数比较大小 | `a.min/max`, `b.min/max`, `ensure_different` |
-| `mixed_addition_subtraction` ⭐ | **统一加减法生成器** | 所有加减法题型 | `question_complexity` (原 `question_types`), `num.min/max`, `result_within_X` |
+| `mixed_addition_subtraction` ⭐ | **统一加减法生成器** | 所有加减法题型及比大小 | `question_complexity`, `num.min/max`, `result_within_X`, `q_type` |
 | `currency_conversion` | 元角分换算 | 人民币单位换算 | `yuan/jiao/fen.max`, `convert_types` |
 | `volume_conversion` | 体积单位换算 | 立方米/立方分米/立方厘米/升/毫升 | `conversion_types` (12 种) |
 | `fraction_comparison` | 分数比大小 |  LaTeX 分数格式比较 | `denominator.min/max`, `compare_types` |
 
 > **注意**:
-> 1. `mixed_addition_subtraction` 是统一的加减法生成器，已覆盖原有的 `addition_subtraction` 和 `consecutive_addition_subtraction` 功能。旧模板已通过迁移 010 更新配置。
+> 1. `mixed_addition_subtraction` 是统一的加减法生成器，已覆盖原有的 `addition_subtraction`、`consecutive_addition_subtraction` 和 `compare_number` 功能。
 > 2. `multiplication_table` 生成器已删除，其功能由 `multiplication_division_comprehensive` 统一支持（通过 `question_complexity: ["simple_multiply"]` 配置实现）。
 
 ---
 
 ## 生成器详情
 
-### 1. CompareNumberGenerator
-
-**模块名**: `compare_number`
-**文件**: `compare_number.py`
-
-**功能**: 生成两个数字比大小的题目
-
-**题型**: `FILL_BLANK`
-
-**输出格式**: `{a}（ ）{b}`
-
-**配置参数**:
-```json
-{
-  "a": {"min": 1, "max": 10},
-  "b": {"min": 1, "max": 10},
-  "rules": ["ensure_different"]
-}
-```
-
-**适用模板**:
-- 一年级 10 以内的数比一比
-- 百以内数的大小比较
-
----
-
-### 2. MixedAdditionSubtractionGenerator ⭐ 统一加减法生成器
+### 1. MixedAdditionSubtractionGenerator ⭐ 统一加减法生成器
 
 **模块名**: `mixed_addition_subtraction`
 **文件**: `mixed_addition_subtraction.py`
 
-**功能**: 统一的加减法生成器，支持所有加减法相关题型
+**功能**: 统一的加减法生成器，支持所有加减法及比大小相关题型
 
-**题型**: `CALCULATION` 或 `FILL_BLANK`
+**题型**: `CALCULATION` 或 `FILL_BLANK` 或 `ORAL_CALCULATION`
 
-**支持的题型** (8 种):
+**支持的题型** (9 种):
 
 | 题型代码 | 说明 | 示例 | 适用配置 |
 |---------|------|------|---------|
-| `simple` | 简单加减 | `5 + 3 = （ ）` | 替代原 `addition_subtraction` |
+| `simple` | 简单加减 | `5 + 3 = （ ）` | 基础加减法 |
 | `simple_fill` | 简单填空 | `5 + （ ） = 8` | 加法/减法填空 |
-| `consecutive_add` | 连加 | `1+6+19=（ ）` | 替代原 `consecutive_addition_subtraction` |
-| `consecutive_subtract` | 连减 | `96-23-45=（ ）` | 替代原 `consecutive_addition_subtraction` |
+| `consecutive_add` | 连加 | `1+6+19=（ ）` | 连加练习 |
+| `consecutive_subtract` | 连减 | `96-23-45=（ ）` | 连减练习 |
 | `mixed_operation` | 加减混合 | `49-19+27=（ ）` | 两运算符混合 |
 | `missing_operand` | 减法填空 | `17-（ ）=2` | 逆向思维 |
-| `compare_simple` | 简单运算比较 | `5+3（ ）8` | 单运算符比较 |
-| `compare_with_result` | 混合运算比较 | `74-28+22（ ）75` | 两运算符比较 |
+| `compare_simple` | 简单比较 | `5（ ）8` | 两数比大小 |
+| `compare_with_result` | 运算后比较 | `74-28+22（ ）75` | 混合运算比较 |
 | `compare_mixed_operation` | 混合运算比较 | `74-28+22（ ）75` | 确保有加有减 |
 
-**配置参数 - 简单加减** (替代 `addition_subtraction`):
+**配置参数 - 简单加减**:
 ```json
 {
   "question_complexity": ["simple"],
@@ -79,7 +52,7 @@
 }
 ```
 
-**配置参数 - 连加减** (替代 `consecutive_addition_subtraction`):
+**配置参数 - 连加减**:
 ```json
 {
   "question_complexity": ["consecutive_add", "consecutive_subtract"],
@@ -87,6 +60,18 @@
   "b": {"min": 1, "max": 10},
   "c": {"min": 1, "max": 10},
   "rules": ["ensure_positive", "result_within_10"]
+}
+```
+
+**配置参数 - 比大小题目**:
+```json
+{
+  "question_complexity": ["compare_simple"],
+  "num": {"min": 1, "max": 10},
+  "rules": ["ensure_different"],
+  "q_type": {
+    "compare_simple": "circle"
+  }
 }
 ```
 
@@ -100,13 +85,18 @@
 ```
 
 **适用模板**:
-- 一年级 10 以内的加减法 (已迁移)
-- 一年级 10 以内连加减法 (已迁移)
+- 一年级 10 以内的加减法
+- 一年级 10 以内连加减法
+- 一年级 10 以内的数比一比
+- 百以内数的大小比较
 - 连加、连减及加减综合
+
+**特殊配置说明**:
+- `q_type`: 用于设置特定题型的 answer_style，例如 `{"compare_simple": "circle"}` 会让比大小题目使用圆圈作答样式
 
 ---
 
-### 3. CurrencyConversionGenerator
+### 2. CurrencyConversionGenerator
 
 **模块名**: `currency_conversion`
 **文件**: `currency_conversion.py`
@@ -144,7 +134,7 @@
 
 ---
 
-### 4. VolumeConversionGenerator
+### 3. VolumeConversionGenerator
 
 **模块名**: `volume_conversion`
 **文件**: `volume_conversion.py`
@@ -182,7 +172,7 @@
 
 ---
 
-### 5. FractionComparisonGenerator
+### 4. FractionComparisonGenerator
 
 **模块名**: `fraction_comparison`
 **文件**: `fraction_comparison.py`
@@ -215,7 +205,7 @@
 
 ---
 
-### 6. FractionComparisonGenerator (续)
+### 5. FractionComparisonGenerator (续)
 
 **适用模板**:
 - 分数比大小

@@ -8,6 +8,7 @@
 - 加减混合：49-19+27=[BLANK]
 - 减法填空：17 - [BLANK]= 2
 - 运算比较：54+6+16[BLANK]74
+- 简单比大小：4[BLANK]5
 """
 import random
 from typing import List, Dict, Any
@@ -16,7 +17,7 @@ from .base import TemplateGenerator
 
 
 class MixedAdditionSubtractionGenerator(TemplateGenerator):
-    """加减法统一生成器 - 支持所有加减法题型"""
+    """加减法统一生成器 - 支持所有加减法及比大小题型"""
 
     def generate(self, template_config: dict, quantity: int, question_type: str) -> List[Dict[str, Any]]:
         questions = []
@@ -64,8 +65,12 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
         # 获取渲染元数据
         rendering_meta = self.get_rendering_meta(question_type, template_config)
 
-        # 判断是否包含比较类型题目
-        has_compare = any(t in question_complexity for t in ["compare_simple", "compare_with_result", "compare_mixed_operation"])
+        # 支持通过 q_type 设置 answer_style（优先级高于 rendering_config）
+        # q_type 格式：题型：answer_style，例如："COMPARE_SIMPLE:circle"
+        q_type_styles = template_config.get("q_type", {})
+        if isinstance(q_type_styles, str):
+            # 兼容简单字符串格式
+            q_type_styles = {q_type_styles: "circle"}
 
         for _ in range(quantity):
             max_attempts = 100
@@ -189,23 +194,12 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
                     stem = f"{a}-[BLANK]={result}"
 
                 elif q_type == "compare_simple":
-                    # 简单比较：a + b [BLANK]c
+                    # 简单比较：a [BLANK] b
                     a = random.randint(num_min, num_max)
                     b = random.randint(num_min, num_max)
-                    op = random.choice(["+", "-"])
-                    if op == "-" and a < b:
+                    if ensure_different and a == b:
                         continue
-                    result = a + b if op == "+" else a - b
-                    compare_type = random.choice(["equal", "greater", "less"])
-                    if compare_type == "equal":
-                        compare_num = result
-                    elif compare_type == "greater":
-                        compare_num = result + random.randint(1, 20)
-                    else:
-                        compare_num = result - random.randint(1, 20)
-                        if compare_num < 0:
-                            compare_num = result + random.randint(1, 20)
-                    stem = f"{a}{op}{b}[BLANK]{compare_num}"
+                    stem = f"{a}[BLANK]{b}"
 
                 elif q_type == "compare_with_result":
                     # 运算后比较（支持混合运算）：74-28+22[BLANK]75
@@ -310,10 +304,10 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
                 # 100 次尝试后仍未生成有效题目，跳过
                 continue
 
-            # 为比较类型题目设置 circle 答案样式
+            # 应用 q_type 级别的 answer_style 配置（优先级高于 rendering_config）
             question_rendering_meta = rendering_meta.copy()
-            if q_type in ["compare_simple", "compare_with_result", "compare_mixed_operation"]:
-                question_rendering_meta["answer_style"] = "circle"
+            if q_type in q_type_styles:
+                question_rendering_meta["answer_style"] = q_type_styles[q_type]
 
             questions.append({
                 "type": question_type,
@@ -326,4 +320,4 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
         return questions
 
     def get_knowledge_points(self, template_config: dict) -> List[str]:
-        return ["百以内加减法", "连加连减", "加减混合运算", "逆向思维"]
+        return ["百以内加减法", "连加连减", "加减混合运算", "逆向思维", "数的大小比较"]

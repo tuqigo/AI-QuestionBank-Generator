@@ -91,7 +91,6 @@ SUPPORTED_QUESTION_TYPES: Dict[str, tuple] = {
 # ==================== 生成器模块配置 ====================
 # key 为生成器模块名，value 为中文名称
 SUPPORTED_GENERATOR_MODULES: Dict[str, str] = {
-    "compare_number": "数字比较",
     "currency_conversion": "货币转换",
     "volume_conversion": "体积转换",
     "fraction_comparison": "分数比较",
