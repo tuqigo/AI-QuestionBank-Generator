@@ -8,14 +8,18 @@
 |-------------|---------|---------|-------------|
 | `mixed_addition_subtraction` ⭐ | **统一加减法生成器** | 所有加减法题型及比大小 | `question_complexity`, `num.min/max`, `result_within_X`, `q_type` |
 | `fraction_arithmetic_comparison` ⭐ | **分数加减乘除比较综合** | 分数所有运算及比较 | `denominator`, `numerator`, `question_complexity`, `q_type` |
+| `decimal_arithmetic` ⭐ | **小数乘除法综合生成器** | 小数乘除所有运算及比较 | `decimal_places`, `factor_int`, `question_complexity`, `rules` |
+| `unit_conversion_comprehensive` ⭐ | **小学单位换算综合** | 所有单位换算（人民币/长度/质量/面积/体积/时间） | `unit_category`, `convert_types`, `value_range` |
 | `fraction_comparison` | 分数比大小 |  LaTeX 分数格式比较 | `denominator.min/max`, `compare_types` |
 | `currency_conversion` | 元角分换算 | 人民币单位换算 | `yuan/jiao/fen.max`, `convert_types` |
+| `length_comparison` | 长度单位换算 | 米/分米/厘米/毫米/千米 | `convert_types` (14 种) |
 | `volume_conversion` | 体积单位换算 | 立方米/立方分米/立方厘米/升/毫升 | `conversion_types` (12 种) |
 
 > **注意**:
 > 1. `mixed_addition_subtraction` 是统一的加减法生成器，已覆盖原有的 `addition_subtraction`、`consecutive_addition_subtraction` 和 `compare_number` 功能。
 > 2. `multiplication_table` 生成器已删除，其功能由 `multiplication_division_comprehensive` 统一支持（通过 `question_complexity: ["simple_multiply"]` 配置实现）。
 > 3. `fraction_arithmetic_comparison` 是分数综合生成器，支持加减乘除、混合运算、比较大小、填空、倒数、带分数等 30+ 种题型。
+> 4. `unit_conversion_comprehensive` 是单位换算综合生成器，**推荐替代** `currency_conversion`、`length_comparison`、`volume_conversion` 三个旧生成器。
 
 ---
 
@@ -312,7 +316,148 @@
 
 ---
 
-### 5. FractionComparisonGenerator
+### 5. DecimalArithmeticGenerator ⭐ 小数乘除法综合
+
+**模块名**: `decimal_arithmetic`
+**文件**: `decimal_arithmetic.py`
+
+**功能**: 小数乘除法综合生成器，支持小学 3-6 年级所有小数相关题型
+
+**题型**: `CALCULATION` 或 `FILL_BLANK`
+
+**支持的题型** (20+ 种):
+
+#### 小数乘法 (5 种)
+| 题型代码 | 说明 | 示例 | 年级 |
+|---------|------|------|------|
+| `multiply_decimal_int` | 小数乘整数 | $0.5 \times 3 = [BLANK]$ | 三年级 |
+| `multiply_decimal_decimal` | 小数乘小数 | $0.5 \times 0.3 = [BLANK]$ | 五年级 |
+| `multiply_commutative` | 乘法交换律 | $0.5 \times 2.4 = 2.4 \times [BLANK]$ | 五年级 |
+| `multiply_associative` | 乘法结合律 | $(0.5 \times 2.4) \times 4 = 0.5 \times (2.4 \times [BLANK])$ | 五年级 |
+| `multiply_distributive` | 乘法分配律 | $0.5 \times (2.4 + 3.6) = 0.5 \times [BLANK] + 0.5 \times 3.6$ | 五年级 |
+| `multiply_distributive_fill` | 乘法分配律填空 | $0.5 \times 2.4 + 0.5 \times 3.6 = 0.5 \times ([BLANK] + 3.6)$ | 五年级 |
+
+#### 小数除法 (5 种)
+| 题型代码 | 说明 | 示例 | 年级 |
+|---------|------|------|------|
+| `divide_decimal_int` | 小数除以整数 | $3.6 \div 2 = [BLANK]$ | 五年级 |
+| `divide_decimal_int_with_remainder` | 小数除以整数（有余数） | $5.6 \div 2 = [BLANK]$ | 五年级 |
+| `divide_int_decimal` | 整数除以小数 | $10 \div 0.5 = [BLANK]$ | 五年级 |
+| `divide_decimal_decimal` | 小数除以小数 | $3.6 \div 0.4 = [BLANK]$ | 五年级 |
+
+#### 商的近似值 (2 种)
+| 题型代码 | 说明 | 示例 | 年级 |
+|---------|------|------|------|
+| `approximate_quotient` | 商的近似值 | $10 \div 3 \approx [BLANK]$（保留 2 位小数） | 五年级 |
+| `approximate_quotient_real` | 实际应用题 | $35.5 \div 6 \approx [BLANK]$（保留 2 位小数） | 五年级 |
+
+#### 循环小数 (2 种)
+| 题型代码 | 说明 | 示例 | 年级 |
+|---------|------|------|------|
+| `repeating_decimal_identify` | 识别循环小数 | $1 \div 3 = 0.\dot{3}$ [BLANK] 循环小数 | 五年级 |
+| `repeating_decimal_write` | 用循环小数表示 | $1 \div 3 = [BLANK]$（用循环小数表示） | 五年级 |
+
+#### 混合运算 (2 种)
+| 题型代码 | 说明 | 示例 | 年级 |
+|---------|------|------|------|
+| `multiply_divide_mixed` | 小数乘除混合 | $0.5 \times 4 \div 2 = [BLANK]$ | 五年级 |
+| `multiply_multiply` | 小数连乘 | $0.5 \times 2 \times 3 = [BLANK]$ | 五年级 |
+
+#### 比较大小 (2 种)
+| 题型代码 | 说明 | 示例 | 年级 |
+|---------|------|------|------|
+| `compare_multiply_result` | 乘法结果比较 | $0.5 \times 3$ [BLANK] $1.4$ | 五年级 |
+| `compare_divide_result` | 除法结果比较 | $3.6 \div 2$ [BLANK] $1.5$ | 五年级 |
+
+#### 填空题 (2 种)
+| 题型代码 | 说明 | 示例 | 年级 |
+|---------|------|------|------|
+| `fill_missing_factor` | 填因数 | $[BLANK] \times 3 = 1.5$ | 五年级 |
+| `fill_divisor` | 填除数 | $3.6 \div [BLANK] = 1.2$ | 五年级 |
+
+**配置参数 - 三年级 (小数乘整数基础)**:
+```json
+{
+  "decimal_places": {"min": 1, "max": 1},
+  "factor_int": {"min": 2, "max": 5},
+  "question_complexity": ["multiply_decimal_int"],
+  "rules": ["result_one_decimal_places"]
+}
+```
+
+**配置参数 - 五年级 (小数乘除法综合)**:
+```json
+{
+  "decimal_places": {"min": 1, "max": 2},
+  "factor_int": {"min": 2, "max": 10},
+  "dividend_range": {"min": 10, "max": 100},
+  "divisor_range": {"min": 2, "max": 20},
+  "question_complexity": [
+    "multiply_decimal_int",
+    "multiply_decimal_decimal",
+    "divide_decimal_int",
+    "divide_decimal_decimal",
+    "approximate_quotient"
+  ],
+  "rules": ["result_two_decimal_places"]
+}
+```
+
+**配置参数 - 运算定律专项**:
+```json
+{
+  "decimal_places": {"min": 1, "max": 2},
+  "question_complexity": [
+    "multiply_commutative",
+    "multiply_associative",
+    "multiply_distributive",
+    "multiply_distributive_fill"
+  ]
+}
+```
+
+**配置参数 - 商的近似值专项**:
+```json
+{
+  "dividend_range": {"min": 10, "max": 100},
+  "divisor_range": {"min": 3, "max": 20},
+  "question_complexity": ["approximate_quotient", "approximate_quotient_real"],
+  "approximate_places": 2,
+  "approximate_method": "half_up"
+}
+```
+
+**配置参数 - 循环小数专项**:
+```json
+{
+  "question_complexity": ["repeating_decimal_identify", "repeating_decimal_write"]
+}
+```
+
+**配置参数 - 比较大小专项**:
+```json
+{
+  "decimal_places": {"min": 1, "max": 2},
+  "question_complexity": ["compare_multiply_result", "compare_divide_result"],
+  "q_type": {
+    "compare_multiply_result": "circle",
+    "compare_divide_result": "circle"
+  }
+}
+```
+
+**适用模板**:
+- 三年级小数的初步认识
+- 五年级小数乘法
+- 五年级小数除法
+- 五年级运算定律推广到小数
+- 五年级商的近似值
+- 五年级循环小数
+- 小数乘除法综合练习
+
+---
+
+### 6. FractionComparisonGenerator
 
 **模块名**: `fraction_comparison`
 **文件**: `fraction_comparison.py`
@@ -345,7 +490,188 @@
 
 ---
 
-### 6. FractionComparisonGenerator (续)
+### 7. UnitConversionComprehensiveGenerator ⭐ 小学单位换算综合
+
+**模块名**: `unit_conversion_comprehensive`
+**文件**: `unit_conversion_comprehensive.py`
+
+**功能**: 小学单位换算综合生成器，支持 1-6 年级所有单位换算类型
+
+**题型**: `CALCULATION`
+
+**支持的单位类别** (6 大类):
+
+#### 人民币单位（一年级）
+| 类型代码 | 说明 | 进率 | 示例 |
+|---------|------|------|------|
+| `yuan_to_jiao` | 元→角 | ×10 | 5 元 = [BLANK] 角 |
+| `jiao_to_yuan` | 角→元 | ÷10 | 60 角 = [BLANK] 元 |
+| `jiao_to_fen` | 角→分 | ×10 | 5 角 = [BLANK] 分 |
+| `fen_to_jiao` | 分→角 | ÷10 | 50 分 = [BLANK] 角 |
+| `yuan_to_fen` | 元→分 | ×100 | 5 元 = [BLANK] 分 |
+| `fen_to_yuan` | 分→元 | ÷100 | 100 分 = [BLANK] 元 |
+| `yuan_jiao_to_jiao` | 元 + 角→角 | - | 3 元 5 角 = [BLANK] 角 |
+| `yuan_fen_to_fen` | 元 + 分→分 | - | 54 元 50 分 = [BLANK] 分 |
+| `yuan_jiao_fen_to_fen` | 元 + 角 + 分→分 | - | 3 元 5 角 20 分 = [BLANK] 分 |
+| `jiao_fen_to_fen` | 角 + 分→分 | - | 5 角 8 分 = [BLANK] 分 |
+| `compare_*` | 比较大小 | - | 5 元 [BLANK] 48 角 |
+
+#### 长度单位（一 - 四年级）
+| 类型代码 | 说明 | 进率 | 示例 |
+|---------|------|------|------|
+| `m_to_cm` | 米→厘米 | ×100 | 3m = [BLANK]cm |
+| `cm_to_m` | 厘米→米 | ÷100 | 300cm = [BLANK]m |
+| `dm_to_cm` | 分米→厘米 | ×10 | 5dm = [BLANK]cm |
+| `cm_to_dm` | 厘米→分米 | ÷10 | 50cm = [BLANK]dm |
+| `m_to_dm` | 米→分米 | ×10 | 5m = [BLANK]dm |
+| `dm_to_m` | 分米→米 | ÷10 | 50dm = [BLANK]m |
+| `km_to_m` | 千米→米 | ×1000 | 3km = [BLANK]m |
+| `m_to_km` | 米→千米 | ÷1000 | 3000m = [BLANK]km |
+| `mm_to_cm` | 毫米→厘米 | ÷10 | 30mm = [BLANK]cm |
+| `cm_to_mm` | 厘米→毫米 | ×10 | 3cm = [BLANK]mm |
+| `m_cm_to_cm` | 米 + 厘米→厘米 | - | 2m50cm = [BLANK]cm |
+| `m_dm_to_dm` | 米 + 分米→分米 | - | 3m5dm = [BLANK]dm |
+| `dm_cm_to_cm` | 分米 + 厘米→厘米 | - | 2dm5cm = [BLANK]cm |
+| `km_m_to_m` | 千米 + 米→米 | - | 2km500m = [BLANK]m |
+| `compare_*` | 比较大小 | - | 3m [BLANK] 280cm |
+
+#### 质量单位（三 - 四年级）
+| 类型代码 | 说明 | 进率 | 示例 |
+|---------|------|------|------|
+| `kg_to_g` | 千克→克 | ×1000 | 3kg = [BLANK]g |
+| `g_to_kg` | 克→千克 | ÷1000 | 3000g = [BLANK]kg |
+| `t_to_kg` | 吨→千克 | ×1000 | 5t = [BLANK]kg |
+| `kg_to_t` | 千克→吨 | ÷1000 | 5000kg = [BLANK]t |
+| `kg_g_to_g` | 千克 + 克→克 | - | 3kg500g = [BLANK]g |
+| `t_kg_to_kg` | 吨 + 千克→千克 | - | 2t500kg = [BLANK]kg |
+
+#### 面积单位（四 - 五年级）
+| 类型代码 | 说明 | 进率 | 示例 |
+|---------|------|------|------|
+| `m2_to_dm2` | 平方米→平方分米 | ×100 | 5m² = [BLANK]dm² |
+| `dm2_to_m2` | 平方分米→平方米 | ÷100 | 500dm² = [BLANK]m² |
+| `dm2_to_cm2` | 平方分米→平方厘米 | ×100 | 5dm² = [BLANK]cm² |
+| `cm2_to_dm2` | 平方厘米→平方分米 | ÷100 | 500cm² = [BLANK]dm² |
+| `hectare_to_m2` | 公顷→平方米 | ×10000 | 3 公顷 = [BLANK]m² |
+| `m2_to_hectare` | 平方米→公顷 | ÷10000 | 30000m² = [BLANK] 公顷 |
+| `km2_to_hectare` | 平方千米→公顷 | ×100 | 5km² = [BLANK] 公顷 |
+| `hectare_to_km2` | 公顷→平方千米 | ÷100 | 500 公顷 = [BLANK]km² |
+
+#### 体积/容积单位（五年级）
+| 类型代码 | 说明 | 进率 | 示例 |
+|---------|------|------|------|
+| `m3_to_dm3` | 立方米→立方分米 | ×1000 | 5m³ = [BLANK]dm³ |
+| `dm3_to_m3` | 立方分米→立方米 | ÷1000 | 5000dm³ = [BLANK]m³ |
+| `dm3_to_cm3` | 立方分米→立方厘米 | ×1000 | 5dm³ = [BLANK]cm³ |
+| `cm3_to_dm3` | 立方厘米→立方分米 | ÷1000 | 5000cm³ = [BLANK]dm³ |
+| `l_to_ml` | 升→毫升 | ×1000 | 5L = [BLANK]mL |
+| `ml_to_l` | 毫升→升 | ÷1000 | 5000mL = [BLANK]L |
+| `dm3_to_l` | 立方分米→升 | 1:1 | 5dm³ = [BLANK]L |
+| `l_to_dm3` | 升→立方分米 | 1:1 | 5L = [BLANK]dm³ |
+| `cm3_to_ml` | 立方厘米→毫升 | 1:1 | 5cm³ = [BLANK]mL |
+| `ml_to_cm3` | 毫升→立方厘米 | 1:1 | 5mL = [BLANK]cm³ |
+| `m3_to_l` | 立方米→升 | ×1000 | 5m³ = [BLANK]L |
+| `l_to_m3` | 升→立方米 | ÷1000 | 5000L = [BLANK]m³ |
+
+#### 时间单位（二 - 五 - 年级）
+| 类型代码 | 说明 | 进率 | 示例 |
+|---------|------|------|------|
+| `hour_to_minute` | 时→分 | ×60 | 3 时 = [BLANK] 分 |
+| `minute_to_hour` | 分→时 | ÷60 | 180 分 = [BLANK] 时 |
+| `minute_to_second` | 分→秒 | ×60 | 5 分 = [BLANK] 秒 |
+| `second_to_minute` | 秒→分 | ÷60 | 300 秒 = [BLANK] 分 |
+| `day_to_hour` | 日→时 | ×24 | 3 日 = [BLANK] 时 |
+| `hour_to_day` | 时→日 | ÷24 | 72 时 = [BLANK] 日 |
+| `year_to_month` | 年→月 | ×12 | 3 年 = [BLANK] 月 |
+| `month_to_year` | 月→年 | ÷12 | 36 月 = [BLANK] 年 |
+| `week_to_day` | 周→天 | ×7 | 5 周 = [BLANK] 天 |
+| `day_to_week` | 天→周 | ÷7 | 35 天 = [BLANK] 周 |
+| `day_to_minute` | 日→分 | ×1440 | 2 日 = [BLANK] 分 |
+| `hour_to_second` | 时→秒 | ×3600 | 2 时 = [BLANK] 秒 |
+| `hour_minute_to_minute` | 时 + 分→分 | - | 2 时 30 分 = [BLANK] 分 |
+| `day_hour_to_hour` | 日 + 时→时 | - | 2 日 5 时 = [BLANK] 时 |
+| `year_month_to_month` | 年 + 月→月 | - | 3 年 5 月 = [BLANK] 月 |
+
+**配置参数 - 一年级人民币**:
+```json
+{
+  "unit_category": "currency",
+  "grade_level": "grade1",
+  "convert_types": ["yuan_to_jiao", "jiao_to_fen", "yuan_jiao_to_jiao"],
+  "value_range": {"min": 1, "max": 20}
+}
+```
+
+**配置参数 - 三年级长度**:
+```json
+{
+  "unit_category": "length",
+  "grade_level": "grade3",
+  "convert_types": ["km_to_m", "m_to_km", "m_cm_to_cm"],
+  "value_range": {"min": 1, "max": 50}
+}
+```
+
+**配置参数 - 五年级体积**:
+```json
+{
+  "unit_category": "volume",
+  "grade_level": "grade5",
+  "convert_types": ["m3_to_dm3", "dm3_to_cm3", "l_to_ml", "dm3_to_l"],
+  "value_range": {"min": 1, "max": 50}
+}
+```
+
+**配置参数 - 综合型（混合所有单位类别）**:
+```json
+{
+  "unit_category": "length",
+  "convert_types": [
+    "m_to_cm", "cm_to_m", "km_to_m", "m_to_km",
+    "m_cm_to_cm", "m_dm_to_dm"
+  ],
+  "value_range": {"min": 1, "max": 100},
+  "allow_compound": true,
+  "integer_result": true
+}
+```
+
+**配置参数 - 比较大小题型**:
+```json
+{
+  "unit_category": "currency",
+  "convert_types": ["yuan_to_jiao", "jiao_to_fen"],
+  "is_comparison": true,
+  "value_range": {"min": 1, "max": 20},
+  "q_type": {
+    "compare_yuan_jiao": "circle",
+    "compare_jiao_fen": "circle"
+  }
+}
+```
+
+**比较大小题型示例**:
+- 人民币：`5 元 [BLANK] 48 角`、`3 元 5 角 [BLANK] 32 角`
+- 长度：`3m [BLANK] 280cm`、`2km [BLANK] 1900m`
+- 质量：`5kg [BLANK] 4800g`、`3t [BLANK] 2800kg`
+- 面积：`5m² [BLANK] 480dm²`、`3 公顷 [BLANK] 28000m²`
+- 体积：`5m³ [BLANK] 4800dm³`、`3L [BLANK] 2800mL`
+- 时间：`3 时 [BLANK] 190 分`、`2 年 [BLANK] 22 月`
+
+**适用模板**:
+- 一年级认识人民币
+- 二年级长度单位初步认识
+- 三年级长度单位拓展、质量单位
+- 四年级面积单位、质量单位拓展
+- 五年级体积/容积单位、面积单位拓展
+- 六年级单位换算综合应用
+
+**替代说明**:
+此生成器是 `currency_conversion`、`length_comparison`、`volume_conversion` 的统一替代版本，推荐使用此生成器而非旧的单一单位生成器。
+
+---
+
+### 8. FractionComparisonGenerator (续)
 
 **适用模板**:
 - 分数比大小

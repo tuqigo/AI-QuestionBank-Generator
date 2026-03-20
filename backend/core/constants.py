@@ -93,10 +93,13 @@ SUPPORTED_QUESTION_TYPES: Dict[str, tuple] = {
 SUPPORTED_GENERATOR_MODULES: Dict[str, str] = {
     "currency_conversion": "货币转换",
     "volume_conversion": "体积转换",
-    "fraction_comparison": "分数比较",
-    "mixed_addition_subtraction": "加减混合运算",
     "length_comparison": "长度比较",
+    "fraction_comparison": "分数比较",
+    "fraction_arithmetic_comparison": "分数加减乘除比较综合",
+    "mixed_addition_subtraction": "加减混合运算",
     "multiplication_division_comprehensive": "乘除综合",
+    "decimal_arithmetic": "小数乘除法综合",
+    "unit_conversion_comprehensive": "单位换算综合",
 }
 
 # ==================== 知识点分组配置 ====================

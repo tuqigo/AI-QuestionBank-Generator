@@ -10,6 +10,8 @@ from .mixed_addition_subtraction import MixedAdditionSubtractionGenerator
 from .length_comparison import LengthComparisonGenerator
 from .multiplication_division_comprehensive import MultiplicationDivisionComprehensiveGenerator
 from .vertical_addition_subtraction import VerticalAdditionSubtractionGenerator
+from .decimal_arithmetic import DecimalArithmeticGenerator
+from .unit_conversion_comprehensive import UnitConversionComprehensiveGenerator
 
 
 # 生成器注册表
@@ -23,6 +25,8 @@ GENERATOR_REGISTRY = {
     "length_comparison": LengthComparisonGenerator,
     "multiplication_division_comprehensive": MultiplicationDivisionComprehensiveGenerator,
     "vertical_addition_subtraction": VerticalAdditionSubtractionGenerator,
+    "decimal_arithmetic": DecimalArithmeticGenerator,
+    "unit_conversion_comprehensive": UnitConversionComprehensiveGenerator,
 }
 
 
