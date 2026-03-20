@@ -12,9 +12,9 @@
       "layout": "multi",
       "columns": 4,
       "font_size": 18,
-      "answer_width": 80,
-      "answer_style": "circle",
-      "show_question_number": false
+      "answer_width": 150,
+      "answer_style": "blank",
+      "show_question_number": true
     },
     "FILL_BLANK": {
       "layout": "single",
