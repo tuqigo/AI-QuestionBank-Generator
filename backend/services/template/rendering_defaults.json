@@ -9,7 +9,7 @@
   },
   "by_question_type": {
     "ORAL_CALCULATION": {
-      "layout": "dashed_box",
+      "layout": "multi",
       "columns": 4,
       "font_size": 18,
       "answer_width": 80,

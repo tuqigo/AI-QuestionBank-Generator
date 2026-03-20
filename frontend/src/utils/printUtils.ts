@@ -128,9 +128,10 @@ function renderSingleQuestion(question: StructuredQuestion, index: number): stri
     ? `${(question.rendering_meta.font_size * 0.75).toFixed(1)}pt`  // px 转 pt (1px = 0.75pt)
     : '10.5pt'
   const answerWidth = question.rendering_meta?.answer_width
+  const answerStyle = question.rendering_meta?.answer_style
   const showQuestionNumber = question.rendering_meta?.show_question_number !== false  // 默认 true
   const keepTogether = question.rendering_meta?.keep_together === true
-  const stemHtml = renderMarkdown(question.stem, answerWidth)
+  const stemHtml = renderMarkdown(question.stem, answerWidth, answerStyle)
   const optionLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
 
   const keepTogetherStyle = keepTogether ? 'page-break-inside: avoid; break-inside: avoid;' : ''
@@ -162,14 +163,14 @@ function renderSingleQuestion(question: StructuredQuestion, index: number): stri
   if (question.passage) {
     const passageText = question.passage.replace(/【阅读材料】/, '').replace(/【材料】/, '').trim()
     html += `<div class="passage-section" style="margin: 8px 0; padding: 8px; background: #fff7ed; border-left: 3px solid #ff6b4a; border-radius: 4px;">`
-    html += `<div class="passage-content" style="font-size: ${fontSize}; line-height: 1.8; color: #262626;">${renderMarkdown(passageText, answerWidth)}</div>`
+    html += `<div class="passage-content" style="font-size: ${fontSize}; line-height: 1.8; color: #262626;">${renderMarkdown(passageText, answerWidth, answerStyle)}</div>`
     html += `</div>`
   }
 
   // 子题目
   if (question.sub_questions && question.sub_questions.length > 0) {
     html += `<div class="sub-questions" style="margin-top: 8px; padding-left: 20px; border-left: 2px solid #f0f0f0;">`
-    html += renderSubQuestions(question.sub_questions, 'print', fontSize, answerWidth)
+    html += renderSubQuestions(question.sub_questions, 'print', fontSize, answerWidth, answerStyle)
     html += `</div>`
   }
 
@@ -197,6 +198,7 @@ function renderGridGroup(
     ? `${(firstQuestion.rendering_meta.font_size * 0.75).toFixed(1)}pt`  // px 转 pt
     : '10.5pt'
   const answerWidth = firstQuestion?.rendering_meta?.answer_width
+  const answerStyle = firstQuestion?.rendering_meta?.answer_style
   const showQuestionNumber = firstQuestion?.rendering_meta?.show_question_number !== false  // 默认 true
   const keepTogether = firstQuestion?.rendering_meta?.keep_together === true
 
@@ -205,7 +207,7 @@ function renderGridGroup(
 
   questions.forEach((question, i) => {
     const typeClass = getQuestionTypeClass(question.type)
-    const stemHtml = renderMarkdown(question.stem, answerWidth)
+    const stemHtml = renderMarkdown(question.stem, answerWidth, answerStyle)
     const globalIndex = startIndex + i
 
     html += `<div class="question-grid-item ${typeClass}" style="padding: ${itemPadding}; border: ${itemBorder}; ${keepTogetherStyle}">`
@@ -263,12 +265,13 @@ export function renderSubQuestions(
   subQuestions: any[],
   mode: 'print' | 'render' = 'print',
   fontSize: string = '10.5pt',
-  answerWidth?: number
+  answerWidth?: number,
+  answerStyle?: string
 ): string {
   const optionLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
 
   return subQuestions.map((subQ, subIdx) => {
-    const subStemHtml = renderMarkdown(subQ.stem, answerWidth)
+    const subStemHtml = renderMarkdown(subQ.stem, answerWidth, answerStyle)
     let html = `<div class="question-item question-sub" style="margin-bottom: 8px; padding: 0; background: transparent; box-shadow: none; font-size: ${fontSize};">`
     html += `<div class="question-header" style="display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px; flex-wrap: nowrap;">`
     html += `<span class="question-number" style="font-weight: bold; min-width: 20px; flex-shrink: 0; white-space: nowrap; font-size: ${fontSize}; line-height: 1.8;">${subIdx + 1}.</span>`
@@ -282,7 +285,7 @@ export function renderSubQuestions(
         const label = optionLabels[optIndex] || String.fromCharCode(65 + optIndex)
         html += `<div class="option-item" style="margin: 4px 0; padding: 4px 0; background: transparent;">`
         html += `<span class="option-label" style="font-weight: 600; font-size: ${fontSize}; line-height: 1.8;">${label}.</span>`
-        html += `<span class="option-text" style="font-size: ${fontSize}; line-height: 1.8;">${renderMarkdown(optionText, answerWidth)}</span>`
+        html += `<span class="option-text" style="font-size: ${fontSize}; line-height: 1.8;">${renderMarkdown(optionText, answerWidth, answerStyle)}</span>`
         html += `</div>`
       })
       html += `</div>`

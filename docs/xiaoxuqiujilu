@@ -77,7 +77,7 @@ PDF下载
 
 
 
-  你读取表question_templates id为4的行 取出一些必要信息 比如	
+你读取表question_templates id为4的行 取出一些必要信息 比如	
 name	TEXT	NO	NULL	
 subject	TEXT	NO	NULL	
 grade	TEXT	NO	NULL	
@@ -92,7 +92,7 @@ knowledge_point_id 这个字段先不用考虑
 
 然后读取文档 @  不需要完全按照这个文档内容来现在更新了  生成generator_module 代码 （先看下现成的能不能满足不能满足就新建）
 
-最终你需要修改这条记录的 generator_module ，template_pattern，variables_config 三个字段 
+最终你需要修改这条记录的 generator_module ，template_pattern，variables_config 三个字段  作答区域用`[BLANK]`表示
 
 使我后续可以生成题目  
 
