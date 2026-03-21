@@ -90,11 +90,9 @@ SUPPORTED_QUESTION_TYPES: Dict[str, tuple] = {
 
 # ==================== 生成器模块配置 ====================
 # key 为生成器模块名，value 为中文名称
+# 注意：currency_conversion、volume_conversion、length_comparison、fraction_comparison 已废弃
+# 请使用 unit_conversion_comprehensive（单位换算综合）和 fraction_arithmetic_comparison（分数比较综合）
 SUPPORTED_GENERATOR_MODULES: Dict[str, str] = {
-    "currency_conversion": "货币转换",
-    "volume_conversion": "体积转换",
-    "length_comparison": "长度比较",
-    "fraction_comparison": "分数比较",
     "fraction_arithmetic_comparison": "分数加减乘除比较综合",
     "mixed_addition_subtraction": "加减混合运算",
     "multiplication_division_comprehensive": "乘除综合",

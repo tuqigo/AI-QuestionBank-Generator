@@ -10,16 +10,13 @@
 | `fraction_arithmetic_comparison` ⭐ | **分数加减乘除比较综合** | 分数所有运算及比较 | `denominator`, `numerator`, `question_complexity`, `q_type` |
 | `decimal_arithmetic` ⭐ | **小数乘除法综合生成器** | 小数乘除所有运算及比较 | `decimal_places`, `factor_int`, `question_complexity`, `rules` |
 | `unit_conversion_comprehensive` ⭐ | **小学单位换算综合** | 所有单位换算（人民币/长度/质量/面积/体积/时间） | `unit_category`, `convert_types`, `value_range` |
-| `fraction_comparison` | 分数比大小 |  LaTeX 分数格式比较 | `denominator.min/max`, `compare_types` |
-| `currency_conversion` | 元角分换算 | 人民币单位换算 | `yuan/jiao/fen.max`, `convert_types` |
-| `length_comparison` | 长度单位换算 | 米/分米/厘米/毫米/千米 | `convert_types` (14 种) |
-| `volume_conversion` | 体积单位换算 | 立方米/立方分米/立方厘米/升/毫升 | `conversion_types` (12 种) |
 
 > **注意**:
 > 1. `mixed_addition_subtraction` 是统一的加减法生成器，已覆盖原有的 `addition_subtraction`、`consecutive_addition_subtraction` 和 `compare_number` 功能。
 > 2. `multiplication_table` 生成器已删除，其功能由 `multiplication_division_comprehensive` 统一支持（通过 `question_complexity: ["simple_multiply"]` 配置实现）。
 > 3. `fraction_arithmetic_comparison` 是分数综合生成器，支持加减乘除、混合运算、比较大小、填空、倒数、带分数等 30+ 种题型。
-> 4. `unit_conversion_comprehensive` 是单位换算综合生成器，**推荐替代** `currency_conversion`、`length_comparison`、`volume_conversion` 三个旧生成器。
+> 4. `unit_conversion_comprehensive` 是单位换算综合生成器，已替代 `currency_conversion`、`length_comparison`、`volume_conversion` 三个旧生成器（2026-03-21 已废弃并删除）。
+> 5. `fraction_arithmetic_comparison` 已替代 `fraction_comparison` 生成器（2026-03-21 已废弃并删除）。
 
 ---
 
@@ -240,83 +237,7 @@
 
 ---
 
-### 3. CurrencyConversionGenerator
-
-**模块名**: `currency_conversion`
-**文件**: `currency_conversion.py`
-
-**功能**: 人民币元角分单位换算
-
-**题型**: `CALCULATION`
-
-**支持的换算类型**:
-| 类型代码 | 说明 | 示例 |
-|---------|------|------|
-| `yuan_to_jiao` | 元→角 | `5 元 = （ ）角` |
-| `jiao_to_yuan` | 角→元 | `60 角 = （ ）元` |
-| `jiao_to_fen` | 角→分 | `5 角 = （ ）分` |
-| `fen_to_jiao` | 分→角 | `50 分 = （ ）角` |
-| `yuan_to_fen` | 元→分 | `5 元 = （ ）分` |
-| `fen_to_yuan` | 分→元 | `100 分 = （ ）元` |
-| `yuan_jiao_to_jiao` | 元 + 角→角 | `3 元 5 角 = （ ）角` |
-| `yuan_fen_to_fen` | 元 + 分→分 | `54 元 50 分 = （ ）分` |
-| `yuan_jiao_fen_to_fen` | 元 + 角 + 分→分 | `3 元 5 角 20 分 = （ ）分` |
-
-**配置参数**:
-```json
-{
-  "yuan": {"max": 50},
-  "jiao": {"max": 50},
-  "fen": {"max": 50},
-  "convert_types": ["yuan_to_jiao", "jiao_to_fen", "yuan_jiao_to_jiao"]
-}
-```
-
-**适用模板**:
-- 认识人民币 - 元角分换算
-- 人民币认识
-
----
-
-### 4. VolumeConversionGenerator
-
-**模块名**: `volume_conversion`
-**文件**: `volume_conversion.py`
-
-**功能**: 体积/容积单位换算
-
-**题型**: `CALCULATION`
-
-**支持的换算类型** (12 种):
-| 类型代码 | 说明 | 进率 |
-|---------|------|------|
-| `m3_to_dm3` | 立方米→立方分米 | ×1000 |
-| `dm3_to_cm3` | 立方分米→立方厘米 | ×1000 |
-| `cm3_to_dm3` | 立方厘米→立方分米 | ÷1000 |
-| `dm3_to_m3` | 立方分米→立方米 | ÷1000 |
-| `l_to_ml` | 升→毫升 | ×1000 |
-| `ml_to_l` | 毫升→升 | ÷1000 |
-| `dm3_to_l` | 立方分米→升 | 1:1 |
-| `l_to_dm3` | 升→立方分米 | 1:1 |
-| `cm3_to_ml` | 立方厘米→毫升 | 1:1 |
-| `ml_to_cm3` | 毫升→立方厘米 | 1:1 |
-| `m3_to_l` | 立方米→升 | ×1000 |
-| `l_to_m3` | 升→立方米 | ÷1000 |
-
-**配置参数**:
-```json
-{
-  "conversion_types": ["m3_to_dm3", "dm3_to_cm3", "l_to_ml"],
-  "integer_result": true
-}
-```
-
-**适用模板**:
-- 长方体和正方体体积单位的换算
-
----
-
-### 5. DecimalArithmeticGenerator ⭐ 小数乘除法综合
+### 4. DecimalArithmeticGenerator ⭐ 小数乘除法综合
 
 **模块名**: `decimal_arithmetic`
 **文件**: `decimal_arithmetic.py`
@@ -457,40 +378,7 @@
 
 ---
 
-### 6. FractionComparisonGenerator
-
-**模块名**: `fraction_comparison`
-**文件**: `fraction_comparison.py`
-
-**功能**: 生成 LaTeX 分数格式的比较题目
-
-**题型**: `FILL_BLANK`
-
-**输出格式**: `$\frac{a}{b}$ （ ） $\frac{c}{d}$`
-
-**支持的比较类型**:
-| 类型代码 | 说明 | 示例 |
-|---------|------|------|
-| `common_denominator` | 同分母 | $\frac{3}{7}$ （ ） $\frac{5}{7}$ |
-| `common_numerator` | 同分子 | $\frac{2}{9}$ （ ） $\frac{2}{5}$ |
-| `different` | 异分母 | $\frac{3}{4}$ （ ） $\frac{2}{3}$ |
-
-**配置参数**:
-```json
-{
-  "denominator": {"min": 2, "max": 12},
-  "numerator": {"min": 1},
-  "compare_types": ["common_denominator", "different"],
-  "rules": ["ensure_different", "ensure_proper_fraction"]
-}
-```
-
-**适用模板**:
-- 分数比大小
-
----
-
-### 7. UnitConversionComprehensiveGenerator ⭐ 小学单位换算综合
+### 5. UnitConversionComprehensiveGenerator ⭐ 小学单位换算综合
 
 **模块名**: `unit_conversion_comprehensive`
 **文件**: `unit_conversion_comprehensive.py`
@@ -667,14 +555,7 @@
 - 六年级单位换算综合应用
 
 **替代说明**:
-此生成器是 `currency_conversion`、`length_comparison`、`volume_conversion` 的统一替代版本，推荐使用此生成器而非旧的单一单位生成器。
-
----
-
-### 8. FractionComparisonGenerator (续)
-
-**适用模板**:
-- 分数比大小
+此生成器是 `currency_conversion`、`length_comparison`、`volume_conversion` 的统一替代版本，推荐使用此生成器而非旧的单一单位生成器。`fraction_arithmetic_comparison` 已替代 `fraction_comparison` 生成器，请使用前者进行分数比大小练习。
 
 ---
 
