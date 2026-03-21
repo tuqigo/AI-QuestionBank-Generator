@@ -96,8 +96,14 @@ class MigrationExecutor:
     ):
         """记录迁移执行成功"""
         cursor = conn.cursor()
+        # 先检查是否已存在该版本的记录
+        cursor.execute("SELECT id FROM schema_migrations WHERE version = ?", (version,))
+        if cursor.fetchone() is not None:
+            logger.warning(f"迁移记录已存在，跳过：{filename} (version: {version})")
+            return
+
         cursor.execute("""
-            INSERT INTO schema_migrations (version, filename, checksum, status)
+            INSERT OR IGNORE INTO schema_migrations (version, filename, checksum, status)
             VALUES (?, ?, ?, 'success')
         """, (version, filename, checksum))
 
@@ -219,11 +225,14 @@ class MigrationExecutor:
                 except sqlite3.Error as e:
                     # 记录失败的迁移
                     cursor = conn.cursor()
-                    cursor.execute("""
-                        INSERT INTO schema_migrations (version, filename, checksum, status)
-                        VALUES (?, ?, ?, 'failed')
-                    """, (version, filepath.name, self._calculate_checksum(filepath.read_text(encoding='utf-8'))))
-                    conn.commit()
+                    # 先检查是否已存在该版本的记录
+                    cursor.execute("SELECT id FROM schema_migrations WHERE version = ?", (version,))
+                    if cursor.fetchone() is None:
+                        cursor.execute("""
+                            INSERT OR IGNORE INTO schema_migrations (version, filename, checksum, status)
+                            VALUES (?, ?, ?, 'failed')
+                        """, (version, filepath.name, self._calculate_checksum(filepath.read_text(encoding='utf-8'))))
+                        conn.commit()
 
                     error_msg = f"迁移执行失败 [{filepath.name}]: {e}"
                     logger.error(error_msg)
