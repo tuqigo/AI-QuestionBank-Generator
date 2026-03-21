@@ -230,8 +230,6 @@ function renderGridGroup(
   const fontSize = firstQuestion?.rendering_meta?.font_size
     ? `${(firstQuestion.rendering_meta.font_size * 0.75).toFixed(1)}pt`  // px 转 pt
     : '10.5pt'
-  const answerWidth = firstQuestion?.rendering_meta?.answer_width
-  const answerStyle = firstQuestion?.rendering_meta?.answer_style
   const showQuestionNumber = firstQuestion?.rendering_meta?.show_question_number !== false  // 默认 true
   const keepTogether = firstQuestion?.rendering_meta?.keep_together === true
 
@@ -240,6 +238,9 @@ function renderGridGroup(
 
   questions.forEach((question, i) => {
     const typeClass = getQuestionTypeClass(question.type)
+    // 每个题目使用自己的 answer_width 和 answer_style
+    const answerWidth = question.rendering_meta?.answer_width
+    const answerStyle = question.rendering_meta?.answer_style
     const stemHtml = renderMarkdown(question.stem, answerWidth, answerStyle)
     const globalIndex = startIndex + i
 
@@ -304,7 +305,10 @@ export function renderSubQuestions(
   const optionLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
 
   return subQuestions.map((subQ, subIdx) => {
-    const subStemHtml = renderMarkdown(subQ.stem, answerWidth, answerStyle)
+    // 优先使用子题目自己的 rendering_meta 配置
+    const subAnswerWidth = subQ.rendering_meta?.answer_width ?? answerWidth
+    const subAnswerStyle = subQ.rendering_meta?.answer_style ?? answerStyle
+    const subStemHtml = renderMarkdown(subQ.stem, subAnswerWidth, subAnswerStyle)
     let html = `<div class="question-item question-sub" style="margin-bottom: 8px; padding: 0; background: transparent; box-shadow: none; font-size: ${fontSize};">`
     html += `<div class="question-header" style="display: flex; align-items: baseline; gap: 4px; margin-bottom: 6px; flex-wrap: nowrap;">`
     html += `<span class="question-number" style="font-weight: bold; min-width: 20px; flex-shrink: 0; white-space: nowrap; font-size: ${fontSize}; line-height: 1.8;">${subIdx + 1}.</span>`
@@ -318,7 +322,7 @@ export function renderSubQuestions(
         const label = optionLabels[optIndex] || String.fromCharCode(65 + optIndex)
         html += `<div class="option-item" style="margin: 4px 0; padding: 4px 0; background: transparent;">`
         html += `<span class="option-label" style="font-weight: 600; font-size: ${fontSize}; line-height: 1.8;">${label}.</span>`
-        html += `<span class="option-text" style="font-size: ${fontSize}; line-height: 1.8;">${renderMarkdown(optionText, answerWidth, answerStyle)}</span>`
+        html += `<span class="option-text" style="font-size: ${fontSize}; line-height: 1.8;">${renderMarkdown(optionText, subAnswerWidth, subAnswerStyle)}</span>`
         html += `</div>`
       })
       html += `</div>`
