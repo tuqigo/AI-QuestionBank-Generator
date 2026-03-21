@@ -111,7 +111,7 @@ class MigrationExecutor:
         """
         获取所有迁移文件，按版本号排序
 
-        迁移文件命名规则：NNN_description.sql
+        迁移文件命名规则：NNN_description.sql 或 NNN_description.py
         - NNN: 3 位数字版本号（001, 002, ...）
         - description: 描述性名称
         """
@@ -132,6 +132,19 @@ class MigrationExecutor:
                 migration_files.append(file)
             else:
                 logger.warning(f"跳过不符合命名规范的文件：{file.name}")
+
+        # 也支持 Python 脚本迁移（用于需要复杂逻辑的迁移）
+        for file in MIGRATIONS_DIR.glob("*.py"):
+            # 跳过 __init__.py 和 __pycache__
+            if file.name.startswith("__") or file.name == "migrations_cli.py":
+                continue
+
+            # 验证文件名格式：NNN_description.py
+            match = re.match(r"^(\d{3})_.+\.py$", file.name)
+            if match:
+                migration_files.append(file)
+            else:
+                logger.warning(f"跳过不符合命名规范的 Python 文件：{file.name}")
 
         # 按文件名排序（即按版本号排序）
         return sorted(migration_files, key=lambda x: x.name)
@@ -157,12 +170,26 @@ class MigrationExecutor:
             filepath: 迁移文件路径
             version: 版本号
         """
+        # 计算校验和
+        checksum = self._calculate_checksum(filepath.read_text(encoding='utf-8'))
+
+        # 检查是否是 Python 脚本迁移
+        if filepath.suffix == '.py':
+            self._execute_python_migration(conn, filepath, version, checksum)
+        else:
+            self._execute_sql_migration(conn, filepath, version, checksum)
+
+    def _execute_sql_migration(
+        self,
+        conn: sqlite3.Connection,
+        filepath: Path,
+        version: str,
+        checksum: str
+    ):
+        """执行 SQL 迁移文件"""
         # 读取迁移文件内容
         with open(filepath, 'r', encoding='utf-8') as f:
             sql_content = f.read()
-
-        # 计算校验和
-        checksum = self._calculate_checksum(sql_content)
 
         # 执行迁移 SQL
         cursor = conn.cursor()
@@ -172,6 +199,33 @@ class MigrationExecutor:
         self._record_migration(conn, version, filepath.name, checksum)
 
         logger.info(f"执行迁移：{filepath.name} (version: {version})")
+
+    def _execute_python_migration(
+        self,
+        conn: sqlite3.Connection,
+        filepath: Path,
+        version: str,
+        checksum: str
+    ):
+        """执行 Python 脚本迁移"""
+        import importlib.util
+        from config import DB_PATH
+
+        # 加载 Python 模块
+        spec = importlib.util.spec_from_file_location("migration_module", filepath)
+        migration_module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(migration_module)
+
+        # 调用 migrate 函数
+        db_path = str(DB_PATH)
+        success = migration_module.migrate(db_path)
+
+        if success:
+            # 记录迁移执行成功
+            self._record_migration(conn, version, filepath.name, checksum)
+            logger.info(f"执行迁移：{filepath.name} (version: {version})")
+        else:
+            raise MigrationError(f"Python 迁移失败：{filepath.name}")
 
     def migrate(self) -> List[str]:
         """
