@@ -53,6 +53,7 @@
 }
 
 /* 答案元素不受 inline 强制转换影响（保持 inline-block 以支持宽高） */
+/* 注意：不设置 margin，让内联样式或特定答案样式规则控制 */
 .question-stem > .answer-box,
 .question-stem > .answer-line,
 .question-stem > .answer-dashed-box,
@@ -60,7 +61,6 @@
 .question-stem > .answer-parentheses,
 .question-stem > .answer-blank {
   display: inline-block !important;
-  margin: 0 !important;
 }
 
 /* 答案样式特定规则 - 确保内联样式被正确应用 */
