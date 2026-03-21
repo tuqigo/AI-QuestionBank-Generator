@@ -1,5 +1,5 @@
 -- ============================================
--- 迁移 019: 合并 compare_number 生成器到 mixed_addition_subtraction
+-- 迁移 026: 合并 compare_number 生成器到 mixed_addition_subtraction
 -- ============================================
 -- 用途：将使用 compare_number 生成器的模板改为使用 mixed_addition_subtraction
 -- 说明：CompareNumberGenerator 已删除，其功能已合并到 MixedAdditionSubtractionGenerator
