@@ -23,7 +23,3 @@ SET generator_module = 'mixed_addition_subtraction',
         '$.question_complexity', '["compare_simple"]'
     )
 WHERE generator_module = 'compare_number';
-
--- 记录迁移
-INSERT INTO schema_migrations (version, filename, status)
-VALUES ('019', '019_merge_compare_number_generator.sql', 'success');

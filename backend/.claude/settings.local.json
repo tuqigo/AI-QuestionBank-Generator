@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd /d D:projectAI-QuestionBank-Generatorbackend)",
+      "Bash(python -c \"import pandas as pd; df = pd.read_excel\\(''nice.xlsx''\\); print\\(''列名:'', df.columns.tolist\\(\\)\\); print\\(''\\\\n前 10 行数据:''\\); print\\(df.head\\(10\\).to_string\\(\\)\\)\")"
+    ]
+  }
+}

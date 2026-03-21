@@ -60,13 +60,19 @@ def parse_excel_to_templates(excel_file_path: str) -> List[QuestionTemplate]:
         # 获取知识点字段
         knowledge_point_raw = str(row.iloc[4]) if len(row) > 4 and pd.notna(row.iloc[4]) else ''
         name = str(row.iloc[5]) if len(row) > 5 and pd.notna(row.iloc[5]) else ''
-        example = str(row.iloc[6]) if len(row) > 6 and pd.notna(row.iloc[6]) else ''
+        example_raw = str(row.iloc[6]) if len(row) > 6 and pd.notna(row.iloc[6]) else ''
 
         # 固定subject为数学
         subject = "math"
 
+        # 处理换行分隔的多个示例，将字符串拆分为列表
+        if example_raw and '\n' in example_raw:
+            example_list = [ex.strip() for ex in example_raw.split('\n') if ex.strip()]
+        else:
+            example_list = [example_raw.strip()] if example_raw else []
+
         # 检查是否有缺失字段（脏数据）
-        if not all([grade, semester, textbook_version, question_type, name, example]):
+        if not all([grade, semester, textbook_version, question_type, name]) or not example_list:
             print(f"警告: 第 {index + 1} 行存在缺失数据，跳过此行。")
             continue
 
@@ -144,17 +150,17 @@ def parse_excel_to_templates(excel_file_path: str) -> List[QuestionTemplate]:
         # 获取知识点字段
         knowledge_point_raw = str(row.iloc[4]) if len(row) > 4 and pd.notna(row.iloc[4]) else ''
         name = str(row.iloc[5]) if len(row) > 5 and pd.notna(row.iloc[5]) else ''
-        example = str(row.iloc[6]) if len(row) > 6 and pd.notna(row.iloc[6]) else ''
+        example_raw = str(row.iloc[6]) if len(row) > 6 and pd.notna(row.iloc[6]) else ''
 
         # 从示例中推断模板模式和变量配置
-        template_pattern = _extract_template_pattern(example, name)
-        variables_config = _infer_variables_config(example, name)
+        template_pattern = _extract_template_pattern(example_list[0], name)
+        variables_config = _infer_variables_config(example_list[0], name)
 
         # 简单尝试从知识点原始数据中提取ID或匹配现有知识
         knowledge_point_id = _match_knowledge_point_id(knowledge_point_raw, subject, grade_key, semester_key, textbook_version_key)
 
         # 尝试从示例中推断模板模式
-        if not example:
+        if not example_list:
             print(f"警告: 第 {index + 1} 行example '{example}' 不合法，跳过此行。")
             continue
 
@@ -170,7 +176,7 @@ def parse_excel_to_templates(excel_file_path: str) -> List[QuestionTemplate]:
             template_pattern=template_pattern,  # 新增字段
             variables_config=variables_config,  # 新增字段
             knowledge_point_id=knowledge_point_id,  # 新增字段
-            example=example,
+            example=example_list,
             is_active=True
         )
 
