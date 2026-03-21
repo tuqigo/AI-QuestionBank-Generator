@@ -514,6 +514,18 @@ export function getPrintStyles(): string {
       margin: 0 !important;
     }
 
+    /* 答案元素例外：保持 inline-block 以支持宽高和圆圈样式 */
+    .question-stem > .answer-box,
+    .question-stem > .answer-line,
+    .question-stem > .answer-dashed-box,
+    .question-stem > .answer-circle,
+    .question-stem > .answer-parentheses,
+    .question-stem > .answer-blank {
+      display: inline-block !important;
+    }
+
+    /* 圆圈样式在 getPrintStyles 后面单独定义（增加优先级覆盖 .question-stem > *） */
+
     .question-options {
       padding-left: 36px;
     }
@@ -587,6 +599,25 @@ export function getPrintStyles(): string {
       border: 1px solid #000 !important;
       background: #fff !important;
       margin: 0 0.3em !important; /* 左右间距，让数字和圆圈分开 */
+    }
+
+    /* 增加优先级确保.question-stem 内的圆圈也能正确显示 */
+    .question-stem > .answer-circle {
+      display: inline-block !important;
+      border-radius: 50% !important;
+      border: 1px solid #000 !important;
+      background: #fff !important;
+      margin: 0 0.3em !important;
+      width: auto !important;
+      height: auto !important;
+    }
+
+    /* 空格样式（灰色背景） */
+    .question-stem > .answer-blank {
+      display: inline-block !important;
+      background: #f5f5f5 !important;
+      border: none !important;
+      border-radius: 0 !important;
     }
 
     /* 答案区域 */
