@@ -169,7 +169,7 @@ class DecimalArithmeticGenerator(TemplateGenerator):
                     if result_two_decimal_places and len(str(result).split('.')[-1]) > 2:
                         continue
 
-                    stem = f"${format_decimal(decimal_factor)} \\times {factor_int} = [BLANK]$"
+                    stem = f"${format_decimal(decimal_factor)} \\times {factor_int} =$ [BLANK]"
 
                 # ==================== 小数乘小数 ====================
                 elif q_type == "multiply_decimal_decimal":
@@ -182,7 +182,7 @@ class DecimalArithmeticGenerator(TemplateGenerator):
 
                     result = factor1 * factor2
 
-                    stem = f"${format_decimal(factor1)} \\times {format_decimal(factor2)} = [BLANK]$"
+                    stem = f"${format_decimal(factor1)} \\times {format_decimal(factor2)} =$ [BLANK]"
 
                 # ==================== 整数乘法运算定律推广到小数 ====================
                 elif q_type == "multiply_commutative":
@@ -236,7 +236,7 @@ class DecimalArithmeticGenerator(TemplateGenerator):
                     elif decimal_places == 2:
                         dividend = dividend / 100
 
-                    stem = f"${format_decimal(dividend)} \\div {divisor} = [BLANK]$"
+                    stem = f"${format_decimal(dividend)} \\div {divisor} =$ [BLANK]"
 
                 elif q_type == "divide_decimal_int_with_remainder":
                     # 小数除以整数（有余数，保留小数）：5.6 ÷ 2 = [BLANK]
@@ -245,7 +245,7 @@ class DecimalArithmeticGenerator(TemplateGenerator):
 
                     dividend = self._generate_decimal(decimal_places, 1, 50)
 
-                    stem = f"${format_decimal(dividend)} \\div {divisor} = [BLANK]$"
+                    stem = f"${format_decimal(dividend)} \\div {divisor} =$ [BLANK]"
 
                 # ==================== 一个数除以小数 ====================
                 elif q_type == "divide_int_decimal":
@@ -261,7 +261,7 @@ class DecimalArithmeticGenerator(TemplateGenerator):
                     if dividend != int(dividend):
                         dividend = round(dividend, 1)
 
-                    stem = f"${int(dividend) if dividend == int(dividend) else format_decimal(dividend)} \\div {format_decimal(divisor_dec)} = [BLANK]$"
+                    stem = f"${int(dividend) if dividend == int(dividend) else format_decimal(dividend)} \\div {format_decimal(divisor_dec)} =$ [BLANK]"
 
                 elif q_type == "divide_decimal_decimal":
                     # 小数除以小数：3.6 ÷ 0.4 = [BLANK]
@@ -273,7 +273,7 @@ class DecimalArithmeticGenerator(TemplateGenerator):
                     divisor = random.randint(1, 9) / (10 ** decimal_places_divisor)
                     dividend = quotient * divisor
 
-                    stem = f"${format_decimal(dividend)} \\div {format_decimal(divisor)} = [BLANK]$"
+                    stem = f"${format_decimal(dividend)} \\div {format_decimal(divisor)} =$ [BLANK]"
 
                 # ==================== 商的近似值 ====================
                 elif q_type == "approximate_quotient":
@@ -285,14 +285,14 @@ class DecimalArithmeticGenerator(TemplateGenerator):
                     if dividend % divisor == 0:
                         divisor += 1
 
-                    stem = f"${dividend} \\div {divisor} \\approx [BLANK]$（保留{approximate_places}位小数）"
+                    stem = f"${dividend} \\div {divisor} \\approx$ [BLANK]（保留{approximate_places}位小数）"
 
                 elif q_type == "approximate_quotient_real":
                     # 商的近似值应用题：用四舍五入法求近似值
                     dividend = self._generate_decimal(random.randint(1, 2), 10, 100)
                     divisor = random.randint(divisor_min, divisor_max)
 
-                    stem = f"${format_decimal(dividend)} \\div {divisor} \\approx [BLANK]$（保留{approximate_places}位小数）"
+                    stem = f"${format_decimal(dividend)} \\div {divisor} \\approx$ [BLANK]（保留{approximate_places}位小数）"
 
                 # ==================== 循环小数 ====================
                 elif q_type == "repeating_decimal_identify":
@@ -320,7 +320,7 @@ class DecimalArithmeticGenerator(TemplateGenerator):
 
                     numerator, denominator, repeating_part = random.choice(repeating_fractions)
 
-                    stem = f"${numerator} \\div {denominator} = [BLANK]$（用循环小数表示）"
+                    stem = f"${numerator} \\div {denominator} =$ [BLANK]（用循环小数表示）"
 
                 # ==================== 小数乘除混合运算 ====================
                 elif q_type == "multiply_divide_mixed":
@@ -330,7 +330,7 @@ class DecimalArithmeticGenerator(TemplateGenerator):
                     multiplier = random.randint(2, 10)
                     divisor = random.randint(2, 10)
 
-                    stem = f"${format_decimal(factor)} \\times {multiplier} \\div {divisor} = [BLANK]$"
+                    stem = f"${format_decimal(factor)} \\times {multiplier} \\div {divisor} =$ [BLANK]"
 
                 elif q_type == "multiply_multiply":
                     # 小数连乘：0.5 × 2 × 3 = [BLANK]
@@ -339,7 +339,7 @@ class DecimalArithmeticGenerator(TemplateGenerator):
                     factor2 = random.randint(2, 5)
                     factor3 = random.randint(2, 5)
 
-                    stem = f"${format_decimal(factor1)} \\times {factor2} \\times {factor3} = [BLANK]$"
+                    stem = f"${format_decimal(factor1)} \\times {factor2} \\times {factor3} =$ [BLANK]"
 
                 # ==================== 小数比较大小 ====================
                 elif q_type == "compare_multiply_result":
@@ -395,7 +395,7 @@ class DecimalArithmeticGenerator(TemplateGenerator):
                     decimal_places = random.randint(decimal_places_min, decimal_places_max)
                     factor = self._generate_decimal(decimal_places, decimal_factor_min, decimal_factor_max)
                     multiplier = random.randint(2, 10)
-                    stem = f"${format_decimal(factor)} \\times {multiplier} = [BLANK]$"
+                    stem = f"${format_decimal(factor)} \\times {multiplier} =$ [BLANK]"
 
                 if stem in used_stems:
                     continue

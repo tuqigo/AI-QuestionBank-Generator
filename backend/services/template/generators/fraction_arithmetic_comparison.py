@@ -135,7 +135,7 @@ class FractionArithmeticComparisonGenerator(TemplateGenerator):
                     if result_proper_fraction and result_numerator > denominator:
                         continue
 
-                    stem = f"$\\frac{{{numerator1}}}{{{denominator}}} + \\frac{{{numerator2}}}{{{denominator}}} = [BLANK]$"
+                    stem = f"$\\frac{{{numerator1}}}{{{denominator}}} + \\frac{{{numerator2}}}{{{denominator}}} =$ [BLANK]"
 
                 elif q_type == "same_denominator_subtract":
                     # 同分母分数减法：3/5 - 1/5 = [BLANK]
@@ -146,7 +146,7 @@ class FractionArithmeticComparisonGenerator(TemplateGenerator):
                     if ensure_proper_fraction and numerator1 >= denominator:
                         continue
 
-                    stem = f"$\\frac{{{numerator1}}}{{{denominator}}} - \\frac{{{numerator2}}}{{{denominator}}} = [BLANK]$"
+                    stem = f"$\\frac{{{numerator1}}}{{{denominator}}} - \\frac{{{numerator2}}}{{{denominator}}} =$ [BLANK]"
 
                 # ==================== 异分母分数加减法 ====================
                 elif q_type == "different_denominator_add":
@@ -160,7 +160,7 @@ class FractionArithmeticComparisonGenerator(TemplateGenerator):
                     numerator1 = random.randint(numerator_min, denominator1 - 1 if ensure_proper_fraction else denominator1)
                     numerator2 = random.randint(numerator_min, denominator2 - 1 if ensure_proper_fraction else denominator2)
 
-                    stem = f"$\\frac{{{numerator1}}}{{{denominator1}}} + \\frac{{{numerator2}}}{{{denominator2}}} = [BLANK]$"
+                    stem = f"$\\frac{{{numerator1}}}{{{denominator1}}} + \\frac{{{numerator2}}}{{{denominator2}}} =$ [BLANK]"
 
                 elif q_type == "different_denominator_subtract":
                     # 异分母分数减法：3/4 - 1/3 = [BLANK]
@@ -177,7 +177,7 @@ class FractionArithmeticComparisonGenerator(TemplateGenerator):
                     if numerator1 * denominator2 <= numerator2 * denominator1:
                         continue
 
-                    stem = f"$\\frac{{{numerator1}}}{{{denominator1}}} - \\frac{{{numerator2}}}{{{denominator2}}} = [BLANK]$"
+                    stem = f"$\\frac{{{numerator1}}}{{{denominator1}}} - \\frac{{{numerator2}}}{{{denominator2}}} =$ [BLANK]"
 
                 # ==================== 分数乘法 ====================
                 elif q_type == "multiply_fraction_int":
@@ -186,7 +186,7 @@ class FractionArithmeticComparisonGenerator(TemplateGenerator):
                     numerator = random.randint(numerator_min, denominator if ensure_proper_fraction else denominator * 2)
                     multiplier = random.randint(2, 9)
 
-                    stem = f"$\\frac{{{numerator}}}{{{denominator}}} \\times {multiplier} = [BLANK]$"
+                    stem = f"$\\frac{{{numerator}}}{{{denominator}}} \\times {multiplier} =$ [BLANK]"
 
                 elif q_type == "multiply_fraction_fraction":
                     # 分数乘分数：1/2 × 2/3 = [BLANK]
@@ -195,7 +195,7 @@ class FractionArithmeticComparisonGenerator(TemplateGenerator):
                     denominator2 = random.randint(denominator_min, denominator_max)
                     numerator2 = random.randint(numerator_min, denominator2 if ensure_proper_fraction else denominator2)
 
-                    stem = f"$\\frac{{{numerator1}}}{{{denominator1}}} \\times \\frac{{{numerator2}}}{{{denominator2}}} = [BLANK]$"
+                    stem = f"$\\frac{{{numerator1}}}{{{denominator1}}} \\times \\frac{{{numerator2}}}{{{denominator2}}} =$ [BLANK]"
 
                 elif q_type == "multiply_mixed":
                     # 带分数乘法：1 1/2 × 2/3 = [BLANK]
@@ -205,7 +205,7 @@ class FractionArithmeticComparisonGenerator(TemplateGenerator):
                     multiplier_num = random.randint(2, 5)
                     multiplier_den = random.randint(2, 5)
 
-                    stem = f"${whole}\\frac{{{numerator}}}{{{denominator}}} \\times \\frac{{{multiplier_num}}}{{{multiplier_den}}} = [BLANK]$"
+                    stem = f"${whole}\\frac{{{numerator}}}{{{denominator}}} \\times \\frac{{{multiplier_num}}}{{{multiplier_den}}} =$ [BLANK]"
 
                 # ==================== 分数除法 ====================
                 elif q_type == "divide_fraction_int":
@@ -214,7 +214,7 @@ class FractionArithmeticComparisonGenerator(TemplateGenerator):
                     numerator = random.randint(numerator_min, denominator if ensure_proper_fraction else denominator)
                     divisor = random.randint(2, 9)
 
-                    stem = f"$\\frac{{{numerator}}}{{{denominator}}} \\div {divisor} = [BLANK]$"
+                    stem = f"$\\frac{{{numerator}}}{{{denominator}}} \\div {divisor} =$ [BLANK]"
 
                 elif q_type == "divide_fraction_fraction":
                     # 分数除分数：1/2 ÷ 1/4 = [BLANK]
@@ -226,7 +226,7 @@ class FractionArithmeticComparisonGenerator(TemplateGenerator):
                     if numerator2 == 0:
                         continue
 
-                    stem = f"$\\frac{{{numerator1}}}{{{denominator1}}} \\div \\frac{{{numerator2}}}{{{denominator2}}} = [BLANK]$"
+                    stem = f"$\\frac{{{numerator1}}}{{{denominator1}}} \\div \\frac{{{numerator2}}}{{{denominator2}}} =$ [BLANK]"
 
                 elif q_type == "divide_mixed":
                     # 带分数除法：1 1/2 ÷ 1/2 = [BLANK]
@@ -236,7 +236,7 @@ class FractionArithmeticComparisonGenerator(TemplateGenerator):
                     divisor_num = random.randint(1, 3)
                     divisor_den = random.randint(2, 5)
 
-                    stem = f"${whole}\\frac{{{numerator}}}{{{denominator}}} \\div \\frac{{{divisor_num}}}{{{divisor_den}}} = [BLANK]$"
+                    stem = f"${whole}\\frac{{{numerator}}}{{{denominator}}} \\div \\frac{{{divisor_num}}}{{{divisor_den}}} =$ [BLANK]"
 
                 # ==================== 分数加减混合 ====================
                 elif q_type == "mixed_add_subtract":
@@ -252,7 +252,7 @@ class FractionArithmeticComparisonGenerator(TemplateGenerator):
                     op1 = random.choice(["+", "-"])
                     op2 = random.choice(["+", "-"])
 
-                    stem = f"$\\frac{{{numerator1}}}{{{denominator1}}} {op1} \\frac{{{numerator2}}}{{{denominator2}}} {op2} \\frac{{{numerator3}}}{{{denominator3}}} = [BLANK]$"
+                    stem = f"$\\frac{{{numerator1}}}{{{denominator1}}} {op1} \\frac{{{numerator2}}}{{{denominator2}}} {op2} \\frac{{{numerator3}}}{{{denominator3}}} =$ [BLANK]"
 
                 # ==================== 分数乘除混合 ====================
                 elif q_type == "multiply_divide_mixed":
@@ -264,7 +264,7 @@ class FractionArithmeticComparisonGenerator(TemplateGenerator):
                     denominator3 = random.randint(denominator_min, denominator_max)
                     numerator3 = random.randint(1, denominator3 if ensure_proper_fraction else denominator3)
 
-                    stem = f"$\\frac{{{numerator1}}}{{{denominator1}}} \\times \\frac{{{numerator2}}}{{{denominator2}}} \\div \\frac{{{numerator3}}}{{{denominator3}}} = [BLANK]$"
+                    stem = f"$\\frac{{{numerator1}}}{{{denominator1}}} \\times \\frac{{{numerator2}}}{{{denominator2}}} \\div \\frac{{{numerator3}}}{{{denominator3}}} =$ [BLANK]"
 
                 # ==================== 分数乘加/乘减混合 ====================
                 elif q_type == "multiply_add":
@@ -275,7 +275,7 @@ class FractionArithmeticComparisonGenerator(TemplateGenerator):
                     denominator2 = random.randint(denominator_min, denominator_max)
                     numerator2 = random.randint(numerator_min, denominator2 - 1 if ensure_proper_fraction else denominator2)
 
-                    stem = f"$\\frac{{{numerator1}}}{{{denominator1}}} \\times {multiplier} + \\frac{{{numerator2}}}{{{denominator2}}} = [BLANK]$"
+                    stem = f"$\\frac{{{numerator1}}}{{{denominator1}}} \\times {multiplier} + \\frac{{{numerator2}}}{{{denominator2}}} =$ [BLANK]"
 
                 elif q_type == "multiply_subtract":
                     # 分数乘减：3/4 × 2 - 1/2 = [BLANK]
@@ -290,7 +290,7 @@ class FractionArithmeticComparisonGenerator(TemplateGenerator):
                     if result_num <= 0:
                         continue
 
-                    stem = f"$\\frac{{{numerator1}}}{{{denominator1}}} \\times {multiplier} - \\frac{{{numerator2}}}{{{denominator2}}} = [BLANK]$"
+                    stem = f"$\\frac{{{numerator1}}}{{{denominator1}}} \\times {multiplier} - \\frac{{{numerator2}}}{{{denominator2}}} =$ [BLANK]"
 
                 elif q_type == "divide_add":
                     # 分数除加：3/4 ÷ 2 + 1/8 = [BLANK]
@@ -300,7 +300,7 @@ class FractionArithmeticComparisonGenerator(TemplateGenerator):
                     denominator2 = random.randint(denominator_min, denominator_max)
                     numerator2 = random.randint(numerator_min, denominator2 - 1 if ensure_proper_fraction else denominator2)
 
-                    stem = f"$\\frac{{{numerator1}}}{{{denominator1}}} \\div {divisor} + \\frac{{{numerator2}}}{{{denominator2}}} = [BLANK]$"
+                    stem = f"$\\frac{{{numerator1}}}{{{denominator1}}} \\div {divisor} + \\frac{{{numerator2}}}{{{denominator2}}} =$ [BLANK]"
 
                 elif q_type == "divide_subtract":
                     # 分数除减：3/4 ÷ 2 - 1/8 = [BLANK]
@@ -315,7 +315,7 @@ class FractionArithmeticComparisonGenerator(TemplateGenerator):
                     if result_num <= 0:
                         continue
 
-                    stem = f"$\\frac{{{numerator1}}}{{{denominator1}}} \\div {divisor} - \\frac{{{numerator2}}}{{{denominator2}}} = [BLANK]$"
+                    stem = f"$\\frac{{{numerator1}}}{{{denominator1}}} \\div {divisor} - \\frac{{{numerator2}}}{{{denominator2}}} =$ [BLANK]"
 
                 # ==================== 分数比大小 ====================
                 elif q_type == "compare_same_denominator":
@@ -499,7 +499,7 @@ class FractionArithmeticComparisonGenerator(TemplateGenerator):
                     numerator1 = random.randint(numerator_min, denominator1 - 1)
                     numerator2 = random.randint(numerator_min, denominator2 - 1)
 
-                    stem = f"${whole1}\\frac{{{numerator1}}}{{{denominator1}}} + {whole2}\\frac{{{numerator2}}}{{{denominator2}}} = [BLANK]$"
+                    stem = f"${whole1}\\frac{{{numerator1}}}{{{denominator1}}} + {whole2}\\frac{{{numerator2}}}{{{denominator2}}} =$ [BLANK]"
 
                 elif q_type == "mixed_number_subtract":
                     # 带分数减法：3 3/4 - 1 1/2 = [BLANK]
@@ -510,14 +510,14 @@ class FractionArithmeticComparisonGenerator(TemplateGenerator):
                     numerator1 = random.randint(numerator_min, denominator1 - 1)
                     numerator2 = random.randint(numerator_min, denominator2 - 1)
 
-                    stem = f"${whole1}\\frac{{{numerator1}}}{{{denominator1}}} - {whole2}\\frac{{{numerator2}}}{{{denominator2}}} = [BLANK]$"
+                    stem = f"${whole1}\\frac{{{numerator1}}}{{{denominator1}}} - {whole2}\\frac{{{numerator2}}}{{{denominator2}}} =$ [BLANK]"
 
                 else:
                     # 默认：同分母分数加法
                     denominator = random.randint(denominator_min, denominator_max)
                     numerator1 = random.randint(numerator_min, denominator - 1)
                     numerator2 = random.randint(numerator_min, denominator - 1)
-                    stem = f"$\\frac{{{numerator1}}}{{{denominator}}} + \\frac{{{numerator2}}}{{{denominator}}} = [BLANK]$"
+                    stem = f"$\\frac{{{numerator1}}}{{{denominator}}} + \\frac{{{numerator2}}}{{{denominator}}} =$ [BLANK]"
 
                 if stem in used_stems:
                     continue
