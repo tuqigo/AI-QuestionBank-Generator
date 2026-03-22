@@ -128,8 +128,7 @@ def parse_excel_to_templates(excel_file_path: str) -> List[QuestionTemplate]:
             if question_type == v or k == question_type:
                 question_type_key = k
                 break
-
-        # 如果没找到完全匹配，尝试模糊匹配
+                # 如果没找到完全匹配，尝试模糊匹配
         if not question_type_key:
             # 根据关键词判断题型
             if "计算" in question_type or "口算" in question_type or "算式" in question_type:
@@ -142,7 +141,6 @@ def parse_excel_to_templates(excel_file_path: str) -> List[QuestionTemplate]:
                 question_type_key = "WORD_PROBLEM"
             elif "口算" in question_type:
                 question_type_key = "ORAL_CALCULATION"
-
         if not question_type_key:
             print(f"警告: 第 {index + 1} 行题型 '{question_type}' 不合法，跳过此行。")
             continue
@@ -152,16 +150,12 @@ def parse_excel_to_templates(excel_file_path: str) -> List[QuestionTemplate]:
         name = str(row.iloc[5]) if len(row) > 5 and pd.notna(row.iloc[5]) else ''
         example_raw = str(row.iloc[6]) if len(row) > 6 and pd.notna(row.iloc[6]) else ''
 
-        # 从示例中推断模板模式和变量配置
-        template_pattern = _extract_template_pattern(example_list[0], name)
-        variables_config = _infer_variables_config(example_list[0], name)
-
         # 简单尝试从知识点原始数据中提取ID或匹配现有知识
         knowledge_point_id = _match_knowledge_point_id(knowledge_point_raw, subject, grade_key, semester_key, textbook_version_key)
 
         # 尝试从示例中推断模板模式
         if not example_list:
-            print(f"警告: 第 {index + 1} 行example '{example}' 不合法，跳过此行。")
+            print(f"警告: 第 {index + 1} 行example '{example_raw}' 不合法，跳过此行。")
             continue
 
         # 构造模板对象
@@ -173,105 +167,13 @@ def parse_excel_to_templates(excel_file_path: str) -> List[QuestionTemplate]:
             semester=semester_key,  # 使用标准键值
             textbook_version=textbook_version_key,  # 使用标准键值
             question_type=question_type_key,  # 使用标准键值
-            template_pattern=template_pattern,  # 新增字段
-            variables_config=variables_config,  # 新增字段
-            knowledge_point_id=knowledge_point_id,  # 新增字段
             example=example_list,
-            is_active=True
+            is_active=False
         )
 
         templates.append(template)
 
     return templates
-
-
-def _extract_template_pattern(example: str, name: str) -> str:
-    """
-    从示例或名称中提取模板模式
-    """
-    if pd.isna(example) or example == '':
-        # 如果没有示例，从名称中提取或创建基本模式
-        if '比大小' in name or '比较' in name:
-            return '{a} ○ {b}'
-        elif '加减' in name or '计算' in name:
-            return '{a} {op} {b} = '
-        else:
-            return '{question}'
-    else:
-        # 从示例中提取模式，替换具体的数值为变量占位符
-        example_str = str(example)
-        # 简单处理：保留特殊符号，但把数字替换成变量
-        # 这里只是基础处理，真实场景中可能需要更复杂的逻辑
-        if '\\bigcirc' in example_str:
-            return example_str.replace('\\bigcirc', '○')  # 替换圈圈符号
-        elif '=' in example_str:
-            # 移除示例末尾的等号，替换为填空格式
-            if example_str.endswith('='):
-                return example_str[:-1].strip() + ' = （ ）'
-            else:
-                return example_str.split('=')[0].strip() + ' = （ ）'  # 添加填空标记
-        else:
-            return example_str
-
-
-def _infer_variables_config(example: str, name: str) -> dict:
-    """
-    从示例或名称中推断变量配置
-    """
-    # 默认变量配置
-    config = {
-        "rules": ["ensure_positive"]
-    }
-
-    # 根据示例内容推断变量类型和范围
-    if pd.isna(example) or example == '':
-        # 如果没有示例，从名称中推断
-        if '比大小' in name or '比较' in name:
-            config.update({
-                "a": {"min": 1, "max": 10},
-                "b": {"min": 1, "max": 10}
-            })
-        elif '加减' in name or '计算' in name:
-            config.update({
-                "a": {"min": 1, "max": 20},
-                "b": {"min": 1, "max": 20},
-                "op": {"values": ["+", "-"]}
-            })
-        else:
-            config.update({
-                "num": {"min": 1, "max": 10}
-            })
-    else:
-        example_str = str(example)
-        # 如果示例中有特定字符，则设置相应的变量配置
-        if '+' in example_str or '-' in example_str:
-            # 加减法题目
-            config.update({
-                "a": {"min": 1, "max": 20},
-                "b": {"min": 1, "max": 20},
-                "op": {"values": ["+", "-"]}
-            })
-        elif '○' in example_str or '○' in example_str:
-            # 比大小题目
-            config.update({
-                "a": {"min": 1, "max": 10},
-                "b": {"min": 1, "max": 10}
-            })
-        elif '=' in example_str:
-            # 计算题
-            config.update({
-                "a": {"min": 1, "max": 20},
-                "b": {"min": 1, "max": 20},
-                "op": {"values": ["+", "-", "*", "/"]}
-            })
-        else:
-            # 默认配置
-            config.update({
-                "num": {"min": 1, "max": 10}
-            })
-
-    return config
-
 
 def _match_knowledge_point_id(knowledge_point_raw: str, subject: str, grade: str, semester: str, textbook_version: str) -> Optional[int]:
     """
@@ -300,9 +202,8 @@ def print_templates_summary(templates: List[QuestionTemplate]):
             print(f"学期: {repr(template.semester)}")
             print(f"教材版本: {repr(template.textbook_version)}")
             print(f"题型: {repr(template.question_type)}")
-            print(f"模板模式: {repr(template.template_pattern)}")  # 修改为 template_pattern 而不是 example
-            print(f"变量配置: {template.variables_config}")
             print(f"知识点ID: {template.knowledge_point_id}")
+            print(f"例题: {template.example}")
 
         if len(templates) > 10:
             print(f"\n... 还有 {len(templates) - 10} 个模板未显示")
