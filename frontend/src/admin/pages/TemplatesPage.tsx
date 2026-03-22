@@ -54,7 +54,7 @@ export default function TemplatesPage() {
     description: '',
     knowledge_point_id: null,
     sort_order: 0,
-    is_active: true,
+    is_active: false,
     generator_module: '',
   })
 
@@ -628,17 +628,6 @@ export default function TemplatesPage() {
             >
               ＋ 添加示例
             </button>
-          </div>
-
-          <div className="form-group checkbox-group">
-            <label>
-              <input
-                type="checkbox"
-                checked={formData.is_active}
-                onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-              />
-              启用
-            </label>
           </div>
         </div>
       )

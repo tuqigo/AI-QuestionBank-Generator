@@ -165,7 +165,7 @@ export interface KnowledgePointUpdate {
  * 获取学科列表
  */
 export async function getSubjects(active_only: boolean = true): Promise<Subject[]> {
-  const response = await fetch(`${API_BASE}/subjects${active_only ? '?active_only=true' : ''}`)
+  const response = await fetch(`${API_BASE}/subjects?active_only=${active_only}`)
   if (!response.ok) {
     throw new Error('获取学科列表失败')
   }
@@ -225,7 +225,7 @@ export async function deleteSubject(id: number): Promise<void> {
  * 获取年级列表
  */
 export async function getGrades(active_only: boolean = true): Promise<Grade[]> {
-  const response = await fetch(`${API_BASE}/grades${active_only ? '?active_only=true' : ''}`)
+  const response = await fetch(`${API_BASE}/grades?active_only=${active_only}`)
   if (!response.ok) {
     throw new Error('获取年级列表失败')
   }
@@ -285,7 +285,7 @@ export async function deleteGrade(id: number): Promise<void> {
  * 获取学期列表
  */
 export async function getSemesters(active_only: boolean = true): Promise<Semester[]> {
-  const response = await fetch(`${API_BASE}/semesters${active_only ? '?active_only=true' : ''}`)
+  const response = await fetch(`${API_BASE}/semesters?active_only=${active_only}`)
   if (!response.ok) {
     throw new Error('获取学期列表失败')
   }
@@ -345,7 +345,7 @@ export async function deleteSemester(id: number): Promise<void> {
  * 获取教材版本列表
  */
 export async function getTextbookVersions(active_only: boolean = true): Promise<TextbookVersion[]> {
-  const response = await fetch(`${API_BASE}/textbook-versions${active_only ? '?active_only=true' : ''}`)
+  const response = await fetch(`${API_BASE}/textbook-versions?active_only=${active_only}`)
   if (!response.ok) {
     throw new Error('获取教材版本列表失败')
   }
@@ -409,11 +409,14 @@ export async function getKnowledgePoints(params?: {
   grade_code?: string
   semester_code?: string
   textbook_version_code?: string
+  active_only?: boolean
 }): Promise<KnowledgePoint[]> {
   const searchParams = new URLSearchParams()
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
-      if (value) searchParams.set(key, value)
+      if (value !== undefined && value !== null) {
+        searchParams.set(key, String(value))
+      }
     })
   }
   const response = await fetch(`${API_BASE}/knowledge-points?${searchParams}`)
@@ -504,8 +507,9 @@ export interface QuestionTypeUpdate {
  */
 export async function getQuestionTypes(active_only: boolean = true, subject?: string): Promise<QuestionType[]> {
   const searchParams = new URLSearchParams()
+  searchParams.set('active_only', String(active_only))
   if (subject) searchParams.set('subject', subject)
-  const response = await fetch(`${API_BASE}/question-types?active_only=${active_only}${subject ? `&subject=${subject}` : ''}`)
+  const response = await fetch(`${API_BASE}/question-types?${searchParams}`)
   if (!response.ok) {
     throw new Error('获取题型列表失败')
   }

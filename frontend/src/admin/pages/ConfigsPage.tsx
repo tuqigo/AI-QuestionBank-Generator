@@ -82,7 +82,7 @@ export default function ConfigsPage() {
           setTextbookVersions(await getTextbookVersions(false))
           break
         case 'knowledge':
-          setKnowledgePoints(await getKnowledgePoints())
+          setKnowledgePoints(await getKnowledgePoints({ active_only: false }))
           break
         case 'questionType':
           setQuestionTypes(await getQuestionTypes(false))
