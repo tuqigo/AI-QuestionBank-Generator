@@ -1,3 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const window: Window & typeof globalThis & { toast?: any }
+
 import React, { useState, useEffect } from 'react'
 import {
   getAllTemplates,
@@ -70,8 +73,6 @@ export default function TemplatesPage() {
   const [generatorModules, setGeneratorModules] = useState<ConfigOption[]>([])
   // 知识点选项（从现有模板中提取）
   const [knowledgePointIds, setKnowledgePointIds] = useState<number[]>([])
-  // 筛选状态
-  const [filterKnowledgePointId, setFilterKnowledgePointId] = useState<number | ''>('')
   // 动态知识点选项（根据已选择的学科/年级/学期/教材版本加载）
   const [availableKnowledgePoints, setAvailableKnowledgePoints] = useState<KnowledgePointOption[]>([])
   // 缓存的知识点数据（用于显示）
@@ -121,7 +122,7 @@ export default function TemplatesPage() {
       setGeneratorModules(configs.generator_modules)
     } catch (error) {
       console.error('加载配置失败:', error)
-      alert('加载配置失败')
+      window.toast.error('加载配置失败')
     }
   }
 
@@ -129,7 +130,9 @@ export default function TemplatesPage() {
     setLoading(true)
     try {
       const result = await getAllTemplates()
-      setTemplates(result.templates)
+      // 按 ID 降序排序
+      const sortedTemplates = result.templates.sort((a, b) => b.id - a.id)
+      setTemplates(sortedTemplates)
 
       // 提取所有唯一的知识点选项并加载知识点名称
       const kpIds = Array.from(new Set(result.templates.map(t => t.knowledge_point_id).filter(Boolean) as number[]))
@@ -144,7 +147,7 @@ export default function TemplatesPage() {
       }
     } catch (error) {
       console.error('加载模板列表失败:', error)
-      alert('加载模板列表失败')
+      window.toast.error('加载模板列表失败')
     } finally {
       setLoading(false)
     }
@@ -176,7 +179,7 @@ export default function TemplatesPage() {
       subject: 'math',
       grade: 'grade1',
       semester: 'upper',
-      textbook_version: 'rjb_2024',  // 默认使用 2024 新版人教版
+      textbook_version: 'rjb',  // 默认使用人教版
       question_type: 'CALCULATION',
       template_pattern: '',
       variables_config: '{}',
@@ -185,7 +188,7 @@ export default function TemplatesPage() {
       description: '',
       knowledge_point_id: null,
       sort_order: 0,
-      is_active: true,
+      is_active: false,  // 默认未启用
       generator_module: '',
     })
     setExampleRows([''])  // 初始化一个空行
@@ -256,7 +259,7 @@ export default function TemplatesPage() {
   const handleSave = async () => {
     // 验证必填字段
     if (!formData.name?.trim()) {
-      alert('请输入模板名称')
+      window.toast.error('请输入模板名称')
       return
     }
 
@@ -265,7 +268,7 @@ export default function TemplatesPage() {
       try {
         variablesConfig = JSON.parse(formData.variables_config || '{}')
       } catch {
-        alert('变量配置必须是有效的 JSON 格式')
+        window.toast.error('变量配置必须是有效的 JSON 格式')
         return
       }
 
@@ -275,7 +278,7 @@ export default function TemplatesPage() {
         try {
           renderingConfig = JSON.parse(formData.rendering_config)
         } catch {
-          alert('渲染配置必须是有效的 JSON 格式')
+          window.toast.error('渲染配置必须是有效的 JSON 格式')
           return
         }
       }
@@ -295,7 +298,7 @@ export default function TemplatesPage() {
           example: exampleArray.length > 0 ? JSON.stringify(exampleArray) : undefined,
           description: formData.description || undefined,
         })
-        alert('创建成功')
+        window.toast.success('创建成功')
       } else if (modalMode === 'edit' && currentTemplate) {
         await updateTemplate(currentTemplate.id, {
           name: formData.name,
@@ -313,13 +316,13 @@ export default function TemplatesPage() {
           question_type: formData.question_type,
           generator_module: formData.generator_module,
         })
-        alert('更新成功')
+        window.toast.success('更新成功')
       }
       handleCloseModal()
       loadTemplates()
     } catch (error) {
       console.error('保存失败:', error)
-      alert(`保存失败：${error instanceof Error ? error.message : '未知错误'}`)
+      window.toast.error(`保存失败：${error instanceof Error ? error.message : '未知错误'}`)
     }
   }
 
@@ -331,7 +334,7 @@ export default function TemplatesPage() {
       setTestResult(result.questions)
     } catch (error) {
       console.error('测试失败:', error)
-      alert(`测试失败：${error instanceof Error ? error.message : '未知错误'}`)
+      window.toast.error(`测试失败：${error instanceof Error ? error.message : '未知错误'}`)
     }
   }
 
@@ -341,7 +344,7 @@ export default function TemplatesPage() {
       loadTemplates()
     } catch (error) {
       console.error('切换状态失败:', error)
-      alert('切换状态失败')
+      window.toast.error('切换状态失败')
     }
   }
 
@@ -353,7 +356,7 @@ export default function TemplatesPage() {
       loadTemplates()
     } catch (error) {
       console.error('删除失败:', error)
-      alert('删除失败')
+      window.toast.error('删除失败')
     }
   }
 
@@ -415,40 +418,6 @@ export default function TemplatesPage() {
 
           <div className="form-row">
             <div className="form-group">
-              <label>知识点</label>
-              <select
-                value={formData.knowledge_point_id || ''}
-                onChange={(e) => setFormData({ ...formData, knowledge_point_id: e.target.value ? Number(e.target.value) : null })}
-                disabled={availableKnowledgePoints.length === 0}
-              >
-                <option value="">请选择</option>
-                {availableKnowledgePoints.map(kp => (
-                  <option key={kp.id} value={kp.id}>{kp.name}</option>
-                ))}
-              </select>
-              {availableKnowledgePoints.length === 0 && (
-                <span className="form-hint">请先选择学科、年级、学期和教材版本</span>
-              )}
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
-              <label>生成器模块</label>
-              <select
-                value={formData.generator_module}
-                onChange={(e) => setFormData({ ...formData, generator_module: e.target.value })}
-              >
-                <option value="">请选择</option>
-                {generatorModules.map(m => (
-                  <option key={m.value} value={m.value}>{m.label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          <div className="form-row">
-            <div className="form-group">
               <label>学科 *</label>
               <select
                 value={formData.subject}
@@ -492,6 +461,40 @@ export default function TemplatesPage() {
               >
                 {textbookVersions.map(v => (
                   <option key={v.id} value={v.id}>{v.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>知识点</label>
+              <select
+                value={formData.knowledge_point_id || ''}
+                onChange={(e) => setFormData({ ...formData, knowledge_point_id: e.target.value ? Number(e.target.value) : null })}
+                disabled={availableKnowledgePoints.length === 0}
+              >
+                <option value="">请选择</option>
+                {availableKnowledgePoints.map(kp => (
+                  <option key={kp.id} value={kp.id}>{kp.name}</option>
+                ))}
+              </select>
+              {availableKnowledgePoints.length === 0 && (
+                <span className="form-hint">当前筛选条件下暂无知识点，请先配置知识点或调整学科/年级/学期/教材版本</span>
+              )}
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label>生成器模块</label>
+              <select
+                value={formData.generator_module}
+                onChange={(e) => setFormData({ ...formData, generator_module: e.target.value })}
+              >
+                <option value="">请选择</option>
+                {generatorModules.map(m => (
+                  <option key={m.value} value={m.value}>{m.label}</option>
                 ))}
               </select>
             </div>
@@ -775,18 +778,6 @@ export default function TemplatesPage() {
           <div className="page-stats">
             共 <span>{templates.length}</span> 个模板
           </div>
-          <div className="filter-group">
-            <label>知识点：</label>
-            <select
-              value={filterKnowledgePointId}
-              onChange={(e) => setFilterKnowledgePointId(e.target.value ? Number(e.target.value) : '')}
-            >
-              <option value="">全部</option>
-              {Array.from(knowledgePointsMap.entries()).map(([id, name]) => (
-                <option key={id} value={id}>{name}</option>
-              ))}
-            </select>
-          </div>
           <button className="admin-btn admin-btn-primary" onClick={openCreateModal}>
             + 添加模板
           </button>
@@ -820,7 +811,7 @@ export default function TemplatesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(filterKnowledgePointId ? templates.filter(t => t.knowledge_point_id === filterKnowledgePointId) : templates).map((template) => (
+                  {templates.map((template) => (
                     <tr key={template.id}>
                       <td>#{template.id}</td>
                       <td className="template-name">{template.name}</td>

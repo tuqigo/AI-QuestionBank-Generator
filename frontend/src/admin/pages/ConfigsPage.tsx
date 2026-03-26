@@ -12,22 +12,16 @@ import {
   getQuestionTypes,
   createSubject,
   updateSubject,
-  deleteSubject,
   createGrade,
   updateGrade,
-  deleteGrade,
   createSemester,
   updateSemester,
-  deleteSemester,
   createTextbookVersion,
   updateTextbookVersion,
-  deleteTextbookVersion,
   createKnowledgePoint,
   updateKnowledgePoint,
-  deleteKnowledgePoint,
   createQuestionType,
   updateQuestionType,
-  deleteQuestionType,
   type Subject,
   type Grade,
   type Semester,
@@ -38,6 +32,9 @@ import {
   type QuestionTypeUpdate,
 } from '@/api/config'
 import './ConfigsPage.css'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const window: Window & typeof globalThis & { toast?: any }
 
 type ConfigTab = 'subject' | 'grade' | 'semester' | 'textbook' | 'knowledge' | 'questionType'
 
@@ -53,6 +50,12 @@ export default function ConfigsPage() {
   const [knowledgePoints, setKnowledgePoints] = useState<KnowledgePoint[]>([])
   const [questionTypes, setQuestionTypes] = useState<QuestionType[]>([])
 
+  // 下拉框选项数据
+  const [subjectOptions, setSubjectOptions] = useState<Subject[]>([])
+  const [gradeOptions, setGradeOptions] = useState<Grade[]>([])
+  const [semesterOptions, setSemesterOptions] = useState<Semester[]>([])
+  const [textbookOptions, setTextbookOptions] = useState<TextbookVersion[]>([])
+
   // 弹窗状态
   const [modalVisible, setModalVisible] = useState(false)
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create')
@@ -63,6 +66,7 @@ export default function ConfigsPage() {
 
   useEffect(() => {
     loadConfigData()
+    loadDropdownOptions()
   }, [activeTab])
 
   const loadConfigData = async () => {
@@ -70,29 +74,40 @@ export default function ConfigsPage() {
     try {
       switch (activeTab) {
         case 'subject':
-          setSubjects(await getSubjects(false))
+          setSubjects((await getSubjects(false)).sort((a, b) => b.id - a.id))
           break
         case 'grade':
-          setGrades(await getGrades(false))
+          setGrades((await getGrades(false)).sort((a, b) => b.id - a.id))
           break
         case 'semester':
-          setSemesters(await getSemesters(false))
+          setSemesters((await getSemesters(false)).sort((a, b) => b.id - a.id))
           break
         case 'textbook':
-          setTextbookVersions(await getTextbookVersions(false))
+          setTextbookVersions((await getTextbookVersions(false)).sort((a, b) => b.id - a.id))
           break
         case 'knowledge':
-          setKnowledgePoints(await getKnowledgePoints({ active_only: false }))
+          setKnowledgePoints((await getKnowledgePoints({ active_only: false })).sort((a, b) => b.id - a.id))
           break
         case 'questionType':
-          setQuestionTypes(await getQuestionTypes(false))
+          setQuestionTypes((await getQuestionTypes(false)).sort((a, b) => b.id - a.id))
           break
       }
     } catch (error) {
       console.error('加载配置数据失败:', error)
-      alert('加载配置数据失败')
+      window.toast.error('加载配置数据失败')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadDropdownOptions = async () => {
+    try {
+      setSubjectOptions(await getSubjects(true))
+      setGradeOptions(await getGrades(true))
+      setSemesterOptions(await getSemesters(true))
+      setTextbookOptions(await getTextbookVersions(true))
+    } catch (error) {
+      console.error('加载下拉框数据失败:', error)
     }
   }
 
@@ -127,10 +142,10 @@ export default function ConfigsPage() {
         return { version_code: '', name_zh: '', sort_order: 0 }
       case 'knowledge':
         return {
-          subject_code: 'math',
-          grade_code: 'grade1',
-          semester_code: 'upper',
-          textbook_version_code: 'rjb',
+          subject_code: subjectOptions.length > 0 ? subjectOptions[0].code : 'math',
+          grade_code: gradeOptions.length > 0 ? gradeOptions[0].code : 'grade1',
+          semester_code: semesterOptions.length > 0 ? semesterOptions[0].code : 'upper',
+          textbook_version_code: textbookOptions.length > 0 ? textbookOptions[0].version_code : 'rjb',
           name: '',
           sort_order: 0,
         }
@@ -210,6 +225,10 @@ export default function ConfigsPage() {
         } else {
           await updateKnowledgePoint((currentItem as KnowledgePoint).id, {
             name: formData.name,
+            subject_code: formData.subject_code,
+            grade_code: formData.grade_code,
+            semester_code: formData.semester_code,
+            textbook_version_code: formData.textbook_version_code,
             sort_order: formData.sort_order || 0,
             is_active: formData.is_active,
           })
@@ -231,44 +250,12 @@ export default function ConfigsPage() {
           } as QuestionTypeUpdate)
         }
       }
-      alert('保存成功')
+      window.toast.success('保存成功')
       handleCloseModal()
       loadConfigData()
     } catch (error) {
       console.error('保存失败:', error)
-      alert(`保存失败：${error instanceof Error ? error.message : '未知错误'}`)
-    }
-  }
-
-  const handleDelete = async (id: number) => {
-    if (!confirm('确定要删除吗？此操作不可恢复！')) return
-
-    try {
-      switch (activeTab) {
-        case 'subject':
-          await deleteSubject(id)
-          break
-        case 'grade':
-          await deleteGrade(id)
-          break
-        case 'semester':
-          await deleteSemester(id)
-          break
-        case 'textbook':
-          await deleteTextbookVersion(id)
-          break
-        case 'knowledge':
-          await deleteKnowledgePoint(id)
-          break
-        case 'questionType':
-          await deleteQuestionType(id)
-          break
-      }
-      alert('删除成功')
-      loadConfigData()
-    } catch (error) {
-      console.error('删除失败:', error)
-      alert('删除失败')
+      window.toast.error(`保存失败：${error instanceof Error ? error.message : '未知错误'}`)
     }
   }
 
@@ -298,8 +285,25 @@ export default function ConfigsPage() {
       loadConfigData()
     } catch (error) {
       console.error('切换状态失败:', error)
-      alert('切换状态失败')
+      window.toast.error('切换状态失败')
     }
+  }
+
+  // 辅助函数：根据代码获取名称
+  const getSubjectLabel = (code: string) => {
+    return subjectOptions.find(s => s.code === code)?.name_zh || code
+  }
+
+  const getGradeLabel = (code: string) => {
+    return gradeOptions.find(g => g.code === code)?.name_zh || code
+  }
+
+  const getSemesterLabel = (code: string) => {
+    return semesterOptions.find(s => s.code === code)?.name_zh || code
+  }
+
+  const getTextbookLabel = (code: string) => {
+    return textbookOptions.find(t => t.version_code === code)?.name_zh || code
   }
 
   const renderTable = () => {
@@ -341,12 +345,6 @@ export default function ConfigsPage() {
                       onClick={() => handleToggleActive(item)}
                     >
                       {item.is_active ? '禁用' : '启用'}
-                    </button>
-                    <button
-                      className="admin-btn admin-btn-sm admin-btn-danger"
-                      onClick={() => handleDelete(item.id)}
-                    >
-                      删除
                     </button>
                   </td>
                 </tr>
@@ -392,12 +390,6 @@ export default function ConfigsPage() {
                     >
                       {item.is_active ? '禁用' : '启用'}
                     </button>
-                    <button
-                      className="admin-btn admin-btn-sm admin-btn-danger"
-                      onClick={() => handleDelete(item.id)}
-                    >
-                      删除
-                    </button>
                   </td>
                 </tr>
               ))}
@@ -441,12 +433,6 @@ export default function ConfigsPage() {
                       onClick={() => handleToggleActive(item)}
                     >
                       {item.is_active ? '禁用' : '启用'}
-                    </button>
-                    <button
-                      className="admin-btn admin-btn-sm admin-btn-danger"
-                      onClick={() => handleDelete(item.id)}
-                    >
-                      删除
                     </button>
                   </td>
                 </tr>
@@ -492,12 +478,6 @@ export default function ConfigsPage() {
                     >
                       {item.is_active ? '禁用' : '启用'}
                     </button>
-                    <button
-                      className="admin-btn admin-btn-sm admin-btn-danger"
-                      onClick={() => handleDelete(item.id)}
-                    >
-                      删除
-                    </button>
                   </td>
                 </tr>
               ))}
@@ -525,10 +505,10 @@ export default function ConfigsPage() {
                 <tr key={point.id}>
                   <td>#{point.id}</td>
                   <td>{point.name}</td>
-                  <td>{point.subject_code}</td>
-                  <td>{point.grade_code}</td>
-                  <td>{point.semester_code}</td>
-                  <td>{point.textbook_version_code}</td>
+                  <td>{getSubjectLabel(point.subject_code)}</td>
+                  <td>{getGradeLabel(point.grade_code)}</td>
+                  <td>{getSemesterLabel(point.semester_code)}</td>
+                  <td>{getTextbookLabel(point.textbook_version_code)}</td>
                   <td>{point.sort_order}</td>
                   <td>
                     <span className={`admin-badge ${point.is_active ? 'admin-badge-success' : 'admin-badge-error'}`}>
@@ -547,12 +527,6 @@ export default function ConfigsPage() {
                       onClick={() => handleToggleActive(point)}
                     >
                       {point.is_active ? '禁用' : '启用'}
-                    </button>
-                    <button
-                      className="admin-btn admin-btn-sm admin-btn-danger"
-                      onClick={() => handleDelete(point.id)}
-                    >
-                      删除
                     </button>
                   </td>
                 </tr>
@@ -599,12 +573,6 @@ export default function ConfigsPage() {
                       onClick={() => handleToggleActive(type)}
                     >
                       {type.is_active ? '禁用' : '启用'}
-                    </button>
-                    <button
-                      className="admin-btn admin-btn-sm admin-btn-danger"
-                      onClick={() => handleDelete(type.id)}
-                    >
-                      删除
                     </button>
                   </td>
                 </tr>
@@ -755,11 +723,12 @@ export default function ConfigsPage() {
               <select
                 value={formData.subject_code || 'math'}
                 onChange={(e) => setFormData({ ...formData, subject_code: e.target.value })}
-                disabled={modalMode === 'edit'}
               >
-                <option value="math">数学</option>
-                <option value="chinese">语文</option>
-                <option value="english">英语</option>
+                {subjectOptions.map((subject) => (
+                  <option key={subject.code} value={subject.code}>
+                    {subject.name_zh}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="form-group">
@@ -767,17 +736,12 @@ export default function ConfigsPage() {
               <select
                 value={formData.grade_code || 'grade1'}
                 onChange={(e) => setFormData({ ...formData, grade_code: e.target.value })}
-                disabled={modalMode === 'edit'}
               >
-                <option value="grade1">一年级</option>
-                <option value="grade2">二年级</option>
-                <option value="grade3">三年级</option>
-                <option value="grade4">四年级</option>
-                <option value="grade5">五年级</option>
-                <option value="grade6">六年级</option>
-                <option value="grade7">七年级</option>
-                <option value="grade8">八年级</option>
-                <option value="grade9">九年级</option>
+                {gradeOptions.map((grade) => (
+                  <option key={grade.code} value={grade.code}>
+                    {grade.name_zh}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="form-group">
@@ -785,10 +749,12 @@ export default function ConfigsPage() {
               <select
                 value={formData.semester_code || 'upper'}
                 onChange={(e) => setFormData({ ...formData, semester_code: e.target.value })}
-                disabled={modalMode === 'edit'}
               >
-                <option value="upper">上学期</option>
-                <option value="lower">下学期</option>
+                {semesterOptions.map((semester) => (
+                  <option key={semester.code} value={semester.code}>
+                    {semester.name_zh}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="form-group">
@@ -796,14 +762,12 @@ export default function ConfigsPage() {
               <select
                 value={formData.textbook_version_code || 'rjb'}
                 onChange={(e) => setFormData({ ...formData, textbook_version_code: e.target.value })}
-                disabled={modalMode === 'edit'}
               >
-                <option value="rjb">人教版</option>
-                <option value="rjb_2024">人教版（2024 新版）</option>
-                <option value="bsd">北师大版</option>
-                <option value="sj">苏教版</option>
-                <option value="xs">西师版</option>
-                <option value="hj">沪教版</option>
+                {textbookOptions.map((textbook) => (
+                  <option key={textbook.version_code} value={textbook.version_code}>
+                    {textbook.name_zh}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="form-group">

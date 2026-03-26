@@ -144,6 +144,18 @@ class KnowledgePointStore:
             if input_data.name is not None:
                 updates.append("name = ?")
                 values.append(input_data.name)
+            if input_data.subject_code is not None:
+                updates.append("subject_code = ?")
+                values.append(input_data.subject_code)
+            if input_data.grade_code is not None:
+                updates.append("grade_code = ?")
+                values.append(input_data.grade_code)
+            if input_data.semester_code is not None:
+                updates.append("semester_code = ?")
+                values.append(input_data.semester_code)
+            if input_data.textbook_version_code is not None:
+                updates.append("textbook_version_code = ?")
+                values.append(input_data.textbook_version_code)
             if input_data.sort_order is not None:
                 updates.append("sort_order = ?")
                 values.append(input_data.sort_order)

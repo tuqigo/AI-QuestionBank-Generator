@@ -162,6 +162,10 @@ class KnowledgePointCreate(KnowledgePointBase):
 class KnowledgePointUpdate(BaseModel):
     """更新知识点请求模型"""
     name: Optional[str] = Field(None, description="知识点名称")
+    subject_code: Optional[str] = Field(None, description="学科代码")
+    grade_code: Optional[str] = Field(None, description="年级代码")
+    semester_code: Optional[str] = Field(None, description="学期代码")
+    textbook_version_code: Optional[str] = Field(None, description="教材版本代码")
     sort_order: Optional[int] = Field(None, description="排序序号")
     is_active: Optional[int] = Field(None, description="是否启用（0/1）", ge=0, le=1)
 

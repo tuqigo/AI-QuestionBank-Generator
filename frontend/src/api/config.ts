@@ -155,6 +155,10 @@ export interface KnowledgePointCreate {
 
 export interface KnowledgePointUpdate {
   name?: string
+  subject_code?: string
+  grade_code?: string
+  semester_code?: string
+  textbook_version_code?: string
   sort_order?: number
   is_active?: number
 }
