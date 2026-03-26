@@ -61,6 +61,7 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
         result_within_10 = "result_within_10" in template_config.get("rules", [])
         result_within_100 = "result_within_100" in template_config.get("rules", [])
         result_limit = template_config.get("result_within", None)  # 自定义结果上限
+        ensure_no_carrying = template_config.get("ensure_no_carrying", False)  # 加法不进位（个位和十位都不进位）
 
         # 获取渲染元数据
         rendering_meta = self.get_rendering_meta(question_type, template_config)
@@ -89,6 +90,15 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
                         continue
                     if ensure_different and a == b:
                         continue
+
+                    # 检查不进位约束（仅加法）
+                    if ensure_no_carrying and op == "+":
+                        # 个位相加不能进位
+                        if (a % 10) + (b % 10) >= 10:
+                            continue
+                        # 十位相加不能进位
+                        if (a // 10) + (b // 10) >= 10:
+                            continue
 
                     result = a + b if op == "+" else a - b
                     if result_limit and result > result_limit:
@@ -320,4 +330,20 @@ class MixedAdditionSubtractionGenerator(TemplateGenerator):
         return questions
 
     def get_knowledge_points(self, template_config: dict) -> List[str]:
-        return ["百以内加减法", "连加连减", "加减混合运算", "逆向思维", "数的大小比较"]
+        points = ["百以内加减法"]
+
+        # 根据配置添加细分知识点
+        if template_config.get("ensure_no_carrying", False):
+            points.append("两位数加两位数（不进位）")
+        if "consecutive_add" in template_config.get("question_complexity", []):
+            points.append("连加")
+        if "consecutive_subtract" in template_config.get("question_complexity", []):
+            points.append("连减")
+        if "mixed_operation" in template_config.get("question_complexity", []):
+            points.append("加减混合运算")
+        if "missing_operand" in template_config.get("question_complexity", []):
+            points.append("逆向思维")
+        if "compare_simple" in template_config.get("question_complexity", []):
+            points.append("数的大小比较")
+
+        return points

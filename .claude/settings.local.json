@@ -47,7 +47,9 @@
       "Bash(netstat:*)",
       "Bash(xargs -r kill)",
       "Bash(python -c \"import sys; sys.path.insert\\(0, ''''.''''\\); from main import app; print\\(''''Backend started successfully''''\\)\")",
-      "Bash(taskkill /F /IM python.exe)"
+      "Bash(taskkill /F /IM python.exe)",
+      "Bash(export HTTPS_PROXY=\"http://127.0.0.1:10808\")",
+      "Bash(xxd -r -p)"
     ]
   }
 }
