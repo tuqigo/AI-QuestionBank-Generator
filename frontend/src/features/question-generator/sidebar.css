@@ -545,6 +545,19 @@
   padding-right: var(--space-1);
 }
 
+/* 移动端增加模板列表高度 */
+@media (max-width: 768px) {
+  .template-list {
+    max-height: 500px;
+  }
+}
+
+@media (max-width: 640px) {
+  .template-list {
+    max-height: 55vh;
+  }
+}
+
 .template-list::-webkit-scrollbar {
   width: 6px;
 }
