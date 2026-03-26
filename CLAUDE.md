@@ -227,6 +227,25 @@ python -m db.migrations_cli history
 2. 验证 `.env` 中的 `DASHSCOPE_API_KEY`
 3. 检查 `ai_generation_records` 表中的错误消息
 
+### 配置题目模板
+1. 先写测试用例（`backend/tests/template_config_test.py`）
+2. 运行测试确认失败（TDD 第一步）
+3. 更新模板配置（使用 DbHelper）
+4. 运行测试确认通过
+5. 提交代码
+
+**测试文件位置**：`backend/tests/template_config_test.py`
+
+**运行测试**：
+```bash
+cd backend
+python tests/template_config_test.py -v
+# 或
+python -m unittest tests.template_config_test -v
+```
+
+**详细文档**：参见 `docs/模板配置需求实现步骤.md`
+
 
 ### 重要说明
 1. 不要轻易push以及部署代码，除非收到我明确指令，我让你提交代码，你只需要commit无需push
