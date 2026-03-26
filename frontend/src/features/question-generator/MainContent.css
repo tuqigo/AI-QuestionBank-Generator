@@ -38,6 +38,7 @@ body {
   max-width: 1400px;
   margin: 0 auto;
   width: 100%;
+  height: calc(100vh - 80px); /* 给主容器设定固定高度 */
 }
 
 /* ===== 响应式设计 - 移动端适配 ===== */
@@ -253,7 +254,7 @@ body {
 
 .mobile-fixed-footer .btn-generate {
   width: 100%;
-  padding: 14px 16px !important;
+  padding: 12px 14px !important;
   font-size: 1rem !important;
   height: 52px !important;
   box-shadow: 0 4px 14px rgba(255, 107, 74, 0.3) !important;

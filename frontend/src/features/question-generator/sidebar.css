@@ -5,6 +5,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  height: calc(100vh - 80px); /* 减去头部高度 */
+  min-height: 0;
 }
 
 .sidebar-content {
@@ -16,6 +18,10 @@
   flex-direction: column;
   gap: var(--space-5);
   border: 1px solid var(--gray-200);
+  flex: 1; /* 让内容区域填充可用空间 */
+  min-height: 0; /* 允许内部元素决定实际高度 */
+  height: 100%; /* 使用全高度 */
+  padding-bottom: var(--space-8); /* 额外添加底部内边距，确保按钮不会紧贴底部 */
 }
 
 /* 面板区域 */
@@ -23,7 +29,54 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  flex: 0 0 auto; /* 面板不伸缩，只占所需空间 */
+}
+
+/* 模板部分特殊处理 - 需要占用可用空间 */
+.panel-section.template-section-flex {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 操作按钮区 - 放在底部 */
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: auto; /* 将按钮推向底部 */
+  padding: var(--space-4) 0 var(--space-6) 0; /* 上、右、下、左 内边距，底部增加更多空间 */
+  border-top: 1px solid var(--gray-200);
   flex-shrink: 0;
+}
+
+/* ===== 模板列表 ===== */
+.template-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1; /* 填充可用空间 */
+  min-height: 150px; /* 最小高度确保可用 */
+  max-height: none;
+  overflow-y: auto;
+  padding-right: var(--space-1);
+}
+
+/* 面板区域 */
+.panel-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 0 0 auto;
+}
+
+/* 模板部分特殊处理 - 需要占用可用空间 */
+.panel-section.template-section-flex {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .section-header {
@@ -286,7 +339,7 @@
   to { transform: rotate(360deg); }
 }
 
-/* 操作按钮区 - 固定在底部 */
+/* 操作按钮区 - 固定在 sidebar-content 底部 */
 .action-buttons {
   display: flex;
   flex-direction: column;
@@ -540,7 +593,9 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  max-height: 350px;
+  flex: 1;
+  min-height: 150px;
+  max-height: none;
   overflow-y: auto;
   padding-right: var(--space-1);
 }
@@ -554,7 +609,7 @@
 
 @media (max-width: 640px) {
   .template-list {
-    max-height: 55vh;
+    max-height: 75vh;
   }
 }
 
@@ -643,9 +698,25 @@
   min-width: 0;
 }
 
-/* 缩小模板列表中的 MathJax 公式 */
-.example-content .MathJax {
-  font-size: 0.85em;
+/* 模板模式下的自适应高度模板列表容器 */
+.sidebar-content .panel-section:has(.template-list) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 修复 Firefox 等浏览器不支持 :has() 选择器的问题 */
+.template-section-flex {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 确保模板列表占据模板部分的所有可用垂直空间 */
+.template-section-flex .template-list {
+  flex: 1;
 }
 
 /* ===== 数量选择器 ===== */
