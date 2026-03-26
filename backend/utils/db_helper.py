@@ -12,7 +12,8 @@ from config import DB_PATH
 
 def _get_connection() -> sqlite3.Connection:
     """获取数据库连接"""
-    conn = sqlite3.connect(str(DB_PATH))
+    conn = sqlite3.connect(str(DB_PATH), isolation_level=None)
+    conn.execute("PRAGMA encoding = 'UTF-8'")
     conn.row_factory = sqlite3.Row
     return conn
 
