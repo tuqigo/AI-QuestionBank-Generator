@@ -112,7 +112,7 @@ function AppContent() {
         <Route path="/" element={<LandingPage />} />
 
         {/* 需要登录的页面 - 主内容 */}
-        <Route path="/workbench" element={user ? <MainContent email={user.email} onLogout={handleLogout} fetchUser={fetchUser} /> : <Navigate to="/" />} />
+        <Route path="/workbench" element={user ? <MainContent email={user.email} userGrade={user.grade} onLogout={handleLogout} fetchUser={fetchUser} /> : <Navigate to="/" />} />
 
         {/* 历史详情页 */}
         <Route path="/history/:id" element={user ? <HistoryDetail /> : <Navigate to="/" />} />

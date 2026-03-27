@@ -25,11 +25,12 @@ const SHORTCUTS = [
 
 interface Props {
   email: string
+  userGrade?: string | null  // 用户的年级（从 /api/auth/me 获取）
   onLogout: () => void
   fetchUser: () => void
 }
 
-export default function MainContent({ email, onLogout, fetchUser }: Props) {
+export default function MainContent({ email, userGrade, onLogout, fetchUser }: Props) {
   const [prompt, setPrompt] = useState('小学六年级 数学综合练习（分数运算、百分数、圆、比例、统计）')
   // 结构化数据
   const [questions, setQuestions] = useState<StructuredQuestion[]>([])
@@ -49,7 +50,14 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
   const [filteredTemplates, setFilteredTemplates] = useState<TemplateItem[]>([])
   const [templateFilter, setTemplateFilter] = useState<TemplateFilter>(() => {
     const saved = localStorage.getItem('question-generator-filter')
-    return saved ? JSON.parse(saved) : {}
+    if (saved) {
+      try {
+        return JSON.parse(saved)
+      } catch (e) {
+        console.error('解析筛选配置失败:', e)
+      }
+    }
+    return {}
   })
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateItem | null>(null)
   const [templateLoading, setTemplateLoading] = useState(false)
@@ -88,6 +96,44 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
   useEffect(() => {
     localStorage.setItem('question-generator-filter', JSON.stringify(templateFilter))
   }, [templateFilter])
+
+  // 用户年级获取后，设置为默认筛选条件并加载模板
+  useEffect(() => {
+    if (!userGrade) {
+      // 用户年级还未获取，等待
+      return
+    }
+
+    // 如果模板还未加载，使用用户年级加载模板
+    if (allTemplates.length === 0 && !templateLoading) {
+      const newFilter = { grade: userGrade }
+      setTemplateFilter(newFilter)
+
+      // 使用新的筛选条件加载模板
+      setTemplateLoading(true)
+      setError('')
+      getTemplates(newFilter)
+        .then((data) => {
+          setAllTemplates(data)
+          setFilteredTemplates(data)
+          if (data.length === 0) {
+            setError('没有找到符合条件的模板')
+          }
+        })
+        .catch((e) => {
+          if (e instanceof Error) {
+            setError(e.message || '加载模板失败')
+          } else {
+            setError('加载模板失败')
+          }
+          setAllTemplates([])
+          setFilteredTemplates([])
+        })
+        .finally(() => {
+          setTemplateLoading(false)
+        })
+    }
+  }, [userGrade])
 
   // 监听窗口大小变化，动态更新移动端状态
   useEffect(() => {
@@ -220,32 +266,34 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
 
   // 加载并筛选模板（点击"查找模板"按钮时调用）
   const applyFilter = async () => {
-    // 如果还没有加载过模板，先调用 API 加载
-    if (allTemplates.length === 0) {
-      await loadAllTemplates()
+    // 必须有年级筛选条件
+    if (!templateFilter.grade) {
+      setError('请先选择年级')
+      return
     }
 
-    let result = allTemplates
+    setTemplateLoading(true)
+    try {
+      // 使用当前的筛选条件调用后端 API
+      const data = await getTemplates(templateFilter)
+      setAllTemplates(data)
+      setFilteredTemplates(data)
 
-    if (templateFilter.grade) {
-      result = result.filter(t => t.grade === templateFilter.grade)
-    }
-    if (templateFilter.subject) {
-      result = result.filter(t => t.subject === templateFilter.subject)
-    }
-    if (templateFilter.semester) {
-      result = result.filter(t => t.semester === templateFilter.semester)
-    }
-    if (templateFilter.textbook_version) {
-      result = result.filter(t => t.textbook_version === templateFilter.textbook_version)
-    }
-
-    setFilteredTemplates(result)
-
-    if (result.length === 0) {
-      setError('没有找到符合条件的模板')
-    } else {
-      setError('')
+      if (data.length === 0) {
+        setError('没有找到符合条件的模板')
+      } else {
+        setError('')
+      }
+    } catch (e) {
+      if (e instanceof Error) {
+        setError(e.message || '加载模板失败')
+      } else {
+        setError('加载模板失败')
+      }
+      setAllTemplates([])
+      setFilteredTemplates([])
+    } finally {
+      setTemplateLoading(false)
     }
 
     // PC 端筛选后自动折叠
@@ -254,45 +302,20 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
     }
   }
 
-  // 加载全部模板
+  // 加载模板（带筛选条件）
   const loadAllTemplates = async () => {
+    // 必须有年级筛选条件
+    if (!templateFilter.grade) {
+      setError('请先选择年级')
+      return
+    }
+
     setTemplateLoading(true)
     setError('')
     try {
-      const data = await getTemplates({})
+      // 使用当前的筛选条件调用后端 API
+      const data = await getTemplates(templateFilter)
       setAllTemplates(data)
-
-      // 检查是否有保存的筛选配置，有的话应用过滤
-      const savedFilter = localStorage.getItem('question-generator-filter')
-      if (savedFilter) {
-        const parsed = JSON.parse(savedFilter)
-        if (parsed.grade || parsed.subject || parsed.semester || parsed.textbook_version) {
-          setTemplateFilter(parsed)
-          // 等状态更新后应用过滤
-          setTimeout(() => {
-            let result = data
-            if (parsed.grade) {
-              result = result.filter(t => t.grade === parsed.grade)
-            }
-            if (parsed.subject) {
-              result = result.filter(t => t.subject === parsed.subject)
-            }
-            if (parsed.semester) {
-              result = result.filter(t => t.semester === parsed.semester)
-            }
-            if (parsed.textbook_version) {
-              result = result.filter(t => t.textbook_version === parsed.textbook_version)
-            }
-            setFilteredTemplates(result)
-            if (result.length === 0) {
-              setError('没有找到符合条件的模板')
-            }
-          }, 0)
-          return
-        }
-      }
-
-      // 没有筛选配置或筛选条件为空，显示全部模板
       setFilteredTemplates(data)
     } catch (e) {
       if (e instanceof Error) {
@@ -306,13 +329,6 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
       setTemplateLoading(false)
     }
   }
-
-  // 页面加载时，自动加载全部模板
-  useEffect(() => {
-    if (allTemplates.length === 0 && !templateLoading) {
-      loadAllTemplates()
-    }
-  }, [])
 
   // 处理模板选择
   const handleTemplateSelect = (template: TemplateItem) => {
@@ -787,41 +803,37 @@ export default function MainContent({ email, onLogout, fetchUser }: Props) {
                   {!isMobile && filterOpen && (
                     <div className="template-filter">
                       <select
-                        value={templateFilter.grade || ''}
+                        value={templateFilter.grade || filterOptions.grades[0]?.value || ''}
                         onChange={(e) => setTemplateFilter({ ...templateFilter, grade: e.target.value as any })}
                         className="filter-select"
                       >
-                        <option value="">全部年级</option>
                         {filterOptions.grades.map(g => (
                           <option key={g.value} value={g.value}>{g.label}</option>
                         ))}
                       </select>
                       <select
-                        value={templateFilter.subject || ''}
+                        value={templateFilter.subject || filterOptions.subjects[0]?.value || ''}
                         onChange={(e) => setTemplateFilter({ ...templateFilter, subject: e.target.value as any })}
                         className="filter-select"
                       >
-                        <option value="">全部学科</option>
                         {filterOptions.subjects.map(s => (
                           <option key={s.value} value={s.value}>{s.label}</option>
                         ))}
                       </select>
                       <select
-                        value={templateFilter.semester || ''}
+                        value={templateFilter.semester || filterOptions.semesters[0]?.value || ''}
                         onChange={(e) => setTemplateFilter({ ...templateFilter, semester: e.target.value as any })}
                         className="filter-select"
                       >
-                        <option value="">全部学期</option>
                         {filterOptions.semesters.map(s => (
                           <option key={s.value} value={s.value}>{s.label}</option>
                         ))}
                       </select>
                       <select
-                        value={templateFilter.textbook_version || ''}
+                        value={templateFilter.textbook_version || filterOptions.textbook_versions[0]?.value || ''}
                         onChange={(e) => setTemplateFilter({ ...templateFilter, textbook_version: e.target.value })}
                         className="filter-select"
                       >
-                        <option value="">全部版本</option>
                         {filterOptions.textbook_versions.map(v => (
                           <option key={v.value} value={v.value}>{v.label}</option>
                         ))}

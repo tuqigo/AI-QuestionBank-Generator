@@ -157,12 +157,24 @@ async def get_knowledge_points(
 
     筛选参数：
     - subject: 学科 (math, chinese, english)
-    - grade: 年级 (grade1, grade2, ...)
+    - grade: 年级 (grade1, grade2, ...) - 必需参数
     - semester: 学期 (upper, lower)
     - textbook_version: 教材版本 (人教版，北师大版，...)
 
-    返回匹配的知识点列表，如果未提供筛选条件则返回所有知识点
+    返回匹配的知识点列表
     """
+    # 校验筛选参数 - grade 为必需参数
+    if grade is None:
+        raise HTTPException(status_code=400, detail="缺少必需参数：grade")
+    if grade == '':
+        raise HTTPException(status_code=400, detail="grade 不能为空字符串")
+    if subject == '':
+        raise HTTPException(status_code=400, detail="subject 不能为空字符串")
+    if semester == '':
+        raise HTTPException(status_code=400, detail="semester 不能为空字符串")
+    if textbook_version == '':
+        raise HTTPException(status_code=400, detail="textbook_version 不能为空字符串")
+
     try:
         import sqlite3
         conn = sqlite3.connect(DB_PATH)
@@ -222,12 +234,24 @@ async def get_templates(
     返回精简版模板信息，用于前端下拉选择
 
     筛选参数：
-    - grade: 年级 (grade1, grade2, ...)
+    - grade: 年级 (grade1, grade2, ...) - 必需参数
     - subject: 学科 (math, chinese, english)
     - semester: 学期 (upper, lower)
     - textbook_version: 教材版本 (人教版，北师大版，...)
     - knowledge_point_id: 知识点 ID
     """
+    # 校验筛选参数 - grade 为必需参数
+    if grade is None:
+        raise HTTPException(status_code=400, detail="缺少必需参数：grade")
+    if grade == '':
+        raise HTTPException(status_code=400, detail="grade 不能为空字符串")
+    if subject == '':
+        raise HTTPException(status_code=400, detail="subject 不能为空字符串")
+    if semester == '':
+        raise HTTPException(status_code=400, detail="semester 不能为空字符串")
+    if textbook_version == '':
+        raise HTTPException(status_code=400, detail="textbook_version 不能为空字符串")
+
     api_logger.info(f"获取模板列表请求，筛选条件：grade={grade}, subject={subject}, semester={semester}, textbook_version={textbook_version}, knowledge_point_id={knowledge_point_id}")
 
     try:
