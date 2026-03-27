@@ -442,4 +442,8 @@
     padding: 14px;
     font-size: 0.9375rem;
   }
+
+  .login-footer p {
+    font-size: 0.9375rem;  /* 与主按钮字体大小保持一致 */
+  }
 }

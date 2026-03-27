@@ -338,4 +338,8 @@
   .login-modal-header h2 {
     font-size: 1.25rem;
   }
+
+  .login-modal-hint {
+    font-size: 0.9375rem;  /* 与主按钮字体大小保持一致 */
+  }
 }

@@ -105,6 +105,8 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    host: '0.0.0.0',  // 允许外部访问
+    strictPort: true,  // 如果端口被占用则失败
     proxy: {
       '/api': {
         target: 'http://localhost:8000',

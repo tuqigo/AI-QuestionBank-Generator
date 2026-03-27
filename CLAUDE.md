@@ -129,6 +129,8 @@ frontend/
 ./restart_backend.sh
 ```
 
+**网络问题**：在中国大陆部署时需要配置代理，否则可能遇到连接问题。当你发现网络连不上超时的时候，请使用代理export HTTPS_PROXY="http://127.0.0.1:10808"访问
+
 ### 前端（Cloudflare Pages）
 
 **注意**：在中国大陆部署时需要配置代理，否则可能遇到连接问题。
@@ -253,3 +255,4 @@ python -m unittest tests.template_config_test -v
    ```bash
    HTTPS_PROXY="http://127.0.0.1:10808"
    ```
+3. **控制台乱码问题**：在Windows中文系统下，部分cmd命令输出可能会出现乱码。建议使用Unix风格的命令或PowerShell来避免此问题。

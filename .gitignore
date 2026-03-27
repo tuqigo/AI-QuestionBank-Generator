@@ -59,6 +59,7 @@ backend/build/
 # ===================
 .vscode/
 .idea/
+.claude/  # Claude Code 配置和临时文件
 *.swp
 *.swo
 *~
